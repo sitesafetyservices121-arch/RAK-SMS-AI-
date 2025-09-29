@@ -11,4 +11,15 @@ const LoadingDots = ({ className }: { className?: string }) => {
   );
 };
 
+export const ThinkingAnimation = () => {
+  return (
+    <div className="flex items-center justify-center space-x-1">
+      <span className="sr-only">Thinking...</span>
+      <div className="h-5 w-1 animate-glow rounded-full bg-primary/60 [animation-delay:-0.3s]"></div>
+      <div className="h-5 w-1 animate-glow rounded-full bg-primary/60 [animation-delay:-0.15s]"></div>
+      <div className="h-5 w-1 animate-glow rounded-full bg-primary/60"></div>
+    </div>
+  )
+}
+
 export default LoadingDots;

@@ -24,9 +24,9 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { askWilsonAction } from "./actions";
-import LoadingDots from "@/components/ui/loading-dots";
+import { ThinkingAnimation } from "@/components/ui/loading-dots";
 import { useToast } from "@/hooks/use-toast";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -149,7 +149,7 @@ export default function OhsConsultantPage() {
                   </AvatarFallback>
                 </Avatar>
                 <div className="max-w-sm rounded-lg px-4 py-3 bg-muted">
-                    <LoadingDots />
+                    <ThinkingAnimation />
                 </div>
               </div>
             )}
