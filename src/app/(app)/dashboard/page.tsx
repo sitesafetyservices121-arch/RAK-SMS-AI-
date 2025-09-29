@@ -17,6 +17,10 @@ import {
   LineChart,
   Bot,
   ClipboardList,
+  Car,
+  Warehouse,
+  Map,
+  Shirt,
 } from "lucide-react";
 
 const tools = [
@@ -68,6 +72,30 @@ const tools = [
     description: "Track employee training records and certifications.",
     href: "/employee-training-tracker",
   },
+  {
+    icon: <Car className="h-8 w-8 text-primary" />,
+    title: "Vehicle & Inspection Tracker",
+    description: "Record vehicle inspections and damage reports.",
+    href: "/vehicle-inspection-tracker",
+  },
+  {
+    icon: <Warehouse className="h-8 w-8 text-primary" />,
+    title: "Storeroom Tracker",
+    description: "Manage storeroom inventory and stocktakes.",
+    href: "/storeroom-tracker",
+  },
+  {
+    icon: <Map className="h-8 w-8 text-primary" />,
+    title: "Site & Resource Tracker",
+    description: "Visualize site layouts and resource allocation.",
+    href: "/site-resource-tracker",
+  },
+  {
+    icon: <Shirt className="h-8 w-8 text-primary" />,
+    title: "PPE Issue Register",
+    description: "Track the issuance and maintenance of PPE.",
+    href: "/ppe-issue-register",
+  },
 ];
 
 export default function DashboardPage() {
@@ -80,7 +108,7 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {tools.map((tool) => (
           <Card
             key={tool.href}
