@@ -9,7 +9,6 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  serverComponentsExternalPackages: ['vectordb'],
   images: {
     remotePatterns: [
       {
@@ -25,7 +24,7 @@ const nextConfig: NextConfig = {
         pathname: "/**",
       },
       {
-        protocol: "https",
+        protocol: "https://",
         hostname: "picsum.photos",
         port: "",
         pathname: "/**",
