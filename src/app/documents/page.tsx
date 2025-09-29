@@ -145,13 +145,125 @@ const documentCategories = [
         subCategory: "Training & Competency Records",
         version: "2024",
         lastUpdated: "2024-06-20",
-        type: "excel", // Note: A different icon might be needed for this
+        type: "excel",
       },
       {
         name: "General Safety Induction Record.docx",
         subCategory: "Training & Competency Records",
         version: "1.0",
         lastUpdated: "2024-05-15",
+        type: "word",
+      },
+      {
+        name: "Toolbox Talk - Slips, Trips, and Falls.docx",
+        subCategory: "Toolbox Talks & Safety Communication",
+        version: "1.0",
+        lastUpdated: "2024-07-01",
+        type: "word",
+      },
+      {
+        name: "Safety Meeting Register.pdf",
+        subCategory: "Toolbox Talks & Safety Communication",
+        version: "1.0",
+        lastUpdated: "2024-01-01",
+        type: "pdf",
+      },
+      {
+        name: "Contractor SHEQ Compliance Pack.zip",
+        subCategory: "Contractor & Visitor Management",
+        version: "2.5",
+        lastUpdated: "2024-06-15",
+        type: "zip",
+      },
+      {
+        name: "Visitor Induction Form.docx",
+        subCategory: "Contractor & Visitor Management",
+        version: "1.2",
+        lastUpdated: "2024-03-01",
+        type: "word",
+      },
+      {
+        name: "General Waste Management Plan.docx",
+        subCategory: "Environmental Management",
+        version: "2.0",
+        lastUpdated: "2024-05-20",
+        type: "word",
+      },
+      {
+        name: "Spill Response Procedure.docx",
+        subCategory: "Environmental Management",
+        version: "1.5",
+        lastUpdated: "2024-04-10",
+        type: "word",
+      },
+      {
+        name: "Quality Control Checklist - Concrete.docx",
+        subCategory: "Quality Management",
+        version: "1.0",
+        lastUpdated: "2024-07-05",
+        type: "word",
+      },
+      {
+        name: "Site Safety Inspection Checklist.docx",
+        subCategory: "Inspections & Audits",
+        version: "3.1",
+        lastUpdated: "2024-07-01",
+        type: "word",
+      },
+      {
+        name: "Internal Audit Schedule.xlsx",
+        subCategory: "Inspections & Audits",
+        version: "2024",
+        lastUpdated: "2024-06-28",
+        type: "excel",
+      },
+      {
+        name: "Vehicle Pre-use Checklist.pdf",
+        subCategory: "Vehicle & Equipment Safety",
+        version: "2.0",
+        lastUpdated: "2024-01-10",
+        type: "pdf",
+      },
+      {
+        name: "Equipment Maintenance Register.xlsx",
+        subCategory: "Vehicle & Equipment Safety",
+        version: "1.0",
+        lastUpdated: "2024-07-01",
+        type: "excel",
+      },
+      {
+        name: "Site Layout Plan Template.dwg",
+        subCategory: "Resource & Site Management",
+        version: "1.0",
+        lastUpdated: "2023-11-01",
+        type: "cad",
+      },
+      {
+        name: "Storeroom Stocktake Form.xlsx",
+        subCategory: "Storeroom & Inventory Control",
+        version: "1.3",
+        lastUpdated: "2024-06-30",
+        type: "excel",
+      },
+      {
+        name: "Monthly SHEQ Report Template.docx",
+        subCategory: "Monitoring & Reporting",
+        version: "2.2",
+        lastUpdated: "2024-07-01",
+        type: "word",
+      },
+      {
+        name: "LTIR Calculation Spreadsheet.xlsx",
+        subCategory: "Monitoring & Reporting",
+        version: "1.1",
+        lastUpdated: "2024-01-01",
+        type: "excel",
+      },
+      {
+        name: "Management Review Meeting Minutes Template.docx",
+        subCategory: "Continuous Improvement & Review",
+        version: "1.0",
+        lastUpdated: "2024-04-15",
         type: "word",
       },
     ],
@@ -241,6 +353,10 @@ const DocumentIcon = ({ type }: { type: string }) => {
   // Added a case for excel, can be expanded for other types
   if (type === "excel") {
     return <File className="h-4 w-4 text-green-600" />;
+  }
+   // Added a case for zip/cad, can be expanded for other types
+  if (type === "zip" || type === "cad") {
+    return <File className="h-4 w-4 text-yellow-600" />;
   }
   return <File className="h-4 w-4 text-blue-600" />;
 };
