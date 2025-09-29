@@ -61,26 +61,21 @@ export default function LoginPage() {
         },
       });
 
-      // DEBUGGING STEP 2: Log the server response
       console.log("Login response status:", res.status);
       const responseBody = await res.text();
       console.log("Login response body:", responseBody);
       
-      // Re-parse the response body as JSON for the check below
       const jsonResponse = responseBody ? JSON.parse(responseBody) : {};
 
-      // 3. Only redirect after the server confirms the cookie is set
       if (res.ok && jsonResponse.status === 'success') {
         toast({
           title: "Success",
           description: "Logged in successfully. Redirecting...",
         });
-        // router.push('/dashboard');
         window.location.href = "/dashboard";
       } else {
         throw new Error(`Server failed to set session cookie. Status: ${res.status}`);
       }
-
     } catch (error) {
       console.error("Login Error:", error);
       toast({
@@ -141,7 +136,7 @@ export default function LoginPage() {
                       />
                     </FormControl>
                     <FormMessage />
-                  </Item>
+                  </FormItem>
                 )}
               />
               <Button type="submit" disabled={isLoading} className="w-full">
