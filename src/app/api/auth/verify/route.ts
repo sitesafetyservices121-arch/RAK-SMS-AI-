@@ -6,14 +6,18 @@ export async function GET(request: NextRequest) {
   const sessionCookie = request.cookies.get('firebase-session-token')?.value;
 
   if (!sessionCookie) {
-    return NextResponse.json({ error: 'No session cookie' }, { status: 401 });
+    return NextResponse.json({ isValid: false }, { status: 200 });
   }
 
-  const decodedToken = await verifySessionCookie(sessionCookie);
-
-  if (!decodedToken) {
-    return NextResponse.json({ error: 'Invalid session cookie' }, { status: 401 });
+  try {
+    const decodedToken = await verifySessionCookie(sessionCookie);
+    if (decodedToken) {
+      return NextResponse.json({ isValid: true }, { status: 200 });
+    } else {
+      return NextResponse.json({ isValid: false }, { status: 200 });
+    }
+  } catch (error) {
+    console.error('Error verifying session in API route:', error);
+    return NextResponse.json({ isValid: false }, { status: 500 });
   }
-
-  return NextResponse.json({ status: 'success', uid: decodedToken.uid }, { status: 200 });
 }

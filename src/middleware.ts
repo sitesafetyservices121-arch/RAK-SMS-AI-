@@ -1,35 +1,20 @@
 import {NextResponse} from 'next/server';
 import type {NextRequest} from 'next/server';
 
-async function verifySession(sessionCookie: string | undefined, request: NextRequest) {
-  if (!sessionCookie) {
-    return false;
-  }
-  
-  // The API route is an absolute URL.
-  const verifyUrl = new URL('/api/auth/verify', request.url);
-
-  try {
-    const response = await fetch(verifyUrl, {
-      headers: {
-        'Cookie': `firebase-session-token=${sessionCookie}`,
-      },
-    });
-
-    return response.ok;
-  } catch (e) {
-    console.error('Error verifying session:', e);
-    return false;
-  }
-}
-
 export async function middleware(request: NextRequest) {
   const {pathname} = request.nextUrl;
   const sessionCookie = request.cookies.get('firebase-session-token')?.value;
 
   const isLoginPage = pathname.startsWith('/login');
   
-  const isSessionValid = await verifySession(sessionCookie, request);
+  // Call the verification API route
+  const verifyResponse = await fetch(new URL('/api/auth/verify', request.url), {
+    headers: {
+      'Cookie': `firebase-session-token=${sessionCookie || ''}`,
+    }
+  });
+
+  const { isValid: isSessionValid } = await verifyResponse.json();
 
   // If the user is trying to access the login page but already has a valid session,
   // redirect them to the dashboard.
@@ -40,7 +25,7 @@ export async function middleware(request: NextRequest) {
   // If the user does not have a valid session and is trying to access any page
   // other than the login page, redirect them to the login page.
   if (!isSessionValid && !isLoginPage) {
-    // To prevent redirect loops for the new API route.
+    // To prevent redirect loops for API routes used by the login page.
     if (pathname.startsWith('/api/auth')) {
         return NextResponse.next();
     }
@@ -54,6 +39,6 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Match all routes except for static files, images, and the login API route itself.
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/auth/login).*)'],
+  // Match all routes except for static files, images, and fonts.
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.woff2$).*)'],
 };
