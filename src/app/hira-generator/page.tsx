@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -34,7 +35,6 @@ import { Separator } from "@/components/ui/separator";
 import { Download } from "lucide-react";
 
 const formSchema = z.object({
-  clientCompanyId: z.string().min(1, "Client Company ID is required."),
   projectDetails: z.string().min(20, {
     message: "Project details must be at least 20 characters.",
   }),
@@ -52,15 +52,12 @@ export default function HiraGeneratorPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      clientCompanyId: "",
       projectDetails: "",
       regulatoryRequirements: "",
       existingSafetyData: "",
     },
   });
   
-  const clientCompanyId = form.watch("clientCompanyId");
-
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     setResult(null);
@@ -85,17 +82,16 @@ export default function HiraGeneratorPage() {
   const fullTextResult = result ? `Hazard Identification:\n${result.hazardIdentification}\n\nRisk Assessment:\n${result.riskAssessment}\n\nControl Measures:\n${result.controlMeasures}` : "";
 
   const handleDownloadPdf = () => {
-    if (!result || !clientCompanyId) return;
+    if (!result) return;
     const doc = new jsPDF();
     
     doc.text("HIRA Report", 10, 10);
-    doc.text(`Client Company ID: ${clientCompanyId}`, 10, 20);
     doc.text("---", 10, 25)
 
     const splitTitle = doc.splitTextToSize(`Hazard Identification:\n${result.hazardIdentification}\n\nRisk Assessment:\n${result.riskAssessment}\n\nControl Measures:\n${result.controlMeasures}`, 180);
     doc.text(splitTitle, 10, 35);
     
-    doc.save(`HIRA-Report-${clientCompanyId}-${new Date().toISOString()}.pdf`);
+    doc.save(`HIRA-Report-${new Date().toISOString()}.pdf`);
   };
 
   return (
@@ -110,22 +106,6 @@ export default function HiraGeneratorPage() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="clientCompanyId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Client Company ID</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="e.g., CLIENT-001"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
               <FormField
                 control={form.control}
                 name="projectDetails"

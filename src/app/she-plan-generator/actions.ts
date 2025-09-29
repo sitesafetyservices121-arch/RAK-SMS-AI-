@@ -1,3 +1,4 @@
+
 "use server";
 
 import {
@@ -5,6 +6,7 @@ import {
   type GenerateShePlanInput,
 } from "@/ai/flows/ai-she-plan-from-prompt";
 
+// The input type is now just the projectDescription string
 export async function generateShePlanAction(input: GenerateShePlanInput) {
   try {
     const output = await generateShePlan(input);

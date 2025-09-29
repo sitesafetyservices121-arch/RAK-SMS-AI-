@@ -40,7 +40,6 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 
 const formSchema = z.object({
-  clientName: z.string().min(1, "Client Name is required."),
   projectLocation: z.string().min(1, "Project/Site Location is required."),
   scopeOfWork: z.string().min(1, "Scope of Work is required."),
   employeeCount: z.string().min(1, "Number of employees is required."),
@@ -67,7 +66,6 @@ export default function ShePlanGeneratorPage() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      clientName: "",
       projectLocation: "",
       scopeOfWork: "",
       employeeCount: "",
@@ -95,7 +93,6 @@ export default function ShePlanGeneratorPage() {
     setFormValues(values);
 
     const projectDescription = `
-      Client Name: ${values.clientName}
       Project Location: ${values.projectLocation}
       Scope of Work: ${values.scopeOfWork}
       Number of Employees/Contractors: ${values.employeeCount}
@@ -140,7 +137,6 @@ export default function ShePlanGeneratorPage() {
       doc.addImage(logo, "PNG", 85, 40, 40, 40);
     }
     doc.setFontSize(16);
-    doc.text(`Client: ${values.clientName}`, 105, 140, { align: "center" });
     doc.text(`Project: ${values.projectLocation}`, 105, 150, { align: "center" });
     doc.setFontSize(12);
     doc.text(`Date Generated: ${new Date().toLocaleDateString()}`, 105, 160, { align: "center" });
@@ -190,7 +186,6 @@ export default function ShePlanGeneratorPage() {
     
     // Project Details Section
     const projectDetailsContent = `
-Client Name: ${values.clientName}
 Project Location: ${values.projectLocation}
 Scope of Work: ${values.scopeOfWork}
 Number of Employees/Contractors: ${values.employeeCount}
@@ -222,7 +217,7 @@ Project Dates: ${format(values.projectDates.from, "PPP")} to ${format(values.pro
     if (setUri) {
       setPdfDataUri(doc.output('datauristring'));
     } else {
-      doc.save(`SHE-Plan-${values.clientName}-${new Date().toISOString()}.pdf`);
+      doc.save(`SHE-Plan-Project-${new Date().toISOString()}.pdf`);
     }
   };
 
@@ -251,9 +246,6 @@ Project Dates: ${format(values.projectDates.from, "PPP")} to ${format(values.pro
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField name="clientName" control={form.control} render={({ field }) => (
-                  <FormItem><FormLabel>Client Name</FormLabel><FormControl><Input placeholder="e.g., Mittal, Sasol, Omnia" {...field} /></FormControl><FormMessage /></FormItem>
-              )} />
               <FormField name="projectLocation" control={form.control} render={({ field }) => (
                   <FormItem><FormLabel>Project / Site Location</FormLabel><FormControl><Input placeholder="e.g., Secunda, Sasolburg" {...field} /></FormControl><FormMessage /></FormItem>
               )} />
@@ -328,7 +320,7 @@ Project Dates: ${format(values.projectDates.from, "PPP")} to ${format(values.pro
                              />
                         </FormControl>
                          <FormDescription>
-                            Upload the client's logo for branded documents.
+                            Upload your company logo for branded documents.
                         </FormDescription>
                         <FormMessage />
                     </FormItem>
@@ -408,5 +400,3 @@ Project Dates: ${format(values.projectDates.from, "PPP")} to ${format(values.pro
     </div>
   );
 }
-
-    

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -32,7 +33,6 @@ import { Input } from "@/components/ui/input";
 import { Download } from "lucide-react";
 
 const formSchema = z.object({
-  clientCompanyId: z.string().min(1, "Client Company ID is required."),
   taskDescription: z.string().min(20, {
     message: "Task description must be at least 20 characters.",
   }),
@@ -46,12 +46,9 @@ export default function SafeWorkProcedurePage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      clientCompanyId: "",
       taskDescription: "",
     },
   });
-  
-  const clientCompanyId = form.watch("clientCompanyId");
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
@@ -75,17 +72,16 @@ export default function SafeWorkProcedurePage() {
   }
 
   const handleDownloadPdf = () => {
-    if (!result || !clientCompanyId) return;
+    if (!result) return;
     const doc = new jsPDF();
     
     doc.text("Safe Work Procedure", 10, 10);
-    doc.text(`Client Company ID: ${clientCompanyId}`, 10, 20);
     doc.text("---", 10, 25)
 
     const splitText = doc.splitTextToSize(result.procedure, 180);
     doc.text(splitText, 10, 35);
     
-    doc.save(`SWP-${clientCompanyId}-${new Date().toISOString()}.pdf`);
+    doc.save(`SWP-${new Date().toISOString()}.pdf`);
   };
 
 
@@ -101,22 +97,6 @@ export default function SafeWorkProcedurePage() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-              <FormField
-                control={form.control}
-                name="clientCompanyId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Client Company ID</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="e.g., CLIENT-001"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
               <FormField
                 control={form.control}
                 name="taskDescription"
