@@ -27,6 +27,7 @@ import {
   Newspaper,
   FilePlus,
   User,
+  LifeBuoy,
 } from "lucide-react";
 import {
   Sidebar,
@@ -74,7 +75,8 @@ const consultant = [
 ];
 
 const accountItems = [
-    { href: "/account/settings", label: "Settings", icon: Users }
+    { href: "/account/settings", label: "Settings", icon: Users },
+    { href: "/support", label: "Support", icon: LifeBuoy }
 ]
 
 const adminTools = [

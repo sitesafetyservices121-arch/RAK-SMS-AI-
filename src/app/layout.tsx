@@ -68,7 +68,9 @@ export default function RootLayout({
                       <DropdownMenuItem asChild>
                         <Link href="/account/settings">Settings</Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem disabled>Support</DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/support">Support</Link>
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
