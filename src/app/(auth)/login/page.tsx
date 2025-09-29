@@ -59,7 +59,9 @@ export default function LoginPage() {
         title: "Success",
         description: "Logged in successfully. Redirecting to dashboard...",
       });
-      router.push("/dashboard");
+      // Instead of router.push, we reload the page.
+      // The middleware will then catch the cookie and handle the redirect.
+      window.location.href = "/dashboard";
     } catch (error) {
       console.error("Login Error:", error);
       toast({
@@ -98,6 +100,7 @@ export default function LoginPage() {
                         type="email"
                         placeholder="admin@example.com"
                         {...field}
+                        disabled={isLoading}
                       />
                     </FormControl>
                     <FormMessage />
@@ -115,6 +118,7 @@ export default function LoginPage() {
                         type="password"
                         placeholder="********"
                         {...field}
+                        disabled={isLoading}
                       />
                     </FormControl>
                     <FormMessage />
