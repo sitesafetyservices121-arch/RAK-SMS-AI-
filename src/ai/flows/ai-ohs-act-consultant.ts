@@ -10,9 +10,12 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { retrieveSimilarChunksFlow } from './ai-document-indexer';
 
 const OhsActConsultantInputSchema = z.object({
   query: z.string().describe('The question related to OHS Act, COID Act, and other relevant South African acts.'),
+  history: z.array(z.any()).optional().describe("The chat history."),
+  documentDataUri: z.string().optional().describe("A document provided by the user for context, as a data URI.")
 });
 export type OhsActConsultantInput = z.infer<typeof OhsActConsultantInputSchema>;
 
@@ -27,15 +30,43 @@ export async function ohsActConsultant(input: OhsActConsultantInput): Promise<Oh
 
 const prompt = ai.definePrompt({
   name: 'ohsActConsultantPrompt',
-  input: {schema: OhsActConsultantInputSchema},
+  input: {schema: z.object({
+    query: z.string(),
+    retrievedDocuments: z.array(z.string()).optional(),
+    history: z.array(z.any()).optional(),
+    documentDataUri: z.string().optional(),
+  })},
   output: {schema: OhsActConsultantOutputSchema},
-  prompt: `You are an AI consultant specializing in South African acts related to Occupational Health and Safety (OHS) and Compensation for Occupational Injuries and Diseases (COID).
+  prompt: `You are Wilson, an AI consultant specializing in South African acts related to Occupational Health and Safety (OHS) and Compensation for Occupational Injuries and Diseases (COID). Be conversational and helpful.
 
-  Your knowledge base consists of the official legal documents and acts provided by the administrator. Prioritize information from these documents above all other general knowledge.
+  Your knowledge base consists of official legal documents provided by the administrator. You MUST prioritize information from these retrieved documents over your general knowledge.
 
-  Answer the following question based on your knowledge of the OHS Act, COID Act, and other relevant South African legislation. Provide clear and concise answers, referencing the specific act or section where possible.
+  If the user provides a document, analyze it in the context of their question and your knowledge base.
 
-  Question: {{{query}}}
+  {{#if retrievedDocuments}}
+  Here are some documents retrieved from the knowledge base that might be relevant to the user's question:
+  ---
+  {{#each retrievedDocuments}}
+  {{this}}
+  ---
+  {{/each}}
+  {{/if}}
+
+  {{#if documentDataUri}}
+  The user has also provided the following document for analysis:
+  {{media url=documentDataUri}}
+  {{/if}}
+
+  {{#if history}}
+  Here is the conversation history:
+  {{#each history}}
+  {{role}}: {{content}}
+  {{/each}}
+  {{/if}}
+
+  Based on all the information provided, answer the user's latest question. Provide clear and concise answers, referencing the specific act or section where possible.
+
+  User Question: {{{query}}}
   `,
 });
 
@@ -46,16 +77,11 @@ const ohsActConsultantFlow = ai.defineFlow(
     outputSchema: OhsActConsultantOutputSchema,
   },
   async input => {
-    // In a real application, you would implement a retriever here.
-    // This retriever would search the permanent storage bucket (e.g., Google Cloud Storage)
-    // for the uploaded reference documents that are relevant to the user's query.
-    // The retrieved content would then be passed into the prompt's context.
+    
+    const retrievedDocuments = await retrieveSimilarChunksFlow(input.query);
 
-    // For example:
-    // const referenceDocs = await myStorageRetriever.retrieve(input.query);
-    // const { output } = await prompt({ ...input, context: referenceDocs });
+    const {output} = await prompt({ ...input, retrievedDocuments });
 
-    const {output} = await prompt(input);
     return output!;
   }
 );

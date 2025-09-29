@@ -12,19 +12,18 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UploadCloud, FileJson, FileText } from "lucide-react";
+import { UploadCloud, FileJson, FileText, LoaderCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { indexDocumentAction } from "./actions";
 
-// Mock data for existing reference documents
-const existingDocs = [
-    { name: "OHS Act 85 of 1993.pdf", type: "PDF", size: "2.1 MB" },
-    { name: "COID Act Amendment 2023.pdf", type: "PDF", size: "850 KB" },
-    { name: "Construction Regulations 2014.json", type: "JSON", size: "1.2 MB" },
-];
+// This would be fetched from a database in a real application.
+const existingDocs: { name: string; type: string; size: string }[] = [];
+
 
 export default function WilsonTrainingPage() {
   const [files, setFiles] = useState<FileList | null>(null);
+  const [isIndexing, setIsIndexing] = useState(false);
   const { toast } = useToast();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -33,7 +32,16 @@ export default function WilsonTrainingPage() {
     }
   };
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const dataUriFromFile = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+  }
+
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!files || files.length === 0) {
       toast({
@@ -43,15 +51,41 @@ export default function WilsonTrainingPage() {
       });
       return;
     }
-    // In a real app, this would handle the file upload to a permanent storage bucket.
-    // The AI flow would then be configured to use a retriever on this bucket.
-    console.log("Uploading files for AI training:", Array.from(files).map(f => f.name));
-    toast({
-      title: "Upload Successful",
-      description: `${files.length} document(s) have been added to Wilson's knowledge base.`,
-    });
+    
+    setIsIndexing(true);
+    let totalChunks = 0;
+    let filesIndexed = 0;
+    
+    for(const file of Array.from(files)) {
+      try {
+        const documentDataUri = await dataUriFromFile(file);
+        const response = await indexDocumentAction({ documentDataUri });
 
-    // Reset form - ideally you would also refresh the list of documents
+        if (response.success && response.data) {
+          totalChunks += response.data.chunksIndexed;
+          filesIndexed++;
+        } else {
+          throw new Error(response.error || 'Unknown error during indexing');
+        }
+      } catch (error: any) {
+        toast({
+          variant: "destructive",
+          title: `Error Indexing ${file.name}`,
+          description: error.message,
+        });
+      }
+    }
+    
+    setIsIndexing(false);
+
+    if (filesIndexed > 0) {
+        toast({
+            title: "Indexing Complete",
+            description: `${filesIndexed} document(s) indexed into ${totalChunks} chunks. Wilson's knowledge base is updated.`,
+        });
+    }
+
+    // Reset form
     const fileInput = document.getElementById('file-upload') as HTMLInputElement;
     if(fileInput) fileInput.value = "";
     setFiles(null);
@@ -64,17 +98,18 @@ export default function WilsonTrainingPage() {
         <CardTitle>AI Reference Documents</CardTitle>
         <CardDescription>
           Upload PDF or JSON files containing acts and regulations for Wilson&apos;s
-          permanent knowledge base.
+          permanent knowledge base. This will store them in a vector database.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid gap-2">
-            <Label htmlFor="file-upload">Reference Documents (PDF, JSON)</Label>
-            <Input id="file-upload" type="file" onChange={handleFileChange} multiple accept=".pdf,.json" />
+            <Label htmlFor="file-upload">Reference Documents (PDF, JSON, Text)</Label>
+            <Input id="file-upload" type="file" onChange={handleFileChange} multiple accept=".pdf,.json,.txt,.md" />
           </div>
-          <Button type="submit" className="w-full">
-            <UploadCloud className="mr-2 h-4 w-4" /> Upload to Knowledge Base
+          <Button type="submit" className="w-full" disabled={isIndexing}>
+            {isIndexing ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : <UploadCloud className="mr-2 h-4 w-4" />} 
+            {isIndexing ? 'Indexing...' : 'Upload & Index'}
           </Button>
         </form>
       </CardContent>
@@ -83,21 +118,27 @@ export default function WilsonTrainingPage() {
         <CardHeader>
           <CardTitle>Current Knowledge Base</CardTitle>
           <CardDescription>
-            List of documents Wilson currently references.
+            List of documents Wilson currently references. (Note: In-memory only)
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ul className="space-y-3">
-            {existingDocs.map(doc => (
-                <li key={doc.name} className="flex items-center justify-between rounded-md border p-3">
-                    <div className="flex items-center gap-3">
-                        {doc.type === 'PDF' ? <FileText className="h-5 w-5 text-red-500" /> : <FileJson className="h-5 w-5 text-blue-500" />}
-                        <span className="font-medium">{doc.name}</span>
-                    </div>
-                    <Badge variant="outline">{doc.size}</Badge>
-                </li>
-            ))}
-          </ul>
+            {existingDocs.length > 0 ? (
+                <ul className="space-y-3">
+                    {existingDocs.map(doc => (
+                        <li key={doc.name} className="flex items-center justify-between rounded-md border p-3">
+                            <div className="flex items-center gap-3">
+                                {doc.type === 'PDF' ? <FileText className="h-5 w-5 text-red-500" /> : <FileJson className="h-5 w-5 text-blue-500" />}
+                                <span className="font-medium">{doc.name}</span>
+                            </div>
+                            <Badge variant="outline">{doc.size}</Badge>
+                        </li>
+                    ))}
+                </ul>
+            ) : (
+                <div className="flex h-20 items-center justify-center rounded-md border border-dashed">
+                    <p className="text-sm text-muted-foreground">Knowledge base is currently empty.</p>
+                </div>
+            )}
         </CardContent>
       </Card>
     </div>

@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Send, User } from "lucide-react";
+import { Send, User, Paperclip, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -30,10 +30,11 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { WilsonLogo } from "@/components/wilson-logo";
+import { Badge } from "@/components/ui/badge";
 
 const formSchema = z.object({
-  query: z.string().min(5, {
-    message: "Query must be at least 5 characters.",
+  query: z.string().min(1, {
+    message: "Query cannot be empty.",
   }),
 });
 
@@ -45,8 +46,11 @@ interface Message {
 export default function OhsConsultantPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [documentFile, setDocumentFile] = useState<File | null>(null);
+  const [documentDataUri, setDocumentDataUri] = useState<string | null>(null);
   const { toast } = useToast();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -62,7 +66,23 @@ export default function OhsConsultantPage() {
             behavior: "smooth",
         });
     }
-  }, [messages])
+  }, [messages]);
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setDocumentFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => setDocumentDataUri(e.target?.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeDocument = () => {
+    setDocumentFile(null);
+    setDocumentDataUri(null);
+    if(fileInputRef.current) fileInputRef.current.value = "";
+  }
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
@@ -70,8 +90,15 @@ export default function OhsConsultantPage() {
     setMessages((prev) => [...prev, userMessage]);
     form.reset();
 
-    const response = await askWilsonAction(values);
+    const history = messages.map(m => ({ role: m.role, parts: [{text: m.content}] }));
+
+    const response = await askWilsonAction({ 
+        query: values.query, 
+        history,
+        documentDataUri: documentDataUri || undefined
+    });
     setIsLoading(false);
+    removeDocument();
 
     if (response.success && response.data) {
       const assistantMessage: Message = {
@@ -95,7 +122,7 @@ export default function OhsConsultantPage() {
       <CardHeader>
         <CardTitle>Wilson - OHS Act Consultant</CardTitle>
         <CardDescription>
-          Your AI consultant for OHS, COID, and relevant South African acts.
+          Your AI consultant for OHS, COID, and relevant South African acts. Attach a document for context-specific questions.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-1 overflow-hidden">
@@ -105,7 +132,7 @@ export default function OhsConsultantPage() {
                 <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
                     <WilsonLogo className="h-12 w-12 mb-4" />
                     <p>Ask me anything about the OHS Act.</p>
-                    <p className="text-xs">For example: &quot;What are the duties of an employer?&quot;</p>
+                    <p className="text-xs">You can also attach a document to ask questions about it.</p>
                 </div>
             )}
             {messages.map((message, index) => (
@@ -157,12 +184,40 @@ export default function OhsConsultantPage() {
           </div>
         </ScrollArea>
       </CardContent>
-      <CardFooter className="pt-4 border-t">
+      <CardFooter className="pt-4 border-t flex flex-col items-start gap-2">
+        {documentFile && (
+            <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="pl-2">
+                    {documentFile.name}
+                    <Button variant="ghost" size="icon" className="h-5 w-5 ml-1" onClick={removeDocument}>
+                        <X className="h-3 w-3"/>
+                    </Button>
+                </Badge>
+            </div>
+        )}
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
             className="flex w-full items-start space-x-2"
           >
+            <Input
+              id="file-upload-chat"
+              type="file"
+              className="hidden"
+              onChange={handleFileChange}
+              ref={fileInputRef}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isLoading}
+              title="Attach document"
+            >
+              <Paperclip className="h-4 w-4" />
+              <span className="sr-only">Attach document</span>
+            </Button>
             <FormField
               control={form.control}
               name="query"
