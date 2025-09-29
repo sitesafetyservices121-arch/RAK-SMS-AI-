@@ -18,14 +18,12 @@ async function AuthLayout({ children }: PropsWithChildren) {
     redirect('/login');
   }
 
-  try {
-    const decodedClaims = await verifySessionCookie(sessionCookie);
-    if (!decodedClaims) {
-      throw new Error('Invalid session cookie');
-    }
-  } catch (error) {
-    console.error('Session verification failed:', error);
-    redirect('/login');
+  const decodedClaims = await verifySessionCookie(sessionCookie);
+  if (!decodedClaims) {
+      console.error('Session verification failed, redirecting to login.');
+      // Invalidate the cookie on the client by redirecting with a special header
+      // The actual cookie removal happens in the middleware if it sees an invalid cookie
+      redirect('/login');
   }
 
   return (

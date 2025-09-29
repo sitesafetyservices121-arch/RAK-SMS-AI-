@@ -1,6 +1,7 @@
+
 import { NextResponse } from 'next/server';
 import { getAuth } from 'firebase-admin/auth';
-import { initializeApp, getApps, getApp, cert } from 'firebase-admin/app';
+import { initializeApp as initializeAdminApp, getApps as getAdminApps, getApp as getAdminApp, cert } from 'firebase-admin/app';
 import { signInWithEmailAndPassword, getAuth as getClientAuth } from 'firebase/auth';
 import { initializeApp as initializeClientApp, getApps as getClientApps, getApp as getClientApp } from 'firebase/app';
 
@@ -13,9 +14,15 @@ if (!serviceAccountKey) {
 
 const serviceAccount = JSON.parse(serviceAccountKey);
 
+// The private key from the environment variable can have its newlines escaped.
+// We need to replace `\\n` with `\n` to parse it correctly.
+if (serviceAccount.private_key) {
+    serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+}
+
 // Server-side Firebase Admin SDK initialization
-if (getApps().length === 0) {
-  initializeApp({
+if (getAdminApps().length === 0) {
+  initializeAdminApp({
     credential: cert(serviceAccount),
   });
 }
@@ -30,11 +37,6 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-// Client-side Firebase SDK initialization (needed to get ID token)
-const clientApp = !getClientApps().length ? initializeClientApp(firebaseConfig) : getClientApp();
-const clientAuth = getClientAuth(clientApp);
-
-
 export async function POST(request: Request) {
   try {
     const { email, password } = await request.json();
@@ -42,6 +44,11 @@ export async function POST(request: Request) {
     if (!email || !password) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
     }
+    
+    // Initialize client auth within the handler to avoid module scope issues
+    const clientApp = !getClientApps().length ? initializeClientApp(firebaseConfig) : getClientApp();
+    const clientAuth = getClientAuth(clientApp);
+
 
     // 1. Sign in with client SDK to get user and ID token
     const userCredential = await signInWithEmailAndPassword(clientAuth, email, password);
