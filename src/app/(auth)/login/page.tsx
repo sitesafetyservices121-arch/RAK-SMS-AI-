@@ -75,7 +75,8 @@ export default function LoginPage() {
           title: "Success",
           description: "Logged in successfully. Redirecting...",
         });
-        router.push('/dashboard');
+        // router.push('/dashboard');
+        window.location.href = "/dashboard";
       } else {
         throw new Error(`Server failed to set session cookie. Status: ${res.status}`);
       }
@@ -140,7 +141,7 @@ export default function LoginPage() {
                       />
                     </FormControl>
                     <FormMessage />
-                  </FormItem>
+                  </Item>
                 )}
               />
               <Button type="submit" disabled={isLoading} className="w-full">
