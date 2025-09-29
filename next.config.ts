@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  serverComponentsExternalPackages: ['vectordb', '@lancedb/vectordb'],
+  serverComponentsExternalPackages: ['vectordb'],
   images: {
     remotePatterns: [
       {
