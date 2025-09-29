@@ -1,3 +1,4 @@
+
 // 'use server'
 'use server';
 
@@ -17,7 +18,8 @@ const AnalyzeLtirTrendInputSchema = z.object({
     .string()
     .describe(
       'Historical LTIR data, preferably in CSV format. Include date, number of injuries, and hours worked.'
-    ),\n  additionalContext: z.string().optional().describe('Any additional context about the data.'),
+    ),
+  additionalContext: z.string().optional().describe('Any additional context about the data.'),
 });
 export type AnalyzeLtirTrendInput = z.infer<typeof AnalyzeLtirTrendInputSchema>;
 
