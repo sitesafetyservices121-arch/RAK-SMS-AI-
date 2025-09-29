@@ -59,17 +59,16 @@ export default function LoginPage() {
         },
       });
 
-      if (!res.ok) {
-        throw new Error('Failed to create session');
+      if (res.ok) {
+        toast({
+          title: "Success",
+          description: "Logged in successfully. Redirecting to dashboard...",
+        });
+        // Only redirect after the session cookie has been successfully set.
+        router.push("/dashboard");
+      } else {
+        throw new Error('Failed to create session on the server.');
       }
-
-      toast({
-        title: "Success",
-        description: "Logged in successfully. Redirecting to dashboard...",
-      });
-      
-      // Redirect to the dashboard after the cookie is set.
-      router.push("/dashboard");
       
     } catch (error) {
       console.error("Login Error:", error);
