@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import jsPDF from "jspdf";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -30,8 +31,10 @@ import LoadingDots from "@/components/ui/loading-dots";
 import { useToast } from "@/hooks/use-toast";
 import { CopyButton } from "@/components/copy-button";
 import { Separator } from "@/components/ui/separator";
+import { Download } from "lucide-react";
 
 const formSchema = z.object({
+  clientCompanyId: z.string().min(1, "Client Company ID is required."),
   projectDetails: z.string().min(20, {
     message: "Project details must be at least 20 characters.",
   }),
@@ -49,11 +52,14 @@ export default function HiraGeneratorPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      clientCompanyId: "",
       projectDetails: "",
       regulatoryRequirements: "",
       existingSafetyData: "",
     },
   });
+  
+  const clientCompanyId = form.watch("clientCompanyId");
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
@@ -63,6 +69,10 @@ export default function HiraGeneratorPage() {
 
     if (response.success && response.data) {
       setResult(response.data);
+      toast({
+        title: "Success",
+        description: "HIRA generated successfully. You can now download it as a PDF.",
+      });
     } else {
       toast({
         variant: "destructive",
@@ -73,6 +83,20 @@ export default function HiraGeneratorPage() {
   }
   
   const fullTextResult = result ? `Hazard Identification:\n${result.hazardIdentification}\n\nRisk Assessment:\n${result.riskAssessment}\n\nControl Measures:\n${result.controlMeasures}` : "";
+
+  const handleDownloadPdf = () => {
+    if (!result || !clientCompanyId) return;
+    const doc = new jsPDF();
+    
+    doc.text("HIRA Report", 10, 10);
+    doc.text(`Client Company ID: ${clientCompanyId}`, 10, 20);
+    doc.text("---", 10, 25)
+
+    const splitTitle = doc.splitTextToSize(`Hazard Identification:\n${result.hazardIdentification}\n\nRisk Assessment:\n${result.riskAssessment}\n\nControl Measures:\n${result.controlMeasures}`, 180);
+    doc.text(splitTitle, 10, 35);
+    
+    doc.save(`HIRA-Report-${clientCompanyId}-${new Date().toISOString()}.pdf`);
+  };
 
   return (
     <div className="grid gap-6 lg:grid-cols-5">
@@ -86,6 +110,22 @@ export default function HiraGeneratorPage() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="clientCompanyId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Client Company ID</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="e.g., CLIENT-001"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="projectDetails"
@@ -146,18 +186,28 @@ export default function HiraGeneratorPage() {
       <div className="lg:col-span-3">
         <Card className="min-h-[600px] sticky top-20">
           <CardHeader>
-            <CardTitle>Generated HIRA</CardTitle>
-            <CardDescription>
-              Review the AI-generated assessment below.
-            </CardDescription>
+             <div className="flex justify-between items-center">
+              <div>
+                <CardTitle>Generated HIRA</CardTitle>
+                <CardDescription>
+                  Review the AI-generated assessment below.
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-2">
+                {result && <CopyButton textToCopy={fullTextResult} />}
+                {result && (
+                  <Button onClick={handleDownloadPdf} variant="outline" size="sm">
+                    <Download className="mr-2 h-4 w-4" />
+                    Download PDF
+                  </Button>
+                )}
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             {isLoading && <LoadingDots />}
             {result && (
               <div className="space-y-4">
-                 <div className="flex justify-end">
-                  <CopyButton textToCopy={fullTextResult} />
-                </div>
                 <div>
                   <h3 className="font-semibold text-lg">Hazard Identification</h3>
                   <pre className="mt-2 w-full whitespace-pre-wrap rounded-md bg-secondary p-4 font-sans text-sm text-secondary-foreground">

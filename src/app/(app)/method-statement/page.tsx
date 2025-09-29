@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import jsPDF from "jspdf";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -27,8 +28,11 @@ import type { GenerateMethodStatementOutput } from "@/ai/flows/ai-method-stateme
 import LoadingDots from "@/components/ui/loading-dots";
 import { useToast } from "@/hooks/use-toast";
 import { CopyButton } from "@/components/copy-button";
+import { Input } from "@/components/ui/input";
+import { Download } from "lucide-react";
 
 const formSchema = z.object({
+  clientCompanyId: z.string().min(1, "Client Company ID is required."),
   taskDescription: z.string().min(20, {
     message: "Task description must be at least 20 characters.",
   }),
@@ -42,9 +46,12 @@ export default function MethodStatementPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      clientCompanyId: "",
       taskDescription: "",
     },
   });
+
+  const clientCompanyId = form.watch("clientCompanyId");
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
@@ -54,6 +61,10 @@ export default function MethodStatementPage() {
 
     if (response.success && response.data) {
       setResult(response.data);
+      toast({
+        title: "Success",
+        description: "Method Statement generated successfully. You can now download it as a PDF.",
+      });
     } else {
       toast({
         variant: "destructive",
@@ -62,6 +73,20 @@ export default function MethodStatementPage() {
       });
     }
   }
+
+  const handleDownloadPdf = () => {
+    if (!result || !clientCompanyId) return;
+    const doc = new jsPDF();
+    
+    doc.text("Method Statement", 10, 10);
+    doc.text(`Client Company ID: ${clientCompanyId}`, 10, 20);
+    doc.text("---", 10, 25)
+
+    const splitText = doc.splitTextToSize(result.methodStatement, 180);
+    doc.text(splitText, 10, 35);
+    
+    doc.save(`Method-Statement-${clientCompanyId}-${new Date().toISOString()}.pdf`);
+  };
 
   return (
     <div className="grid gap-6 lg:grid-cols-5">
@@ -75,6 +100,22 @@ export default function MethodStatementPage() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              <FormField
+                control={form.control}
+                name="clientCompanyId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Client Company ID</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="e.g., CLIENT-001"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="taskDescription"
@@ -108,7 +149,15 @@ export default function MethodStatementPage() {
                 Review the AI-generated statement below.
               </CardDescription>
             </div>
-            {result && <CopyButton textToCopy={result.methodStatement} />}
+            <div className="flex items-center gap-2">
+              {result && <CopyButton textToCopy={result.methodStatement} />}
+               {result && (
+                  <Button onClick={handleDownloadPdf} variant="outline" size="sm">
+                    <Download className="mr-2 h-4 w-4" />
+                    Download PDF
+                  </Button>
+                )}
+            </div>
           </CardHeader>
           <CardContent>
             {isLoading && <LoadingDots />}

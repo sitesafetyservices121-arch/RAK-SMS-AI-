@@ -18,6 +18,7 @@ import {
   Map,
   Shirt,
   Briefcase,
+  FolderKanban,
 } from "lucide-react";
 import {
   Sidebar,
@@ -33,12 +34,12 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { cn } from "@/lib/utils";
 import React from "react";
 
 const menuItems = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
   { href: "/documents", label: "Document Library", icon: Library },
+  { href: "/generated-documents", label: "Generated Documents", icon: FolderKanban },
 ];
 
 const managementTools = [

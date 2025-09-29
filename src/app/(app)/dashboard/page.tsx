@@ -21,6 +21,7 @@ import {
   Warehouse,
   Map,
   Shirt,
+  FolderKanban,
 } from "lucide-react";
 
 const tools = [
@@ -29,6 +30,12 @@ const tools = [
     title: "Document Library",
     description: "Access all your safety documents in one place.",
     href: "/documents",
+  },
+  {
+    icon: <FolderKanban className="h-8 w-8 text-primary" />,
+    title: "Generated Documents",
+    description: "View and manage all AI-generated documents by client.",
+    href: "/generated-documents",
   },
   {
     icon: <FileText className="h-8 w-8 text-primary" />,
