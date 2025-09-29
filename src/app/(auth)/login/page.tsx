@@ -52,14 +52,8 @@ export default function LoginPage() {
       const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
       const idToken = await userCredential.user.getIdToken();
       
-      // Set cookie for server-side rendering
-      await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ idToken }),
-      });
+      // Manually set cookie for middleware to pick up
+      document.cookie = `firebase-auth-token=${idToken}; path=/; max-age=${60 * 60 * 24}`;
 
       toast({
         title: "Success",
@@ -67,6 +61,7 @@ export default function LoginPage() {
       });
       router.push("/dashboard");
     } catch (error) {
+      console.error("Login Error:", error);
       toast({
         variant: "destructive",
         title: "Error",
