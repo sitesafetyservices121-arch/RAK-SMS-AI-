@@ -385,11 +385,9 @@ const DocumentIcon = ({ type }: { type: string }) => {
   if (type === "pdf") {
     return <FileText className="h-4 w-4 text-red-600" />;
   }
-  // Added a case for excel, can be expanded for other types
   if (type === "excel") {
     return <File className="h-4 w-4 text-green-600" />;
   }
-   // Added a case for zip/cad, can be expanded for other types
   if (type === "zip" || type === "cad") {
     return <File className="h-4 w-4 text-yellow-600" />;
   }
