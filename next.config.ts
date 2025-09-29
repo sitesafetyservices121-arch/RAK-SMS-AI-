@@ -42,7 +42,6 @@ const nextConfig: NextConfig = {
       (isServer ? "../" : "") + "static/wasm/[modulehash].wasm";
     return config;
   },
-  serverComponentsExternalPackages: ['cmdk'],
 };
 
 export default nextConfig;
