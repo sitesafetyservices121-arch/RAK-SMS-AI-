@@ -23,6 +23,9 @@ import {
   Shield,
   BrainCircuit,
   Bot,
+  BookOpen,
+  Newspaper,
+  FilePlus,
 } from "lucide-react";
 import {
   Sidebar,
@@ -45,6 +48,8 @@ const menuItems = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
   { href: "/documents", label: "Document Library", icon: Library },
   { href: "/generated-documents", label: "Generated Documents", icon: FolderKanban },
+  { href: "/news", label: "News", icon: Newspaper },
+  { href: "/how-to-guide", label: "How-to Guide", icon: BookOpen },
 ];
 
 const managementTools = [
@@ -72,6 +77,7 @@ const adminTools = [
   { href: "/admin/onboarding", label: "Onboarding", icon: Users },
   { href: "/admin/prescription-management", label: "Prescription Mgt", icon: ClipboardCheck },
   { href: "/admin/document-upload", label: "Document Upload", icon: Library },
+  { href: "/admin/create-news", label: "Create News", icon: FilePlus },
   { href: "/admin/wilson-training", label: "AI Training", icon: BrainCircuit },
 ]
 
