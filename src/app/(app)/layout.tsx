@@ -1,7 +1,7 @@
+
 import type { PropsWithChildren } from 'react';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { verifySessionCookie } from '@/lib/firebase-admin';
 
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppNav } from "@/components/nav";
@@ -12,19 +12,22 @@ import { LogoutButton } from './logout-button';
 
 
 async function AuthLayout({ children }: PropsWithChildren) {
-  const sessionCookie = cookies().get('firebase-session-token')?.value;
+  const sessionCookie = cookies().get('rak-sms-session')?.value;
 
   if (!sessionCookie) {
     redirect('/login');
   }
 
-  const decodedClaims = await verifySessionCookie(sessionCookie);
-  if (!decodedClaims) {
-      console.error('Session verification failed, redirecting to login.');
-      // Invalidate the cookie on the client by redirecting with a special header
-      // The actual cookie removal happens in the middleware if it sees an invalid cookie
+  try {
+    const session = JSON.parse(sessionCookie);
+    if (!session.email) {
       redirect('/login');
+    }
+  } catch (e) {
+    console.error("Invalid session cookie:", e);
+    redirect('/login');
   }
+
 
   return (
      <SidebarProvider>

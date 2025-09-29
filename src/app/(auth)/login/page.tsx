@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -51,7 +52,7 @@ export default function LoginPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(values),
+        body: JSON.stringify({ email: values.email, password: values.password }),
       });
 
       if (!response.ok) {
@@ -64,7 +65,6 @@ export default function LoginPage() {
         description: "Logged in successfully. Redirecting...",
       });
       
-      // Full page refresh to ensure cookie is picked up by the server
       window.location.href = '/dashboard';
 
     } catch (error: any) {
