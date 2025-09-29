@@ -30,8 +30,9 @@ import LoadingDots from "@/components/ui/loading-dots";
 
 const formSchema = z.object({
     category: z.string().min(1, "Category is required."),
-    subCategory: z.string().min(1, "Sub-category is required."),
-    document: z.instanceof(File).refine(file => file.size > 0, "File is required."),
+    section: z.string().min(1, "Section is required."),
+    documentName: z.string().min(1, "Document name is required."),
+    document: z.instanceof(File).refine(file => file.size > 0, "A file is required."),
 });
 
 export default function DocumentUploadPage() {
@@ -42,7 +43,8 @@ export default function DocumentUploadPage() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       category: "",
-      subCategory: "",
+      section: "",
+      documentName: "",
     },
   });
 
@@ -51,7 +53,8 @@ export default function DocumentUploadPage() {
     
     const formData = new FormData();
     formData.append("category", values.category);
-    formData.append("subCategory", values.subCategory);
+    formData.append("section", values.section);
+    formData.append("documentName", values.documentName);
     formData.append("document", values.document);
 
     const response = await uploadDocumentAction(formData);
@@ -93,7 +96,7 @@ export default function DocumentUploadPage() {
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                             <SelectTrigger>
-                            <SelectValue placeholder="Select a category" />
+                            <SelectValue placeholder="Select a main category" />
                             </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -111,12 +114,26 @@ export default function DocumentUploadPage() {
 
                 <FormField
                     control={form.control}
-                    name="subCategory"
+                    name="section"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Sub-Category</FormLabel>
+                            <FormLabel>Section</FormLabel>
                             <FormControl>
-                                <Input placeholder="e.g., Procedures, Forms, Policies" {...field} />
+                                <Input placeholder="e.g., Appointments, Procedures, Policies" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                
+                <FormField
+                    control={form.control}
+                    name="documentName"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Document Name</FormLabel>
+                            <FormControl>
+                                <Input placeholder="e.g., Site Supervisor Appointment" {...field} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -132,9 +149,10 @@ export default function DocumentUploadPage() {
                         <FormControl>
                             <Input 
                                 type="file" 
-                                {...fieldProps} 
+                                {...fieldProps}
+                                value={undefined}
                                 onChange={e => onChange(e.target.files?.[0])}
-                                accept=".doc,.docx,.pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
+                                accept=".doc,.docx,.pdf,.xls,.xlsx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                             />
                         </FormControl>
                         <FormMessage />
