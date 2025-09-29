@@ -9,7 +9,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 // import {textEmbedding} from '@genkit-ai/embedder-all-minilm';
-import pdf from 'pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js';
+// import pdf from 'pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js';
 
 // In-memory vector store. In a real application, you might use a persistent
 // vector database like Pinecone or Chroma.
@@ -69,9 +69,10 @@ const indexDocumentFlow = ai.defineFlow(
     let textContent = '';
 
     if (mimeType === 'application/pdf') {
-      const pdfBuffer = Buffer.from(base64Data, 'base64');
-      const data = await pdf(pdfBuffer);
-      textContent = data.text;
+      // const pdfBuffer = Buffer.from(base64Data, 'base64');
+      // const data = await pdf(pdfBuffer);
+      // textContent = data.text;
+      throw new Error(`PDF processing is temporarily disabled.`);
     } else if (mimeType === 'application/json') {
       const jsonBuffer = Buffer.from(base64Data, 'base64');
       textContent = jsonBuffer.toString('utf-8');
