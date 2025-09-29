@@ -5,14 +5,11 @@ export async function POST(request: NextRequest) {
   const idToken = request.headers.get('Authorization')?.split('Bearer ')[1];
 
   if (!idToken) {
-    return new NextResponse('No token provided', {status: 401});
+    return NextResponse.json({ error: 'No token provided' }, { status: 401 });
   }
 
   try {
-    const response = new NextResponse(JSON.stringify({status: 'success'}), {
-      status: 200,
-      headers: {'Content-Type': 'application/json'},
-    });
+    const response = NextResponse.json({ status: 'success' }, { status: 200 });
 
     // Set the cookie on the response
     response.cookies.set({
@@ -27,6 +24,6 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (error) {
     console.error('Error setting auth cookie:', error);
-    return new NextResponse('Internal Server Error', {status: 500});
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
