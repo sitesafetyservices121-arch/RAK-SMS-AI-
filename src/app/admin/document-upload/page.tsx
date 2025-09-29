@@ -26,6 +26,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { uploadDocumentAction } from "./actions";
 import LoadingDots from "@/components/ui/loading-dots";
+import { Combobox } from "@/components/ui/combobox";
 
 
 const formSchema = z.object({
@@ -34,6 +35,30 @@ const formSchema = z.object({
     documentName: z.string().min(1, "Document name is required."),
     document: z.instanceof(File).refine(file => file.size > 0, "A file is required."),
 });
+
+// In a real app, this would be fetched from a database
+const existingSections = [
+    "Safety Policy & Objectives",
+    "Legal & Compliance Framework",
+    "Risk Management",
+    "Safe Work Procedures",
+    "Method Statements",
+    "Emergency Preparedness & Response",
+    "Incident & Accident Reporting",
+    "First Aid & Medical Surveillance",
+    "PPE Management",
+    "Training & Competency Records",
+    "Toolbox Talks & Safety Communication",
+    "Contractor & Visitor Management",
+    "Environmental Management",
+    "Quality Management",
+    "Inspections & Audits",
+    "Vehicle & Equipment Safety",
+    "Resource & Site Management",
+    "Storeroom & Inventory Control",
+    "Monitoring & Reporting",
+    "Continuous Improvement & Review",
+].map(s => ({ value: s.toLowerCase().replace(/ /g, '-'), label: s }));
 
 export default function DocumentUploadPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -116,11 +141,15 @@ export default function DocumentUploadPage() {
                     control={form.control}
                     name="section"
                     render={({ field }) => (
-                        <FormItem>
+                        <FormItem className="flex flex-col">
                             <FormLabel>Section</FormLabel>
-                            <FormControl>
-                                <Input placeholder="e.g., Appointments, Procedures, Policies" {...field} />
-                            </FormControl>
+                             <Combobox 
+                                options={existingSections}
+                                value={field.value}
+                                onChange={field.onChange}
+                                placeholder="Select or create a section..."
+                                notFoundText="No sections found. Create a new one."
+                            />
                             <FormMessage />
                         </FormItem>
                     )}
