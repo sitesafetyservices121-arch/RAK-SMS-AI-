@@ -31,8 +31,9 @@ import LoadingDots from "@/components/ui/loading-dots";
 import { useToast } from "@/hooks/use-toast";
 import { CopyButton } from "@/components/copy-button";
 import { Input } from "@/components/ui/input";
-import { Download } from "lucide-react";
+import { Download, Eye, Save } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 
 const formSchema = z.object({
   clientCompanyId: z.string().min(1, "Client Company ID is required."),
@@ -46,6 +47,7 @@ export default function ShePlanGeneratorPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<GenerateShePlanOutput | null>(null);
   const [logoDataUri, setLogoDataUri] = useState<string | null>(null);
+  const [pdfDataUri, setPdfDataUri] = useState<string | null>(null);
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -72,14 +74,16 @@ export default function ShePlanGeneratorPage() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     setResult(null);
+    setPdfDataUri(null);
     const response = await generateShePlanAction(values);
     setIsLoading(false);
 
     if (response.success && response.data) {
       setResult(response.data);
+      generatePdf(response.data, values.clientCompanyId, logoDataUri, true);
        toast({
         title: "Success",
-        description: "SHE Plan generated successfully. You can now download it as a PDF.",
+        description: "SHE Plan generated successfully. You can now preview or download it.",
       });
     } else {
       toast({
@@ -91,9 +95,9 @@ export default function ShePlanGeneratorPage() {
   }
   
   const fullTextResult = result ? Object.entries(result).map(([key, value]) => `## ${key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}\n\n${value}`).join("\n\n") : "";
-
-  const handleDownloadPdf = () => {
-    if (!result || !clientCompanyId) return;
+  
+  const generatePdf = (data: GenerateShePlanOutput, clientId: string, logo: string | null, setUri = false) => {
+    if (!data || !clientId) return;
     const doc = new jsPDF();
     const pageHeight = doc.internal.pageSize.height;
     const pageWidth = doc.internal.pageSize.width;
@@ -102,41 +106,39 @@ export default function ShePlanGeneratorPage() {
     // Title Page
     doc.setFontSize(22);
     doc.text("Safety, Health, and Environment (SHE) Plan", 105, 120, { align: "center" });
-    if (logoDataUri) {
-      doc.addImage(logoDataUri, "PNG", 85, 40, 40, 40);
+    if (logo) {
+      doc.addImage(logo, "PNG", 85, 40, 40, 40);
     }
     doc.setFontSize(16);
-    doc.text(`Client: ${clientCompanyId}`, 105, 140, { align: "center" });
+    doc.text(`Client: ${clientId}`, 105, 140, { align: "center" });
     doc.setFontSize(12);
     doc.text(`Date Generated: ${new Date().toLocaleDateString()}`, 105, 150, { align: "center" });
 
     doc.addPage();
     y = 20;
 
-    // Content Pages
-    const addHeaderFooter = (pageNumber: number) => {
+    const addHeaderFooter = () => {
         doc.setFontSize(10);
-        if (logoDataUri) {
-            doc.addImage(logoDataUri, 'PNG', 10, 5, 15, 15);
+        if (logo) {
+            doc.addImage(logo, 'PNG', 10, 5, 15, 15);
         }
-        doc.text("SHE Plan", logoDataUri ? 30 : 10, 10);
-        doc.text(`Page ${pageNumber}`, pageWidth - 10, 10, { align: "right" });
+        doc.text("SHE Plan", logo ? 30 : 10, 10);
+        doc.text(`Page ${doc.getNumberOfPages() - 1}`, pageWidth - 10, 10, { align: "right" });
     };
 
-    addHeaderFooter(1);
-
+    addHeaderFooter();
 
     const sections = [
-      { title: "Introduction and Scope", content: result.introduction },
-      { title: "Safety Policy", content: result.safetyPolicy },
-      { title: "Objectives", content: result.objectives },
-      { title: "Roles and Responsibilities", content: result.rolesAndResponsibilities },
-      { title: "Risk Management", content: result.riskManagement },
-      { title: "Safe Work Procedures", content: result.safeWorkProcedures },
-      { title: "Emergency Procedures", content: result.emergencyProcedures },
-      { title: "Training and Competency", content: result.trainingAndCompetency },
-      { title: "Incident Reporting", content: result.incidentReporting },
-      { title: "Monitoring and Review", content: result.monitoringAndReview },
+      { title: "Introduction and Scope", content: data.introduction },
+      { title: "Safety Policy", content: data.safetyPolicy },
+      { title: "Objectives", content: data.objectives },
+      { title: "Roles and Responsibilities", content: data.rolesAndResponsibilities },
+      { title: "Risk Management", content: data.riskManagement },
+      { title: "Safe Work Procedures", content: data.safeWorkProcedures },
+      { title: "Emergency Procedures", content: data.emergencyProcedures },
+      { title: "Training and Competency", content: data.trainingAndCompetency },
+      { title: "Incident Reporting", content: data.incidentReporting },
+      { title: "Monitoring and Review", content: data.monitoringAndReview },
     ];
 
     sections.forEach(section => {
@@ -146,11 +148,10 @@ export default function ShePlanGeneratorPage() {
         if (y + (titleLines.length * 5) > pageHeight - 20) {
             doc.addPage();
             y = 20;
-            addHeaderFooter(doc.getNumberOfPages() -1);
+            addHeaderFooter();
         }
         doc.text(titleLines, 14, y);
         y += (titleLines.length * 5) + 2;
-
 
         doc.setFontSize(11);
         doc.setFont("helvetica", "normal");
@@ -160,7 +161,7 @@ export default function ShePlanGeneratorPage() {
             if (y > pageHeight - 20) {
                 doc.addPage();
                 y = 20;
-                addHeaderFooter(doc.getNumberOfPages() -1);
+                addHeaderFooter();
             }
             doc.text(line, 14, y);
             y += 5;
@@ -168,8 +169,25 @@ export default function ShePlanGeneratorPage() {
         y += 10;
     });
 
-    doc.save(`SHE-Plan-${clientCompanyId}-${new Date().toISOString()}.pdf`);
+    if (setUri) {
+      setPdfDataUri(doc.output('datauristring'));
+    } else {
+      doc.save(`SHE-Plan-${clientCompanyId}-${new Date().toISOString()}.pdf`);
+    }
   };
+
+  const handleDownloadPdf = () => {
+    if (!result || !clientCompanyId) return;
+    generatePdf(result, clientCompanyId, logoDataUri);
+  }
+
+  const handleSave = () => {
+    // In a real app, this would upload the generated PDF or its data to a server.
+    toast({
+        title: "Document Saved",
+        description: "The SHE Plan has been saved to the 'Generated Documents' library."
+    });
+  }
 
   return (
     <div className="grid gap-6 lg:grid-cols-5">
@@ -254,6 +272,28 @@ export default function ShePlanGeneratorPage() {
             </div>
              <div className="flex items-center gap-2">
                 {result && <CopyButton textToCopy={fullTextResult} />}
+                {result && (
+                  <Dialog>
+                    <DialogTrigger asChild>
+                       <Button variant="outline" size="sm">
+                          <Eye className="mr-2 h-4 w-4" />
+                          Preview
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl h-[90vh]">
+                        <DialogHeader>
+                            <DialogTitle>SHE Plan Preview</DialogTitle>
+                        </DialogHeader>
+                        <div className="h-full">
+                           {pdfDataUri && <iframe src={pdfDataUri} width="100%" height="100%" />}
+                        </div>
+                        <DialogFooter>
+                            <Button onClick={handleSave}><Save className="mr-2 h-4 w-4" />Save to Generated Docs</Button>
+                            <Button onClick={handleDownloadPdf} variant="outline"><Download className="mr-2 h-4 w-4" />Download PDF</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                )}
                 {result && (
                   <Button onClick={handleDownloadPdf} variant="outline" size="sm">
                     <Download className="mr-2 h-4 w-4" />
