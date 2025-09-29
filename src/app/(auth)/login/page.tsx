@@ -82,9 +82,8 @@ export default function LoginPage() {
           title: "Success",
           description: "Logged in successfully. Redirecting...",
         });
-        // Instead of window.location, use the router for a smoother transition
-        router.push("/dashboard");
-        router.refresh(); // Force a refresh to ensure middleware is re-evaluated with the new cookie
+        // Use window.location for a full page reload to ensure middleware is re-evaluated
+        window.location.href = '/dashboard';
       } else {
         const errorData = await res.json();
         throw new Error(errorData.error || `Server responded with ${res.status}`);
