@@ -32,10 +32,10 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     // This is required to allow the Next.js dev server to accept requests from the preview server.
-    allowedDevOrigins: [
-      'https://6000-firebase-studio-1759140212143.cluster-fbfjltn375c6wqxlhoehbz44sk.cloudworkstations.dev',
-    ],
   },
+  allowedDevOrigins: [
+    'https://6000-firebase-studio-1759140212143.cluster-fbfjltn375c6wqxlhoehbz44sk.cloudworkstations.dev',
+  ],
 };
 
 export default nextConfig;
