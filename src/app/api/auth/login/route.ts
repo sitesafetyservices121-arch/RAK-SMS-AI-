@@ -1,6 +1,6 @@
 import {NextResponse} from 'next/server';
 import type {NextRequest} from 'next/server';
-import { createSessionCookie, verifySessionCookie } from '@/lib/firebase-admin';
+import { createSessionCookie } from '@/lib/firebase-admin';
 
 
 export async function POST(request: NextRequest) {

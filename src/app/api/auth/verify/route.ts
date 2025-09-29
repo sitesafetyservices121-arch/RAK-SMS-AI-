@@ -3,21 +3,21 @@ import type {NextRequest} from 'next/server';
 import { verifySessionCookie } from '@/lib/firebase-admin';
 
 export async function GET(request: NextRequest) {
-  const sessionCookie = request.cookies.get('firebase-session-token')?.value;
+  const sessionCookie = request.headers.get('Authorization')?.split('Bearer ')[1];
 
   if (!sessionCookie) {
-    return NextResponse.json({ isValid: false }, { status: 200 });
+    return NextResponse.json({error: 'No session cookie provided'}, {status: 401});
   }
 
   try {
     const decodedToken = await verifySessionCookie(sessionCookie);
-    if (decodedToken) {
-      return NextResponse.json({ isValid: true }, { status: 200 });
-    } else {
-      return NextResponse.json({ isValid: false }, { status: 200 });
+    if (!decodedToken) {
+       return NextResponse.json({error: 'Invalid session cookie'}, {status: 401});
     }
+    // Session is valid
+    return NextResponse.json({status: 'success'}, {status: 200});
   } catch (error) {
-    console.error('Error verifying session in API route:', error);
-    return NextResponse.json({ isValid: false }, { status: 500 });
+    console.error('Error verifying session cookie in API route:', error);
+    return NextResponse.json({error: 'Internal Server Error'}, {status: 500});
   }
 }

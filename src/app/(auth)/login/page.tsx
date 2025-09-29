@@ -93,6 +93,8 @@ export default function LoginPage() {
       let description = "Failed to log in. Please check your credentials or try again.";
       if (error.code === 'auth/invalid-credential') {
         description = "Invalid email or password. Please try again.";
+      } else if (error.message) {
+        description = error.message;
       }
       toast({
         variant: "destructive",
