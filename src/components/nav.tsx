@@ -28,6 +28,7 @@ import {
   FilePlus,
   User,
   LifeBuoy,
+  CreditCard,
 } from "lucide-react";
 import {
   Sidebar,
@@ -75,7 +76,8 @@ const consultant = [
 ];
 
 const accountItems = [
-    { href: "/account/settings", label: "Settings", icon: Users },
+    { href: "/account/settings", label: "Settings", icon: User },
+    { href: "/account/billing", label: "Billing", icon: CreditCard },
     { href: "/support", label: "Support", icon: LifeBuoy }
 ]
 
@@ -83,6 +85,7 @@ const adminTools = [
   { href: "/admin", label: "Admin Dashboard", icon: Shield },
   { href: "/admin/onboarding", label: "Onboarding", icon: Users },
   { href: "/admin/prescription-management", label: "Prescription Mgt", icon: ClipboardCheck },
+  { href: "/admin/billing", label: "Billing", icon: CreditCard },
   { href: "/admin/document-upload", label: "Document Upload", icon: Library },
   { href: "/admin/create-news", label: "Create News", icon: FilePlus },
   { href: "/admin/wilson-training", label: "AI Training", icon: BrainCircuit },
