@@ -34,7 +34,7 @@ const nextConfig: NextConfig = {
   webpack: (config, { isServer }) => {
     // Exclude gRPC and vectordb from client-side bundle
     if (!isServer) {
-      config.externals = [...config.externals, '@grpc/grpc-js', 'vectordb'];
+      config.externals = [...config.externals, '@grpc/grpc-js', 'vectordb', '@lancedb/vectordb'];
     }
     
     config.experiments = { ...config.experiments, asyncWebAssembly: true };
