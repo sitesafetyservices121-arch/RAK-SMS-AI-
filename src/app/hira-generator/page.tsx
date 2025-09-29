@@ -278,7 +278,7 @@ export default function HiraGeneratorPage() {
         })
     );
 
-    (doc as any).autoTable({
+    jsPDF.API.autoTable.call(doc, {
         head: head,
         body: body,
         startY: 20,
