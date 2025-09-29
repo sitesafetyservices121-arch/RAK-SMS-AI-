@@ -91,14 +91,14 @@ const documentCategories = [
       },
       {
         name: "SWP - Working at Heights.docx",
-        subCategory: "Safe Work Procedures (SWPs)",
+        subCategory: "Safe Work Procedures",
         version: "1.8",
         lastUpdated: "2024-04-22",
         type: "word",
       },
       {
         name: "SWP - Confined Space Entry.docx",
-        subCategory: "Safe Work Procedures (SWPs)",
+        subCategory: "Safe Work Procedures",
         version: "1.6",
         lastUpdated: "2024-05-30",
         type: "word",
@@ -358,6 +358,29 @@ const documentCategories = [
   },
 ];
 
+const safetySubCategoryOrder: string[] = [
+  "Safety Policy & Objectives",
+  "Legal & Compliance Framework",
+  "Risk Management",
+  "Safe Work Procedures",
+  "Method Statements",
+  "Emergency Preparedness & Response",
+  "Incident & Accident Reporting",
+  "First Aid & Medical Surveillance",
+  "PPE Management",
+  "Training & Competency Records",
+  "Toolbox Talks & Safety Communication",
+  "Contractor & Visitor Management",
+  "Environmental Management",
+  "Quality Management",
+  "Inspections & Audits",
+  "Vehicle & Equipment Safety",
+  "Resource & Site Management",
+  "Storeroom & Inventory Control",
+  "Monitoring & Reporting",
+  "Continuous Improvement & Review",
+];
+
 const DocumentIcon = ({ type }: { type: string }) => {
   if (type === "pdf") {
     return <FileText className="h-4 w-4 text-red-600" />;
@@ -413,42 +436,46 @@ export default function DocumentsPage() {
             <TabsContent value={category.category} key={category.category}>
               {category.category === 'Safety' ? (
                  <div className="space-y-8">
-                  {Object.entries(groupedSafetyDocs).map(([subCategory, docs]) => (
-                    <div key={subCategory}>
-                      <h3 className="text-lg font-semibold tracking-tight">{subCategory}</h3>
-                      <Separator className="my-2" />
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Document Name</TableHead>
-                            <TableHead>Version</TableHead>
-                            <TableHead>Last Updated</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {docs.map((doc) => (
-                             <TableRow key={doc.name}>
-                              <TableCell className="font-medium flex items-center gap-2">
-                                <DocumentIcon type={doc.type} />
-                                {doc.name}
-                              </TableCell>
-                              <TableCell>{doc.version}</TableCell>
-                              <TableCell>{doc.lastUpdated}</TableCell>
-                              <TableCell className="text-right">
-                                <Button variant="ghost" size="icon" asChild>
-                                  <a href="#" download={doc.name}>
-                                    <Download className="h-4 w-4" />
-                                    <span className="sr-only">Download</span>
-                                  </a>
-                                </Button>
-                              </TableCell>
+                  {safetySubCategoryOrder.map((subCategory) => {
+                    const docs = groupedSafetyDocs[subCategory];
+                    if (!docs) return null;
+                    return (
+                      <div key={subCategory}>
+                        <h3 className="text-lg font-semibold tracking-tight">{subCategory}</h3>
+                        <Separator className="my-2" />
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Document Name</TableHead>
+                              <TableHead>Version</TableHead>
+                              <TableHead>Last Updated</TableHead>
+                              <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  ))}
+                          </TableHeader>
+                          <TableBody>
+                            {docs.map((doc) => (
+                              <TableRow key={doc.name}>
+                                <TableCell className="font-medium flex items-center gap-2">
+                                  <DocumentIcon type={doc.type} />
+                                  {doc.name}
+                                </TableCell>
+                                <TableCell>{doc.version}</TableCell>
+                                <TableCell>{doc.lastUpdated}</TableCell>
+                                <TableCell className="text-right">
+                                  <Button variant="ghost" size="icon" asChild>
+                                    <a href="#" download={doc.name}>
+                                      <Download className="h-4 w-4" />
+                                      <span className="sr-only">Download</span>
+                                    </a>
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    );
+                  })}
                  </div>
               ) : (
                 <Table>
