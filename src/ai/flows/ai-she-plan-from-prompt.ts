@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Generates a SHE (Safety, Health, and Environment) plan from a text prompt describing the project.
@@ -47,7 +48,7 @@ const prompt = ai.definePrompt({
 
   Project Description: {{{projectDescription}}}
 
-  Generate the output as a structured JSON object with the following keys.
+  IMPORTANT: Generate the output as a valid JSON object with the specified keys. Do not include any text outside of the JSON structure.
   `,
 });
 

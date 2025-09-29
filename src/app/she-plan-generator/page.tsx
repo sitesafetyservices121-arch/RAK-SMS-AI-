@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -34,6 +35,7 @@ import { Separator } from "@/components/ui/separator";
 
 const formSchema = z.object({
   clientCompanyId: z.string().min(1, "Client Company ID is required."),
+  logo: z.instanceof(File).optional(),
   projectDescription: z.string().min(20, {
     message: "Project description must be at least 20 characters.",
   }),
@@ -42,6 +44,7 @@ const formSchema = z.object({
 export default function ShePlanGeneratorPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<GenerateShePlanOutput | null>(null);
+  const [logoDataUri, setLogoDataUri] = useState<string | null>(null);
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -53,6 +56,17 @@ export default function ShePlanGeneratorPage() {
   });
   
   const clientCompanyId = form.watch("clientCompanyId");
+
+  const handleLogoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => setLogoDataUri(e.target?.result as string);
+      reader.readAsDataURL(file);
+      form.setValue("logo", file);
+    }
+  };
+
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
@@ -81,11 +95,15 @@ export default function ShePlanGeneratorPage() {
     if (!result || !clientCompanyId) return;
     const doc = new jsPDF();
     const pageHeight = doc.internal.pageSize.height;
+    const pageWidth = doc.internal.pageSize.width;
     let y = 20;
 
     // Title Page
     doc.setFontSize(22);
     doc.text("Safety, Health, and Environment (SHE) Plan", 105, 120, { align: "center" });
+    if (logoDataUri) {
+      doc.addImage(logoDataUri, "PNG", 85, 40, 40, 40);
+    }
     doc.setFontSize(16);
     doc.text(`Client: ${clientCompanyId}`, 105, 140, { align: "center" });
     doc.setFontSize(12);
@@ -95,14 +113,17 @@ export default function ShePlanGeneratorPage() {
     y = 20;
 
     // Content Pages
-    const addHeaderFooter = () => {
-      for (let i = 2; i <= doc.getNumberOfPages(); i++) {
-        doc.setPage(i);
+    const addHeaderFooter = (pageNumber: number) => {
         doc.setFontSize(10);
-        doc.text("SHE Plan", 10, 10);
-        doc.text(`Page ${i - 1}`, 200, 10, { align: "right" });
-      }
+        if (logoDataUri) {
+            doc.addImage(logoDataUri, 'PNG', 10, 5, 15, 15);
+        }
+        doc.text("SHE Plan", logoDataUri ? 30 : 10, 10);
+        doc.text(`Page ${pageNumber}`, pageWidth - 10, 10, { align: "right" });
     };
+
+    addHeaderFooter(1);
+
 
     const sections = [
       { title: "Introduction and Scope", content: result.introduction },
@@ -118,23 +139,34 @@ export default function ShePlanGeneratorPage() {
     ];
 
     sections.forEach(section => {
-        if (y > pageHeight - 40) { // check for space
-            doc.addPage();
-            y = 20;
-        }
         doc.setFontSize(14);
         doc.setFont("helvetica", "bold");
-        doc.text(section.title, 14, y);
-        y += 8;
+        const titleLines = doc.splitTextToSize(section.title, 180);
+        if (y + (titleLines.length * 5) > pageHeight - 20) {
+            doc.addPage();
+            y = 20;
+            addHeaderFooter(doc.getNumberOfPages() -1);
+        }
+        doc.text(titleLines, 14, y);
+        y += (titleLines.length * 5) + 2;
+
 
         doc.setFontSize(11);
         doc.setFont("helvetica", "normal");
-        const splitText = doc.splitTextToSize(section.content, 180);
-        doc.text(splitText, 14, y);
-        y += (doc.getTextDimensions(splitText).h) + 10;
+        const contentLines = doc.splitTextToSize(section.content, 180);
+        
+        contentLines.forEach((line: string) => {
+            if (y > pageHeight - 20) {
+                doc.addPage();
+                y = 20;
+                addHeaderFooter(doc.getNumberOfPages() -1);
+            }
+            doc.text(line, 14, y);
+            y += 5;
+        });
+        y += 10;
     });
 
-    addHeaderFooter();
     doc.save(`SHE-Plan-${clientCompanyId}-${new Date().toISOString()}.pdf`);
   };
 
@@ -166,6 +198,26 @@ export default function ShePlanGeneratorPage() {
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name="logo"
+                render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Company Logo (Optional)</FormLabel>
+                        <FormControl>
+                            <Input 
+                                type="file" 
+                                accept="image/png, image/jpeg"
+                                onChange={handleLogoChange}
+                             />
+                        </FormControl>
+                         <FormDescription>
+                            Upload the client's logo for branded documents.
+                        </FormDescription>
+                        <FormMessage />
+                    </FormItem>
+                )}
+                />
               <FormField
                 control={form.control}
                 name="projectDescription"
@@ -235,3 +287,5 @@ export default function ShePlanGeneratorPage() {
     </div>
   );
 }
+
+    
