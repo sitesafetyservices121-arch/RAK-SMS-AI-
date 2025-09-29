@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  serverComponentsExternalPackages: ['vectordb', '@lancedb/vectordb'],
   images: {
     remotePatterns: [
       {
@@ -34,7 +35,7 @@ const nextConfig: NextConfig = {
   webpack: (config, { isServer }) => {
     // Exclude gRPC and vectordb from client-side bundle
     if (!isServer) {
-      config.externals = [...config.externals, '@grpc/grpc-js', 'vectordb', '@lancedb/vectordb'];
+      config.externals = [...config.externals, '@grpc/grpc-js'];
     }
     
     config.experiments = { ...config.experiments, asyncWebAssembly: true };
