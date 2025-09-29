@@ -17,27 +17,17 @@ import { retrieveSimilarChunksFlow } from './ai-document-indexer';
 const HiraInputSchema = z.object({
   projectDetails: z
     .string()
-    .describe('Detailed information about the project, including scope, location, and timeline.'),
+    .describe('Detailed information about the project, activity, and specific hazard.'),
   regulatoryRequirements: z
     .string()
-    .describe('Applicable regulatory requirements and industry standards.'),
-  existingSafetyData: z
-    .string()
-    .optional()
-    .describe('Any existing safety data or reports relevant to the project.'),
+    .describe('Applicable regulatory requirements and industry standards, e.g., OHS Act & Construction Regulations.'),
 });
 export type HiraInput = z.infer<typeof HiraInputSchema>;
 
 const HiraOutputSchema = z.object({
-  hazardIdentification: z
-    .string()
-    .describe('Identified hazards based on the project details.'),
-  riskAssessment: z
-    .string()
-    .describe('Assessment of the risks associated with each identified hazard.'),
   controlMeasures: z
     .string()
-    .describe('Recommended control measures to mitigate the identified risks.'),
+    .describe('Recommended additional control measures to mitigate the identified hazard, based on South African regulations.'),
 });
 export type HiraOutput = z.infer<typeof HiraOutputSchema>;
 
@@ -50,15 +40,14 @@ const hiraPrompt = ai.definePrompt({
   input: {schema: z.object({
       projectDetails: z.string(),
       regulatoryRequirements: z.string(),
-      existingSafetyData: z.string().optional(),
       retrievedDocuments: z.array(z.string()).optional(),
   })},
   output: {schema: HiraOutputSchema},
-  prompt: `You are an AI-powered safety expert specializing in hazard identification and risk assessment (HIRA).
+  prompt: `You are an AI-powered safety expert specializing in providing control measures for Hazard Identification and Risk Assessment (HIRA) based on South African law.
 
-  Your primary goal is to generate a comprehensive HIRA report. Use the provided project details, regulatory requirements, and any existing safety data as the basis for your assessment.
+  Your primary goal is to suggest additional control measures for a specific hazard within a project context. Use the provided details and your knowledge of the OHS Act and Construction Regulations.
 
-  IMPORTANT: Prioritize information from any 'retrieved documents' provided. These are approved examples and templates from the company's knowledge base. Use them as a style and content guide to ensure the final document meets company standards.
+  IMPORTANT: Prioritize information from any 'retrieved documents' provided. These are approved examples from the company's knowledge base. Use them as a style and content guide.
 
   {{#if retrievedDocuments}}
   Here are some reference documents from the knowledge base. Use these as your primary guide:
@@ -69,15 +58,11 @@ const hiraPrompt = ai.definePrompt({
   {{/each}}
   {{/if}}
 
-  Project Details: {{{projectDetails}}}
-  Regulatory Requirements: {{{regulatoryRequirements}}}
-  Existing Safety Data: {{{existingSafetyData}}}
+  Context: {{{projectDetails}}}
+  Applicable Regulations: {{{regulatoryRequirements}}}
 
-  Format the output as follows:
-
-Hazard Identification: [List of identified hazards]
-Risk Assessment: [Assessment of risks for each hazard]
-Control Measures: [Recommended control measures for each hazard]`,
+  Based on this, provide a concise list of ADDITIONAL control measures. Do not repeat the existing controls mentioned in the context. Focus only on what else can be done to mitigate the risk.
+  `,
 });
 
 const generateHiraFlow = ai.defineFlow(
@@ -92,3 +77,5 @@ const generateHiraFlow = ai.defineFlow(
     return output!;
   }
 );
+
+    
