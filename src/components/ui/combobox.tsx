@@ -2,7 +2,7 @@
 "use client"
 
 import * as React from "react"
-import { Check, ChevronsUpDown } from "lucide-react"
+import { Check, ChevronsUpDown, PlusCircle } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -31,6 +31,11 @@ interface ComboboxProps {
 
 export function Combobox({ options, value, onChange, placeholder = "Select...", notFoundText = "Nothing found." }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
+  const [query, setQuery] = React.useState("");
+
+  const filteredOptions = query === "" ? options : options.filter(option =>
+    option.label.toLowerCase().includes(query.toLowerCase())
+  );
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -48,19 +53,24 @@ export function Combobox({ options, value, onChange, placeholder = "Select...", 
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-        <Command shouldFilter={true}>
-          <CommandInput placeholder={placeholder} />
+        <Command>
+          <CommandInput 
+            placeholder={placeholder}
+            value={query}
+            onValueChange={setQuery}
+          />
           <CommandList>
-            <CommandEmpty
-                onSelect={() => {
-                    // This is a bit of a hack to get the current input value from CMDK
-                    const inputValue = (document.querySelector(`[cmdk-input]`) as HTMLInputElement)?.value;
-                    onChange(inputValue);
-                    setOpen(false);
-                }}
-                className="py-6 text-center text-sm cursor-pointer"
-            >
-                {notFoundText}
+            <CommandEmpty>
+                <CommandItem
+                    onSelect={() => {
+                        onChange(query);
+                        setOpen(false);
+                    }}
+                    className="flex items-center gap-2"
+                >
+                    <PlusCircle className="h-4 w-4" />
+                    Create "{query}"
+                </CommandItem>
             </CommandEmpty>
             <CommandGroup>
             {options.map((option) => (
