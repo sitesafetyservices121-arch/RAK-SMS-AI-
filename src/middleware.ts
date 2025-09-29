@@ -1,18 +1,27 @@
 import {NextResponse} from 'next/server';
 import type {NextRequest} from 'next/server';
-import { verifySessionCookie } from '@/lib/firebase-admin';
 
-// This middleware function runs on the Edge Runtime.
-// It can NOT use Node.js-specific APIs or packages like `firebase-admin`.
+async function verifySession(sessionCookie: string | undefined, request: NextRequest) {
+  if (!sessionCookie) {
+    return false;
+  }
+  
+  // The API route is an absolute URL.
+  const verifyUrl = new URL('/api/auth/verify', request.url);
 
-async function verifyToken(sessionCookie: string | undefined) {
-    if (!sessionCookie) {
-        return false;
-    }
-    const decodedToken = await verifySessionCookie(sessionCookie);
-    return !!decodedToken;
+  try {
+    const response = await fetch(verifyUrl, {
+      headers: {
+        'Cookie': `firebase-session-token=${sessionCookie}`,
+      },
+    });
+
+    return response.ok;
+  } catch (e) {
+    console.error('Error verifying session:', e);
+    return false;
+  }
 }
-
 
 export async function middleware(request: NextRequest) {
   const {pathname} = request.nextUrl;
@@ -20,7 +29,7 @@ export async function middleware(request: NextRequest) {
 
   const isLoginPage = pathname.startsWith('/login');
   
-  const isSessionValid = await verifyToken(sessionCookie);
+  const isSessionValid = await verifySession(sessionCookie, request);
 
   // If the user is trying to access the login page but already has a valid session,
   // redirect them to the dashboard.
@@ -31,6 +40,10 @@ export async function middleware(request: NextRequest) {
   // If the user does not have a valid session and is trying to access any page
   // other than the login page, redirect them to the login page.
   if (!isSessionValid && !isLoginPage) {
+    // To prevent redirect loops for the new API route.
+    if (pathname.startsWith('/api/auth')) {
+        return NextResponse.next();
+    }
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
@@ -41,6 +54,6 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Match all routes except for static files, images, and the API auth routes.
+  // Match all routes except for static files, images, and the login API route itself.
   matcher: ['/((?!_next/static|_next/image|favicon.ico|api/auth/login).*)'],
 };
