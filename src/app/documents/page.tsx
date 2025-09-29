@@ -1,4 +1,7 @@
 
+"use client"
+
+import { useMemo } from "react";
 import {
   Tabs,
   TabsContent,
@@ -23,6 +26,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Download, File, FileText } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+
+type Document = {
+  name: string;
+  subCategory: string;
+  version: string;
+  lastUpdated: string;
+  type: string;
+};
 
 const documentCategories = [
   {
@@ -363,6 +375,22 @@ const DocumentIcon = ({ type }: { type: string }) => {
 
 
 export default function DocumentsPage() {
+
+  const groupedSafetyDocs = useMemo(() => {
+    const safetyCategory = documentCategories.find(cat => cat.category === 'Safety');
+    if (!safetyCategory) return {};
+
+    return safetyCategory.documents.reduce((acc, doc) => {
+      const { subCategory } = doc;
+      if (!acc[subCategory]) {
+        acc[subCategory] = [];
+      }
+      acc[subCategory].push(doc);
+      return acc;
+    }, {} as Record<string, Document[]>);
+  }, []);
+
+
   return (
     <Card>
       <CardHeader>
@@ -383,41 +411,82 @@ export default function DocumentsPage() {
           </TabsList>
           {documentCategories.map((category) => (
             <TabsContent value={category.category} key={category.category}>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Document Name</TableHead>
-                    <TableHead>Sub-Category</TableHead>
-                    <TableHead>Version</TableHead>
-                    <TableHead>Last Updated</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {category.documents.map((doc) => (
-                    <TableRow key={doc.name}>
-                      <TableCell className="font-medium flex items-center gap-2">
-                        <DocumentIcon type={doc.type} />
-                        {doc.name}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">{doc.subCategory}</Badge>
-                      </TableCell>
-                      <TableCell>{doc.version}</TableCell>
-                      <TableCell>{doc.lastUpdated}</TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" asChild>
-                          {/* In a real app, this would link to a file download */}
-                          <a href="#" download={doc.name}>
-                            <Download className="h-4 w-4" />
-                            <span className="sr-only">Download</span>
-                          </a>
-                        </Button>
-                      </TableCell>
-                    </TableRow>
+              {category.category === 'Safety' ? (
+                 <div className="space-y-8">
+                  {Object.entries(groupedSafetyDocs).map(([subCategory, docs]) => (
+                    <div key={subCategory}>
+                      <h3 className="text-lg font-semibold tracking-tight">{subCategory}</h3>
+                      <Separator className="my-2" />
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Document Name</TableHead>
+                            <TableHead>Version</TableHead>
+                            <TableHead>Last Updated</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {docs.map((doc) => (
+                             <TableRow key={doc.name}>
+                              <TableCell className="font-medium flex items-center gap-2">
+                                <DocumentIcon type={doc.type} />
+                                {doc.name}
+                              </TableCell>
+                              <TableCell>{doc.version}</TableCell>
+                              <TableCell>{doc.lastUpdated}</TableCell>
+                              <TableCell className="text-right">
+                                <Button variant="ghost" size="icon" asChild>
+                                  <a href="#" download={doc.name}>
+                                    <Download className="h-4 w-4" />
+                                    <span className="sr-only">Download</span>
+                                  </a>
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   ))}
-                </TableBody>
-              </Table>
+                 </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Document Name</TableHead>
+                      <TableHead>Sub-Category</TableHead>
+                      <TableHead>Version</TableHead>
+                      <TableHead>Last Updated</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {category.documents.map((doc) => (
+                      <TableRow key={doc.name}>
+                        <TableCell className="font-medium flex items-center gap-2">
+                          <DocumentIcon type={doc.type} />
+                          {doc.name}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">{doc.subCategory}</Badge>
+                        </TableCell>
+                        <TableCell>{doc.version}</TableCell>
+                        <TableCell>{doc.lastUpdated}</TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="ghost" size="icon" asChild>
+                            {/* In a real app, this would link to a file download */}
+                            <a href="#" download={doc.name}>
+                              <Download className="h-4 w-4" />
+                              <span className="sr-only">Download</span>
+                            </a>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
             </TabsContent>
           ))}
         </Tabs>
