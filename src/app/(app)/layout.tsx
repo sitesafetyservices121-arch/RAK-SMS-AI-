@@ -1,17 +1,35 @@
+import type { PropsWithChildren } from 'react';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { verifySessionCookie } from '@/lib/firebase-admin';
+
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppNav } from "@/components/nav";
 import { Button } from "@/components/ui/button";
-import { Bell, LogOut, UserCircle } from "lucide-react";
+import { Bell, UserCircle } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { logoutAction } from "./actions";
+import { LogoutButton } from './logout-button';
 
-export default function AppLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+
+async function AuthLayout({ children }: PropsWithChildren) {
+  const sessionCookie = cookies().get('firebase-session-token')?.value;
+
+  if (!sessionCookie) {
+    redirect('/login');
+  }
+
+  try {
+    const decodedClaims = await verifySessionCookie(sessionCookie);
+    if (!decodedClaims) {
+      throw new Error('Invalid session cookie');
+    }
+  } catch (error) {
+    console.error('Session verification failed:', error);
+    redirect('/login');
+  }
+
   return (
-    <SidebarProvider>
+     <SidebarProvider>
       <AppNav />
       <SidebarInset>
         <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm md:justify-end">
@@ -36,14 +54,7 @@ export default function AppLayout({
                 <DropdownMenuItem disabled>Settings</DropdownMenuItem>
                 <DropdownMenuItem disabled>Support</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <form action={logoutAction}>
-                  <button type="submit" className="w-full">
-                    <DropdownMenuItem>
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>Log out</span>
-                    </DropdownMenuItem>
-                  </button>
-                </form>
+                <LogoutButton />
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -55,3 +66,5 @@ export default function AppLayout({
     </SidebarProvider>
   );
 }
+
+export default AuthLayout;

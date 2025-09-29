@@ -1,58 +1,77 @@
-import {NextResponse} from 'next/server';
-import type {NextRequest} from 'next/server';
-import { createSessionCookie } from '@/lib/firebase-admin';
+import { NextResponse } from 'next/server';
+import { getAuth } from 'firebase-admin/auth';
+import { initializeApp, getApps, getApp, cert } from 'firebase-admin/app';
+import { signInWithEmailAndPassword, getAuth as getClientAuth } from 'firebase/auth';
+import { initializeApp as initializeClientApp, getApps as getClientApps, getApp as getClientApp } from 'firebase/app';
 
 
-export async function POST(request: NextRequest) {
-  const idToken = request.headers.get('Authorization')?.split('Bearer ')[1];
+const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
 
-  if (!idToken) {
-    return NextResponse.json({error: 'No token provided'}, {status: 401});
-  }
-
-  try {
-    // Set session expiration to 5 days.
-    const expiresIn = 60 * 60 * 24 * 5 * 1000;
-    
-    // Create the session cookie. This will also verify the ID token.
-    const sessionCookie = await createSessionCookie(idToken, expiresIn);
-    
-    const response = NextResponse.json({status: 'success'}, {status: 200});
-
-    response.cookies.set({
-      name: 'firebase-session-token',
-      value: sessionCookie,
-      path: '/',
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: expiresIn / 1000,
-    });
-
-    return response;
-
-  } catch (error) {
-    console.error('Error creating session cookie:', error);
-    return NextResponse.json({error: 'Internal Server Error'}, {status: 500});
-  }
+if (!serviceAccountKey) {
+    throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY environment variable is not set.');
 }
 
-export async function DELETE(request: NextRequest) {
+const serviceAccount = JSON.parse(serviceAccountKey);
+
+// Server-side Firebase Admin SDK initialization
+if (getApps().length === 0) {
+  initializeApp({
+    credential: cert(serviceAccount),
+  });
+}
+
+const firebaseConfig = {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
+};
+
+// Client-side Firebase SDK initialization (needed to get ID token)
+const clientApp = !getClientApps().length ? initializeClientApp(firebaseConfig) : getClientApp();
+const clientAuth = getClientAuth(clientApp);
+
+
+export async function POST(request: Request) {
   try {
-    const response = NextResponse.json({status: 'success'}, {status: 200});
-    // Expire the cookie by setting maxAge to 0
-    response.cookies.set({
-        name: 'firebase-session-token',
-        value: '',
-        path: '/',
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 0,
+    const { email, password } = await request.json();
+
+    if (!email || !password) {
+      return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
+    }
+
+    // 1. Sign in with client SDK to get user and ID token
+    const userCredential = await signInWithEmailAndPassword(clientAuth, email, password);
+    const user = userCredential.user;
+    const idToken = await user.getIdToken();
+
+    // 2. Create session cookie with Admin SDK
+    const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days
+    const sessionCookie = await getAuth().createSessionCookie(idToken, { expiresIn });
+
+    // 3. Set cookie in response
+    const response = NextResponse.json({ status: 'success' }, { status: 200 });
+    response.cookies.set('firebase-session-token', sessionCookie, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: expiresIn,
+      path: '/',
     });
+
     return response;
-  } catch (error) {
-    console.error('Error deleting auth cookie:', error);
-    return NextResponse.json({error: 'Internal Server Error'}, {status: 500});
+
+  } catch (error: any) {
+    console.error('Login API Error:', error);
+    let errorMessage = 'An unexpected error occurred.';
+
+    // Provide more specific error messages for common auth issues
+    if (error.code?.startsWith('auth/')) {
+        errorMessage = 'Invalid email or password. Please try again.';
+    }
+
+    return NextResponse.json({ error: errorMessage }, { status: 401 });
   }
 }

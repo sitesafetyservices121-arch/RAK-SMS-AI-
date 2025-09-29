@@ -4,9 +4,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useRouter } from "next/navigation";
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -28,21 +25,6 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, ShieldHalf } from "lucide-react";
 
-// Firebase config moved directly into the component
-const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
-};
-
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const auth = getAuth(app);
-
-
 const formSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
   password: z.string().min(6, { message: "Password must be at least 6 characters." }),
@@ -52,7 +34,6 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const { toast } = useToast();
-  const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -65,41 +46,33 @@ export default function LoginPage() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
-      // 1. Sign in with Firebase on the client
-      const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
-      const idToken = await userCredential.user.getIdToken();
-
-      // 2. Send the token to the server to set the session cookie
-      const res = await fetch('/api/auth/login', {
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${idToken}`,
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify(values),
       });
 
-      if (res.ok) {
-        toast({
-          title: "Success",
-          description: "Logged in successfully. Redirecting...",
-        });
-        // Use window.location for a full page reload to ensure middleware is re-evaluated
-        window.location.href = '/dashboard';
-      } else {
-        const errorData = await res.json();
-        throw new Error(errorData.error || `Server responded with ${res.status}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to log in.");
       }
+
+      toast({
+        title: "Success",
+        description: "Logged in successfully. Redirecting...",
+      });
+      
+      // Full page refresh to ensure cookie is picked up by the server
+      window.location.href = '/dashboard';
+
     } catch (error: any) {
       console.error("Login Error:", error);
-      let description = "Failed to log in. Please check your credentials or try again.";
-      if (error.code === 'auth/invalid-credential') {
-        description = "Invalid email or password. Please try again.";
-      } else if (error.message) {
-        description = error.message;
-      }
       toast({
         variant: "destructive",
-        title: "Error",
-        description: description,
+        title: "Login Error",
+        description: error.message || "Please check your credentials and try again.",
       });
     } finally {
       setIsLoading(false);
