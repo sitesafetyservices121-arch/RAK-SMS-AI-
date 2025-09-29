@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
  
 export function middleware(request: NextRequest) {
+  console.log("Cookies seen in middleware:", request.cookies.getAll());
   const token = request.cookies.get('firebase-auth-token')?.value
   const { pathname } = request.nextUrl
  
