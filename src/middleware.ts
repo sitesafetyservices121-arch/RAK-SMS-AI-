@@ -1,52 +1,43 @@
 import {NextResponse} from 'next/server';
 import type {NextRequest} from 'next/server';
+import { verifySessionCookie } from '@/lib/firebase-admin';
+
+// This middleware function runs on the Edge Runtime.
+// It can NOT use Node.js-specific APIs or packages like `firebase-admin`.
+
+async function verifyToken(sessionCookie: string | undefined) {
+    if (!sessionCookie) {
+        return false;
+    }
+    const decodedToken = await verifySessionCookie(sessionCookie);
+    return !!decodedToken;
+}
+
 
 export async function middleware(request: NextRequest) {
   const {pathname} = request.nextUrl;
   const sessionCookie = request.cookies.get('firebase-session-token')?.value;
 
-  // For API routes, we don't need to do any verification here.
-  // The matcher below already excludes them, but this is a good practice.
-  if (pathname.startsWith('/api/')) {
-    return NextResponse.next();
+  const isLoginPage = pathname.startsWith('/login');
+  
+  const isSessionValid = await verifyToken(sessionCookie);
+
+  // If the user is trying to access the login page but already has a valid session,
+  // redirect them to the dashboard.
+  if (isSessionValid && isLoginPage) {
+    return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
-  // If there's no session cookie and the user is not on the login page, redirect to login.
-  if (!sessionCookie) {
-    if (pathname.startsWith('/login')) {
-      return NextResponse.next();
-    }
+  // If the user does not have a valid session and is trying to access any page
+  // other than the login page, redirect them to the login page.
+  if (!isSessionValid && !isLoginPage) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  // If there is a session cookie, verify it.
-  try {
-    // Dynamically import 'firebase-admin' only within the middleware
-    const { getAdminAuth } = await import('@/lib/firebase-admin');
-    const auth = getAdminAuth();
-    await auth.verifySessionCookie(sessionCookie, true);
-    
-    // If the cookie is valid and the user is on the login page, redirect to the dashboard.
-    if (pathname.startsWith('/login')) {
-        return NextResponse.redirect(new URL('/dashboard', request.url));
-    }
-
-    // Allow the request to proceed.
-    return NextResponse.next();
-
-  } catch (error) {
-    console.error('Middleware token verification error:', error);
-    // If verification fails, redirect to the login page.
-    const response = NextResponse.redirect(new URL('/login', request.url));
-    // Clear the invalid cookie.
-    response.cookies.set({
-        name: 'firebase-session-token',
-        value: '',
-        path: '/',
-        maxAge: 0,
-    });
-    return response;
-  }
+  // Allow the request to proceed if:
+  // 1. The user has a valid session and is not on the login page.
+  // 2. The user does not have a valid session and is on the login page.
+  return NextResponse.next();
 }
 
 export const config = {

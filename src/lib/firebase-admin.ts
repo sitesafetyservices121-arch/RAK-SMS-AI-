@@ -1,19 +1,16 @@
-import type { App, AppOptions } from 'firebase-admin/app';
-import type { Auth } from 'firebase-admin/auth';
+import type { App } from 'firebase-admin/app';
 
-// This function is dynamically imported in the middleware and API routes.
-// This prevents the firebase-admin module from being bundled in client-side code.
-function initializeAdminApp(options?: AppOptions): App {
-  const { getApps, initializeApp, cert } = require('firebase-admin/app') as typeof import('firebase-admin/app');
-  
-  if (getApps().length > 0) {
-    return getApps()[0];
+// This function dynamically imports and initializes the Firebase Admin SDK.
+// It ensures that the SDK is only imported on the server-side and only when needed.
+async function getAdminApp(): Promise<App> {
+  const admin = await import('firebase-admin');
+  if (admin.apps.length > 0) {
+    return admin.apps[0]!;
   }
 
   try {
-    return initializeApp({
-      ...options,
-      credential: cert({
+    return admin.initializeApp({
+      credential: admin.credential.cert({
         projectId: process.env.FIREBASE_PROJECT_ID,
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
         privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
@@ -21,16 +18,36 @@ function initializeAdminApp(options?: AppOptions): App {
     });
   } catch (error) {
     console.error('Firebase admin initialization error', error);
-    // Re-throw the error to be caught by the calling function
+    // Re-throw the error to be caught by the caller
     throw error;
   }
 }
 
-// We are not exporting a singleton instance anymore, but rather functions that
-// ensure the app is initialized and then return the service.
-
-export function getAdminAuth(): Auth {
-  initializeAdminApp();
-  const { getAuth } = require('firebase-admin/auth') as typeof import('firebase-admin/auth');
+// Dynamically imports the auth module and returns it.
+async function getAdminAuth() {
+  await getAdminApp();
+  const { getAuth } = await import('firebase-admin/auth');
   return getAuth();
+}
+
+/**
+ * Verifies a session cookie and returns the decoded token.
+ * Returns null if the cookie is invalid.
+ */
+export async function verifySessionCookie(sessionCookie: string) {
+  try {
+    const auth = await getAdminAuth();
+    return await auth.verifySessionCookie(sessionCookie, true);
+  } catch (error) {
+    console.error('Error verifying session cookie:', error);
+    return null;
+  }
+}
+
+/**
+ * Creates a session cookie for the given ID token.
+ */
+export async function createSessionCookie(idToken: string, expiresIn: number) {
+    const auth = await getAdminAuth();
+    return auth.createSessionCookie(idToken, { expiresIn });
 }
