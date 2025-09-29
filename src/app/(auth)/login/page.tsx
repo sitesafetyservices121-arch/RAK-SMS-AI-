@@ -52,18 +52,23 @@ export default function LoginPage() {
       const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
       const idToken = await userCredential.user.getIdToken();
 
-      await fetch('/api/auth/login', {
+      const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${idToken}`,
         },
       });
 
+      if (!res.ok) {
+        throw new Error('Failed to create session');
+      }
+
       toast({
         title: "Success",
         description: "Logged in successfully. Redirecting to dashboard...",
       });
-
+      
+      // Redirect to the dashboard after the cookie is set.
       router.push("/dashboard");
       
     } catch (error) {
