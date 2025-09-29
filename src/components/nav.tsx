@@ -11,7 +11,6 @@ import {
   ClipboardCheck,
   DraftingCompass,
   LineChart,
-  Bot,
   ClipboardList,
   ChevronDown,
   Car,
@@ -39,6 +38,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import React from "react";
+import { WilsonLogo } from "./wilson-logo";
 
 const menuItems = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
@@ -63,7 +63,7 @@ const aiTools = [
 ];
 
 const consultant = [
-  { href: "/ohs-consultant", label: "Wilson - OHS Consultant", icon: Bot },
+  { href: "/ohs-consultant", label: "Wilson - OHS Consultant", icon: WilsonLogo },
 ];
 
 const adminTools = [
@@ -147,7 +147,7 @@ export function AppNav() {
                     tooltip={{ children: "AI Tools", side: "right", align: "center" }}
                   >
                     <div className="flex items-center gap-2">
-                      <Bot />
+                      <WilsonLogo />
                       <span>AI Tools</span>
                     </div>
                     <ChevronDown className="h-4 w-4 transition-transform [&[data-state=open]]:rotate-180" />

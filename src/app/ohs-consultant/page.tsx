@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Bot, Send, User } from "lucide-react";
+import { Send, User } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -29,6 +29,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { WilsonLogo } from "@/components/wilson-logo";
 
 const formSchema = z.object({
   query: z.string().min(5, {
@@ -102,7 +103,7 @@ export default function OhsConsultantPage() {
           <div className="space-y-6">
             {messages.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
-                    <Bot className="h-12 w-12 mb-4" />
+                    <WilsonLogo className="h-12 w-12 mb-4" />
                     <p>Ask me anything about the OHS Act.</p>
                     <p className="text-xs">For example: &quot;What are the duties of an employer?&quot;</p>
                 </div>
@@ -117,8 +118,8 @@ export default function OhsConsultantPage() {
               >
                 {message.role === "assistant" && (
                   <Avatar className="h-8 w-8">
-                    <AvatarFallback className="bg-primary text-primary-foreground">
-                      <Bot className="h-5 w-5" />
+                    <AvatarFallback className="bg-transparent text-primary-foreground">
+                      <WilsonLogo className="h-5 w-5" />
                     </AvatarFallback>
                   </Avatar>
                 )}
@@ -144,8 +145,8 @@ export default function OhsConsultantPage() {
             {isLoading && (
               <div className="flex items-start gap-3 justify-start">
                 <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-primary text-primary-foreground">
-                    <Bot className="h-5 w-5" />
+                  <AvatarFallback className="bg-transparent">
+                    <WilsonLogo className="h-5 w-5" />
                   </AvatarFallback>
                 </Avatar>
                 <div className="max-w-sm rounded-lg px-4 py-3 bg-muted">
