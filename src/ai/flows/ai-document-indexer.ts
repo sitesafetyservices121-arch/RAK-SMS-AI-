@@ -8,8 +8,9 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-// import {textEmbedding} from '@genkit-ai/embedder-all-minilm';
-// import pdf from 'pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js';
+import {allMiniLm} from 'genkitx-all-minilm';
+import pdf from 'pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js';
+import * as vecdb from 'vectordb';
 
 // In-memory vector store. In a real application, you might use a persistent
 // vector database like Pinecone or Chroma.
@@ -18,8 +19,8 @@ let vectorStore: any | null = null;
 // Helper to get or create the vector store.
 async function getVectorStore() {
   if (!vectorStore) {
-    // const db = await vecdb.connect('vectors');
-    // vectorStore = await db.openTable('documents');
+    const db = await vecdb.connect('vectors');
+    vectorStore = await db.openTable('documents');
   }
   return vectorStore;
 }
@@ -69,10 +70,9 @@ const indexDocumentFlow = ai.defineFlow(
     let textContent = '';
 
     if (mimeType === 'application/pdf') {
-      // const pdfBuffer = Buffer.from(base64Data, 'base64');
-      // const data = await pdf(pdfBuffer);
-      // textContent = data.text;
-      throw new Error(`PDF processing is temporarily disabled.`);
+      const pdfBuffer = Buffer.from(base64Data, 'base64');
+      const data = await pdf(pdfBuffer);
+      textContent = data.text;
     } else if (mimeType === 'application/json') {
       const jsonBuffer = Buffer.from(base64Data, 'base64');
       textContent = jsonBuffer.toString('utf-8');
@@ -85,22 +85,20 @@ const indexDocumentFlow = ai.defineFlow(
 
     const chunks = chunkText(textContent);
 
-    // const embeddings = await ai.embed({
-    //   embedder: textEmbedding,
-    //   content: chunks,
-    // });
+    const embeddings = await ai.embed({
+      embedder: allMiniLm,
+      content: chunks,
+    });
     
-    // const store = await getVectorStore();
-    // const records = chunks.map((chunk, i) => ({
-    //     vector: embeddings[i],
-    //     text: chunk
-    // }));
+    const store = await getVectorStore();
+    const records = chunks.map((chunk, i) => ({
+        vector: embeddings[i],
+        text: chunk
+    }));
 
-    // await store.add(records);
+    await store.add(records);
 
-    // return { success: true, chunksIndexed: chunks.length };
-    console.log(`Document chunked into ${chunks.length} pieces. Embedding and indexing is currently disabled.`);
-    return { success: true, chunksIndexed: 0 };
+    return { success: true, chunksIndexed: chunks.length };
   }
 );
 
@@ -114,16 +112,15 @@ export const retrieveSimilarChunksFlow = ai.defineFlow(
     outputSchema: z.array(z.string()),
   },
   async (query) => {
-    // const store = await getVectorStore();
-    // if (!store) return [];
+    const store = await getVectorStore();
+    if (!store) return [];
 
-    // const queryEmbedding = await ai.embed({
-    //     embedder: textEmbedding,
-    //     content: query,
-    // });
+    const queryEmbedding = await ai.embed({
+        embedder: allMiniLm,
+        content: query,
+    });
 
-    // const results = await store.search(queryEmbedding).limit(5).execute();
-    // return results.map(r => r.text);
-    return [];
+    const results = await store.search(queryEmbedding).limit(5).execute();
+    return results.map(r => (r as any).text);
   }
 );

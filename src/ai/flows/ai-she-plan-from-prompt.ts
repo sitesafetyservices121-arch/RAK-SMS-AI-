@@ -10,6 +10,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { retrieveSimilarChunksFlow } from './ai-document-indexer';
 
 const GenerateShePlanInputSchema = z.object({
   projectDescription: z
@@ -38,11 +39,25 @@ export async function generateShePlan(input: GenerateShePlanInput): Promise<Gene
 
 const prompt = ai.definePrompt({
   name: 'generateShePlanPrompt',
-  input: {schema: GenerateShePlanInputSchema},
+  input: {schema: z.object({
+      projectDescription: z.string(),
+      retrievedDocuments: z.array(z.string()).optional(),
+  })},
   output: {schema: GenerateShePlanOutputSchema},
   prompt: `You are an expert in creating professional Safety, Health, and Environment (SHE) plans for construction and industrial projects in South Africa.
 
   Based on the detailed project information provided below, generate a comprehensive and site-ready SHE plan. The language must be formal and professional. Where relevant, explicitly reference sections of the South African Occupational Health and Safety (OHS) Act 85 of 1993.
+  
+  IMPORTANT: Prioritize information from any 'retrieved documents' provided. These are approved examples and templates from the company's knowledge base. Use them as a style and content guide to ensure the final document meets company standards.
+
+  {{#if retrievedDocuments}}
+  Here are some reference documents from the knowledge base. Use these as your primary guide:
+  ---
+  {{#each retrievedDocuments}}
+  {{this}}
+  ---
+  {{/each}}
+  {{/if}}
 
   Project Information:
   {{{projectDescription}}}
@@ -60,7 +75,8 @@ const generateShePlanFlow = ai.defineFlow(
     outputSchema: GenerateShePlanOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
+    const retrievedDocuments = await retrieveSimilarChunksFlow(input.projectDescription);
+    const {output} = await prompt({...input, retrievedDocuments});
     return output!;
   }
 );

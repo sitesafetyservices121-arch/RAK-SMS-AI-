@@ -1,3 +1,4 @@
+
 // src/ai/flows/ai-hira-generator.ts
 'use server';
 
@@ -11,6 +12,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { retrieveSimilarChunksFlow } from './ai-document-indexer';
 
 const HiraInputSchema = z.object({
   projectDetails: z
@@ -45,13 +47,27 @@ export async function generateHira(input: HiraInput): Promise<HiraOutput> {
 
 const hiraPrompt = ai.definePrompt({
   name: 'hiraPrompt',
-  input: {schema: HiraInputSchema},
+  input: {schema: z.object({
+      projectDetails: z.string(),
+      regulatoryRequirements: z.string(),
+      existingSafetyData: z.string().optional(),
+      retrievedDocuments: z.array(z.string()).optional(),
+  })},
   output: {schema: HiraOutputSchema},
   prompt: `You are an AI-powered safety expert specializing in hazard identification and risk assessment (HIRA).
 
-  Based on the provided project details, regulatory requirements, and any existing safety data, generate a comprehensive HIRA report.
+  Your primary goal is to generate a comprehensive HIRA report. Use the provided project details, regulatory requirements, and any existing safety data as the basis for your assessment.
 
-  Consider all potential hazards, assess the associated risks, and recommend appropriate control measures.
+  IMPORTANT: Prioritize information from any 'retrieved documents' provided. These are approved examples and templates from the company's knowledge base. Use them as a style and content guide to ensure the final document meets company standards.
+
+  {{#if retrievedDocuments}}
+  Here are some reference documents from the knowledge base. Use these as your primary guide:
+  ---
+  {{#each retrievedDocuments}}
+  {{this}}
+  ---
+  {{/each}}
+  {{/if}}
 
   Project Details: {{{projectDetails}}}
   Regulatory Requirements: {{{regulatoryRequirements}}}
@@ -71,7 +87,8 @@ const generateHiraFlow = ai.defineFlow(
     outputSchema: HiraOutputSchema,
   },
   async input => {
-    const {output} = await hiraPrompt(input);
+    const retrievedDocuments = await retrieveSimilarChunksFlow(input.projectDetails);
+    const {output} = await hiraPrompt({...input, retrievedDocuments});
     return output!;
   }
 );

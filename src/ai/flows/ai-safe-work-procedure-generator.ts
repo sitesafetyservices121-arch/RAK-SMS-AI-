@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Generates a Safe Work Procedure from a text prompt describing the task.
@@ -9,6 +10,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { retrieveSimilarChunksFlow } from './ai-document-indexer';
 
 export const GenerateSafeWorkProcedureInputSchema = z.object({
   taskDescription: z
@@ -28,11 +30,25 @@ export async function generateSafeWorkProcedure(input: GenerateSafeWorkProcedure
 
 const prompt = ai.definePrompt({
   name: 'generateSafeWorkProcedurePrompt',
-  input: {schema: GenerateSafeWorkProcedureInputSchema},
+  input: {schema: z.object({
+      taskDescription: z.string(),
+      retrievedDocuments: z.array(z.string()).optional(),
+  })},
   output: {schema: GenerateSafeWorkProcedureOutputSchema},
   prompt: `You are an expert in creating Safe Work Procedures (SWP).
 
   Based on the task description provided, generate a comprehensive, step-by-step Safe Work Procedure.
+  
+  IMPORTANT: Prioritize information from any 'retrieved documents' provided. These are approved examples and templates from the company's knowledge base. Use them as a style and content guide to ensure the final document meets company standards.
+  
+  {{#if retrievedDocuments}}
+  Here are some reference documents from the knowledge base. Use these as your primary guide:
+  ---
+  {{#each retrievedDocuments}}
+  {{this}}
+  ---
+  {{/each}}
+  {{/if}}
 
   Include sections for:
   1.  **Purpose:** The objective of the task.
@@ -53,7 +69,8 @@ const generateSafeWorkProcedureFlow = ai.defineFlow(
     outputSchema: GenerateSafeWorkProcedureOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
+    const retrievedDocuments = await retrieveSimilarChunksFlow(input.taskDescription);
+    const {output} = await prompt({...input, retrievedDocuments});
     return output!;
   }
 );
