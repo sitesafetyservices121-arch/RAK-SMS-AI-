@@ -1,4 +1,4 @@
-import type {NextConfig} from 'next';
+import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -11,31 +11,31 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: 'placehold.co',
-        port: '',
-        pathname: '/**',
+        protocol: "https",
+        hostname: "placehold.co",
+        port: "",
+        pathname: "/**",
       },
       {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
-        port: '',
-        pathname: '/**',
+        protocol: "https",
+        hostname: "images.unsplash.com",
+        port: "",
+        pathname: "/**",
       },
       {
-        protocol: 'https',
-        hostname: 'picsum.photos',
-        port: '',
-        pathname: '/**',
+        protocol: "https",
+        hostname: "picsum.photos",
+        port: "",
+        pathname: "/**",
       },
     ],
   },
   experimental: {
-    // This is required to allow the Next.js dev server to accept requests from the preview server.
+    allowedDevOrigins: [
+      "https://6000-firebase-studio-1759140212143.cluster-fbfjltn375c6wqxlhoehbz44sk.cloudworkstations.dev",
+      "https://9000-firebase-studio-1759140212143.cluster-fbfjltn375c6wqxlhoehbz44sk.cloudworkstations.dev",
+    ],
   },
-  allowedDevOrigins: [
-    'https://6000-firebase-studio-1759140212143.cluster-fbfjltn375c6wqxlhoehbz44sk.cloudworkstations.dev',
-  ],
 };
 
 export default nextConfig;
