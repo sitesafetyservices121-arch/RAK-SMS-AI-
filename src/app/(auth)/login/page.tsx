@@ -49,29 +49,14 @@ export default function LoginPage() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
-      const idToken = await userCredential.user.getIdToken();
-
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${idToken}`,
-        },
+      await signInWithEmailAndPassword(auth, values.email, values.password);
+      // The redirection is now handled by the AuthProvider's onAuthStateChanged listener.
+      // This page no longer needs to manage cookies or redirects.
+      toast({
+        title: "Success",
+        description: "Logged in successfully. Redirecting...",
       });
-
-      if (res.ok) {
-        toast({
-          title: "Success",
-          description: "Logged in successfully. Redirecting to dashboard...",
-        });
-        setTimeout(() => {
-          router.push("/dashboard");
-          router.refresh();
-        }, 100);
-      } else {
-        throw new Error('Failed to create session on the server.');
-      }
-      
+      router.push('/dashboard');
     } catch (error) {
       console.error("Login Error:", error);
       toast({
