@@ -30,6 +30,7 @@ import { useToast } from "@/hooks/use-toast";
 import { CopyButton } from "@/components/copy-button";
 import { Input } from "@/components/ui/input";
 import { Download } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 
 const formSchema = z.object({
   clientCompanyId: z.string().min(1, "Client Company ID is required."),
@@ -73,18 +74,67 @@ export default function ShePlanGeneratorPage() {
       });
     }
   }
+  
+  const fullTextResult = result ? Object.entries(result).map(([key, value]) => `## ${key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}\n\n${value}`).join("\n\n") : "";
 
   const handleDownloadPdf = () => {
     if (!result || !clientCompanyId) return;
     const doc = new jsPDF();
-    
-    doc.text("SHE Plan", 10, 10);
-    doc.text(`Client Company ID: ${clientCompanyId}`, 10, 20);
-    doc.text("---", 10, 25)
+    const pageHeight = doc.internal.pageSize.height;
+    let y = 20;
 
-    const splitText = doc.splitTextToSize(result.shePlan, 180);
-    doc.text(splitText, 10, 35);
-    
+    // Title Page
+    doc.setFontSize(22);
+    doc.text("Safety, Health, and Environment (SHE) Plan", 105, 120, { align: "center" });
+    doc.setFontSize(16);
+    doc.text(`Client: ${clientCompanyId}`, 105, 140, { align: "center" });
+    doc.setFontSize(12);
+    doc.text(`Date Generated: ${new Date().toLocaleDateString()}`, 105, 150, { align: "center" });
+
+    doc.addPage();
+    y = 20;
+
+    // Content Pages
+    const addHeaderFooter = () => {
+      for (let i = 2; i <= doc.getNumberOfPages(); i++) {
+        doc.setPage(i);
+        doc.setFontSize(10);
+        doc.text("SHE Plan", 10, 10);
+        doc.text(`Page ${i - 1}`, 200, 10, { align: "right" });
+      }
+    };
+
+    const sections = [
+      { title: "Introduction and Scope", content: result.introduction },
+      { title: "Safety Policy", content: result.safetyPolicy },
+      { title: "Objectives", content: result.objectives },
+      { title: "Roles and Responsibilities", content: result.rolesAndResponsibilities },
+      { title: "Risk Management", content: result.riskManagement },
+      { title: "Safe Work Procedures", content: result.safeWorkProcedures },
+      { title: "Emergency Procedures", content: result.emergencyProcedures },
+      { title: "Training and Competency", content: result.trainingAndCompetency },
+      { title: "Incident Reporting", content: result.incidentReporting },
+      { title: "Monitoring and Review", content: result.monitoringAndReview },
+    ];
+
+    sections.forEach(section => {
+        if (y > pageHeight - 40) { // check for space
+            doc.addPage();
+            y = 20;
+        }
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        doc.text(section.title, 14, y);
+        y += 8;
+
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "normal");
+        const splitText = doc.splitTextToSize(section.content, 180);
+        doc.text(splitText, 14, y);
+        y += (doc.getTextDimensions(splitText).h) + 10;
+    });
+
+    addHeaderFooter();
     doc.save(`SHE-Plan-${clientCompanyId}-${new Date().toISOString()}.pdf`);
   };
 
@@ -150,7 +200,7 @@ export default function ShePlanGeneratorPage() {
               </CardDescription>
             </div>
              <div className="flex items-center gap-2">
-                {result && <CopyButton textToCopy={result.shePlan} />}
+                {result && <CopyButton textToCopy={fullTextResult} />}
                 {result && (
                   <Button onClick={handleDownloadPdf} variant="outline" size="sm">
                     <Download className="mr-2 h-4 w-4" />
@@ -162,9 +212,15 @@ export default function ShePlanGeneratorPage() {
           <CardContent>
             {isLoading && <LoadingDots />}
             {result && (
-              <pre className="mt-2 w-full whitespace-pre-wrap rounded-md bg-secondary p-4 font-sans text-sm text-secondary-foreground">
-                {result.shePlan}
-              </pre>
+              <div className="space-y-4 text-sm">
+                {Object.entries(result).map(([key, value]) => (
+                  <div key={key}>
+                     <h3 className="font-semibold text-base">{key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</h3>
+                     <Separator className="my-1" />
+                     <p className="whitespace-pre-wrap font-sans text-muted-foreground">{value}</p>
+                  </div>
+                ))}
+              </div>
             )}
             {!isLoading && !result && (
               <div className="flex h-[400px] items-center justify-center rounded-md border border-dashed">
