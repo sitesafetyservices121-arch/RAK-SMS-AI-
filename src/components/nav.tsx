@@ -20,6 +20,7 @@ import {
   Briefcase,
   FolderKanban,
   Users,
+  Shield,
 } from "lucide-react";
 import {
   Sidebar,
@@ -62,6 +63,13 @@ const aiTools = [
 const consultant = [
   { href: "/ohs-consultant", label: "Wilson - OHS Consultant", icon: Bot },
 ];
+
+const adminTools = [
+  { href: "/admin", label: "Admin Dashboard", icon: Shield },
+  { href: "/admin/onboarding", label: "Onboarding", icon: Users },
+  { href: "/admin/prescription-management", label: "Prescription Mgt", icon: ClipboardCheck },
+  { href: "/admin/document-upload", label: "Document Upload", icon: Library },
+]
 
 export function AppNav() {
   const pathname = usePathname();
@@ -179,6 +187,46 @@ export function AppNav() {
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
+
+          {/* Admin Section */}
+          <Collapsible asChild>
+            <SidebarMenuItem>
+              <>
+                <CollapsibleTrigger asChild>
+                  <SidebarMenuButton
+                    className="justify-between"
+                    tooltip={{ children: "Admin", side: "right", align: "center" }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Shield />
+                      <span>Admin</span>
+                    </div>
+                    <ChevronDown className="h-4 w-4 transition-transform [&[data-state=open]]:rotate-180" />
+                  </SidebarMenuButton>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <SidebarMenu className="ml-4 mt-2">
+                    {adminTools.map((item) => (
+                      <SidebarMenuItem key={item.href}>
+                        <SidebarMenuButton
+                          asChild
+                          size="sm"
+                          isActive={isActive(item.href)}
+                          tooltip={{ children: item.label, side: "right", align: "center" }}
+                        >
+                          <Link href={item.href}>
+                            <item.icon />
+                            <span>{item.label}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </CollapsibleContent>
+              </>
+            </SidebarMenuItem>
+          </Collapsible>
+
         </SidebarMenu>
       </SidebarContent>
     </Sidebar>
