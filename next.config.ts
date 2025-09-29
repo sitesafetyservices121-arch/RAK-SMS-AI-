@@ -32,17 +32,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  webpack: (config, { isServer }) => {
-    // Exclude gRPC and vectordb from client-side bundle
-    if (!isServer) {
-      config.externals = [...config.externals, '@grpc/grpc-js', 'vectordb'];
-    }
-    
-    config.experiments = { ...config.experiments, asyncWebAssembly: true };
-    config.output.webassemblyModuleFilename =
-      (isServer ? "../" : "") + "static/wasm/[modulehash].wasm";
-    return config;
-  },
 };
 
 export default nextConfig;
