@@ -25,8 +25,14 @@ import {
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { ShieldHalf } from "lucide-react";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { getApp, getApps, initializeApp } from "firebase/app";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { firebaseConfig } from "@/lib/firebase-config";
+
+// Initialize Firebase client-side auth directly in the component
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+const auth = getAuth(app);
+
 
 const formSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
