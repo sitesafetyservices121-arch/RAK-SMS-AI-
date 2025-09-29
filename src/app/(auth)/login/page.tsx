@@ -49,20 +49,35 @@ export default function LoginPage() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, values.email, values.password);
-      // The redirection is now handled by the AuthProvider's onAuthStateChanged listener.
-      // This page no longer needs to manage cookies or redirects.
-      toast({
-        title: "Success",
-        description: "Logged in successfully. Redirecting...",
+      // 1. Sign in with Firebase on the client
+      const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
+      const idToken = await userCredential.user.getIdToken();
+
+      // 2. Send the token to the server to set the session cookie
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${idToken}`,
+        },
       });
-      router.push('/dashboard');
+
+      // 3. Only redirect after the server confirms the cookie is set
+      if (res.ok) {
+        toast({
+          title: "Success",
+          description: "Logged in successfully. Redirecting...",
+        });
+        router.push('/dashboard');
+      } else {
+        throw new Error("Server failed to set session cookie.");
+      }
+
     } catch (error) {
       console.error("Login Error:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to log in. Please check your credentials.",
+        description: "Failed to log in. Please check your credentials or try again.",
       });
     } finally {
       setIsLoading(false);
