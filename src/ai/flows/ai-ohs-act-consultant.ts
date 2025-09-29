@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI consultant specializing in OHS Act, COID Act, and all relevant South African acts.
@@ -30,7 +31,9 @@ const prompt = ai.definePrompt({
   output: {schema: OhsActConsultantOutputSchema},
   prompt: `You are an AI consultant specializing in South African acts related to Occupational Health and Safety (OHS) and Compensation for Occupational Injuries and Diseases (COID).
 
-  Answer the following question based on your knowledge of the OHS Act, COID Act, and other relevant South African legislation. Provide clear and concise answers.
+  Your knowledge base consists of the official legal documents and acts provided by the administrator. Prioritize information from these documents above all other general knowledge.
+
+  Answer the following question based on your knowledge of the OHS Act, COID Act, and other relevant South African legislation. Provide clear and concise answers, referencing the specific act or section where possible.
 
   Question: {{{query}}}
   `,
@@ -43,6 +46,15 @@ const ohsActConsultantFlow = ai.defineFlow(
     outputSchema: OhsActConsultantOutputSchema,
   },
   async input => {
+    // In a real application, you would implement a retriever here.
+    // This retriever would search the permanent storage bucket (e.g., Google Cloud Storage)
+    // for the uploaded reference documents that are relevant to the user's query.
+    // The retrieved content would then be passed into the prompt's context.
+
+    // For example:
+    // const referenceDocs = await myStorageRetriever.retrieve(input.query);
+    // const { output } = await prompt({ ...input, context: referenceDocs });
+
     const {output} = await prompt(input);
     return output!;
   }

@@ -13,6 +13,7 @@ import {
   Users,
   ClipboardCheck,
   Library,
+  BrainCircuit,
 } from "lucide-react";
 
 const adminTools = [
@@ -33,6 +34,12 @@ const adminTools = [
     title: "Document Upload",
     description: "Upload new documents to the library.",
     href: "/admin/document-upload",
+  },
+  {
+    icon: <BrainCircuit className="h-8 w-8 text-primary" />,
+    title: "AI Training",
+    description: "Upload reference documents for the AI consultant.",
+    href: "/admin/wilson-training",
   },
 ];
 

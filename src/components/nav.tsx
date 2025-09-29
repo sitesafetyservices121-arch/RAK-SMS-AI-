@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -21,6 +22,7 @@ import {
   FolderKanban,
   Users,
   Shield,
+  BrainCircuit,
 } from "lucide-react";
 import {
   Sidebar,
@@ -69,6 +71,7 @@ const adminTools = [
   { href: "/admin/onboarding", label: "Onboarding", icon: Users },
   { href: "/admin/prescription-management", label: "Prescription Mgt", icon: ClipboardCheck },
   { href: "/admin/document-upload", label: "Document Upload", icon: Library },
+  { href: "/admin/wilson-training", label: "AI Training", icon: BrainCircuit },
 ]
 
 export function AppNav() {
