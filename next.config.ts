@@ -1,3 +1,4 @@
+
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -41,6 +42,7 @@ const nextConfig: NextConfig = {
       (isServer ? "../" : "") + "static/wasm/[modulehash].wasm";
     return config;
   },
+  serverComponentsExternalPackages: ['cmdk'],
 };
 
 export default nextConfig;
