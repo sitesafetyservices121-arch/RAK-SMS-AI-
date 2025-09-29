@@ -61,27 +61,28 @@ export default function LoginPage() {
         },
       });
 
-      console.log("Login response status:", res.status);
-      const responseBody = await res.text();
-      console.log("Login response body:", responseBody);
-      
-      const jsonResponse = responseBody ? JSON.parse(responseBody) : {};
-
-      if (res.ok && jsonResponse.status === 'success') {
+      if (res.ok) {
         toast({
           title: "Success",
           description: "Logged in successfully. Redirecting...",
         });
-        window.location.href = "/dashboard";
+        // Instead of window.location, use the router for a smoother transition
+        router.push("/dashboard");
+        router.refresh(); // Force a refresh to ensure middleware is re-evaluated with the new cookie
       } else {
-        throw new Error(`Server failed to set session cookie. Status: ${res.status}`);
+        const errorData = await res.json();
+        throw new Error(errorData.error || `Server responded with ${res.status}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login Error:", error);
+      let description = "Failed to log in. Please check your credentials or try again.";
+      if (error.code === 'auth/invalid-credential') {
+        description = "Invalid email or password. Please try again.";
+      }
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to log in. Please check your credentials or try again.",
+        description: description,
       });
     } finally {
       setIsLoading(false);

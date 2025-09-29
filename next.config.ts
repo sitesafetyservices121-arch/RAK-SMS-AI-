@@ -30,12 +30,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  experimental: {
-    allowedDevOrigins: [
-      "https://6000-firebase-studio-1759140212143.cluster-fbfjltn375c6wqxlhoehbz44sk.cloudworkstations.dev",
-      "https://9000-firebase-studio-1759140212143.cluster-fbfjltn375c6wqxlhoehbz44sk.cloudworkstations.dev",
-    ],
-  },
   webpack: (config, { isServer }) => {
     config.experiments = { ...config.experiments, asyncWebAssembly: true };
     config.output.webassemblyModuleFilename =
