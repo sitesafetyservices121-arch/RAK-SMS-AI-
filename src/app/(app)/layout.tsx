@@ -1,34 +1,14 @@
 
 import type { PropsWithChildren } from 'react';
-import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
 
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppNav } from "@/components/nav";
 import { Button } from "@/components/ui/button";
-import { Bell, UserCircle } from "lucide-react";
+import { Bell, UserCircle, LogOut } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { LogoutButton } from './logout-button';
 
 
 async function AuthLayout({ children }: PropsWithChildren) {
-  const sessionCookie = cookies().get('rak-sms-session')?.value;
-
-  if (!sessionCookie) {
-    redirect('/login');
-  }
-
-  try {
-    const session = JSON.parse(sessionCookie);
-    if (!session.email) {
-      redirect('/login');
-    }
-  } catch (e) {
-    console.error("Invalid session cookie:", e);
-    redirect('/login');
-  }
-
-
   return (
      <SidebarProvider>
       <AppNav />
@@ -54,8 +34,6 @@ async function AuthLayout({ children }: PropsWithChildren) {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem disabled>Settings</DropdownMenuItem>
                 <DropdownMenuItem disabled>Support</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <LogoutButton />
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
