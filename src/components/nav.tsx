@@ -19,6 +19,7 @@ import {
   Shirt,
   Briefcase,
   FolderKanban,
+  Users,
 } from "lucide-react";
 import {
   Sidebar,
@@ -40,6 +41,7 @@ const menuItems = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
   { href: "/documents", label: "Document Library", icon: Library },
   { href: "/generated-documents", label: "Generated Documents", icon: FolderKanban },
+  { href: "/client-onboarding", label: "Client Onboarding", icon: Users },
 ];
 
 const managementTools = [
