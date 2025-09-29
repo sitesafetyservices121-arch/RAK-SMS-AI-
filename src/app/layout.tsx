@@ -13,6 +13,7 @@ import { Bell, UserCircle } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { LiveClock } from "@/components/live-clock";
 import { ThemeProvider, ThemeToggle } from "@/components/theme-toggle";
+import Link from "next/link";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-body" });
 
@@ -64,7 +65,9 @@ export default function RootLayout({
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>My Account</DropdownMenuLabel>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem disabled>Settings</DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/account/settings">Settings</Link>
+                      </DropdownMenuItem>
                       <DropdownMenuItem disabled>Support</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
