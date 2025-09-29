@@ -1,7 +1,9 @@
 
 "use client";
 
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
   Card,
   CardContent,
@@ -19,42 +21,60 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+import { uploadDocumentAction } from "./actions";
+import LoadingDots from "@/components/ui/loading-dots";
+
+
+const formSchema = z.object({
+    clientCompanyId: z.string().min(1, "Client ID is required."),
+    category: z.string().min(1, "Category is required."),
+    subCategory: z.string().min(1, "Sub-category is required."),
+    document: z.instanceof(File).refine(file => file.size > 0, "File is required."),
+});
 
 export default function DocumentUploadPage() {
-  const [file, setFile] = useState<File | null>(null);
-  const [category, setCategory] = useState("");
-  const [subCategory, setSubCategory] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      setFile(event.target.files[0]);
-    }
-  };
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      clientCompanyId: "",
+      category: "",
+      subCategory: "",
+    },
+  });
 
-  const handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!file || !category || !subCategory) {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    setIsLoading(true);
+    
+    const formData = new FormData();
+    formData.append("clientCompanyId", values.clientCompanyId);
+    formData.append("category", values.category);
+    formData.append("subCategory", values.subCategory);
+    formData.append("document", values.document);
+
+    const response = await uploadDocumentAction(formData);
+
+    setIsLoading(false);
+
+    if (response.success) {
       toast({
-        variant: "destructive",
-        title: "Missing Information",
-        description: "Please select a file, category, and sub-category.",
+        title: "Upload Successful",
+        description: `${values.document.name} has been processed.`,
       });
-      return;
+      form.reset();
+    } else {
+        toast({
+            variant: "destructive",
+            title: "Upload Failed",
+            description: response.error,
+        });
     }
-    // In a real app, this would handle the file upload to a server/cloud storage.
-    console.log("Uploading file:", file.name, "to", category, "/", subCategory);
-    toast({
-      title: "Upload Successful",
-      description: `${file.name} has been uploaded.`,
-    });
-
-    // Reset form
-    setFile(null);
-    setCategory("");
-    setSubCategory("");
   };
 
   return (
@@ -66,39 +86,86 @@ export default function DocumentUploadPage() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid gap-2">
-            <Label htmlFor="file-upload">Document File</Label>
-            <Input id="file-upload" type="file" onChange={handleFileChange} />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="category">Category</Label>
-            <Select onValueChange={setCategory} value={category}>
-              <SelectTrigger id="category">
-                <SelectValue placeholder="Select a category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Safety">Safety</SelectItem>
-                <SelectItem value="Quality">Quality</SelectItem>
-                <SelectItem value="HR">HR</SelectItem>
-                <SelectItem value="Environment">Environment</SelectItem>
-                <SelectItem value="Toolbox Talks">Toolbox Talks</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="sub-category">Sub-Category</Label>
-            <Input
-              id="sub-category"
-              placeholder="e.g., Procedures, Forms, Policies"
-              value={subCategory}
-              onChange={(e) => setSubCategory(e.target.value)}
-            />
-          </div>
-          <Button type="submit" className="w-full">
-            <Upload className="mr-2 h-4 w-4" /> Upload Document
-          </Button>
-        </form>
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <FormField
+                    control={form.control}
+                    name="clientCompanyId"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Client Company ID</FormLabel>
+                            <FormControl>
+                                <Input placeholder="e.g., CLIENT-001" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+
+                <FormField
+                    control={form.control}
+                    name="category"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Category</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                            <SelectTrigger>
+                            <SelectValue placeholder="Select a category" />
+                            </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            <SelectItem value="Safety">Safety</SelectItem>
+                            <SelectItem value="Quality">Quality</SelectItem>
+                            <SelectItem value="HR">HR</SelectItem>
+                            <SelectItem value="Environment">Environment</SelectItem>
+                            <SelectItem value="Toolbox Talks">Toolbox Talks</SelectItem>
+                        </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+
+                <FormField
+                    control={form.control}
+                    name="subCategory"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Sub-Category</FormLabel>
+                            <FormControl>
+                                <Input placeholder="e.g., Procedures, Forms, Policies" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+
+                <FormField
+                    control={form.control}
+                    name="document"
+                    render={({ field: { onChange, ...fieldProps } }) => (
+                        <FormItem>
+                        <FormLabel>Document File</FormLabel>
+                        <FormControl>
+                            <Input 
+                                type="file" 
+                                {...fieldProps} 
+                                onChange={e => onChange(e.target.files?.[0])}
+                                accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                            />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? <LoadingDots /> : <Upload className="mr-2 h-4 w-4" />} 
+                    Upload Document
+                </Button>
+            </form>
+        </Form>
       </CardContent>
     </Card>
   );
