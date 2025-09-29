@@ -1,9 +1,9 @@
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 import {
   Card,
   CardContent,
@@ -161,52 +161,54 @@ export default function DocumentsPage() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Accordion type="single" collapsible className="w-full" defaultValue="item-0">
-          {documentCategories.map((category, index) => (
-            <AccordionItem value={`item-${index}`} key={category.category}>
-              <AccordionTrigger className="text-lg font-medium">
+        <Tabs defaultValue={documentCategories[0].category}>
+          <TabsList className="grid w-full grid-cols-5">
+            {documentCategories.map((category) => (
+              <TabsTrigger value={category.category} key={category.category}>
                 {category.category}
-              </AccordionTrigger>
-              <AccordionContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Document Name</TableHead>
-                      <TableHead>Sub-Category</TableHead>
-                      <TableHead>Version</TableHead>
-                      <TableHead>Last Updated</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          {documentCategories.map((category) => (
+            <TabsContent value={category.category} key={category.category}>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Document Name</TableHead>
+                    <TableHead>Sub-Category</TableHead>
+                    <TableHead>Version</TableHead>
+                    <TableHead>Last Updated</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {category.documents.map((doc) => (
+                    <TableRow key={doc.name}>
+                      <TableCell className="font-medium flex items-center gap-2">
+                        <DocumentIcon type={doc.type} />
+                        {doc.name}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">{doc.subCategory}</Badge>
+                      </TableCell>
+                      <TableCell>{doc.version}</TableCell>
+                      <TableCell>{doc.lastUpdated}</TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="icon" asChild>
+                          {/* In a real app, this would link to a file download */}
+                          <a href="#" download={doc.name}>
+                            <Download className="h-4 w-4" />
+                            <span className="sr-only">Download</span>
+                          </a>
+                        </Button>
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {category.documents.map((doc) => (
-                      <TableRow key={doc.name}>
-                        <TableCell className="font-medium flex items-center gap-2">
-                          <DocumentIcon type={doc.type} />
-                          {doc.name}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="secondary">{doc.subCategory}</Badge>
-                        </TableCell>
-                        <TableCell>{doc.version}</TableCell>
-                        <TableCell>{doc.lastUpdated}</TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="ghost" size="icon" asChild>
-                            {/* In a real app, this would link to a file download */}
-                            <a href="#" download={doc.name}>
-                              <Download className="h-4 w-4" />
-                              <span className="sr-only">Download</span>
-                            </a>
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </AccordionContent>
-            </AccordionItem>
+                  ))}
+                </TableBody>
+              </Table>
+            </TabsContent>
           ))}
-        </Accordion>
+        </Tabs>
       </CardContent>
     </Card>
   );
