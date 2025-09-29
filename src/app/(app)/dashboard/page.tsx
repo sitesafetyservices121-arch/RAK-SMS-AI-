@@ -16,6 +16,7 @@ import {
   DraftingCompass,
   LineChart,
   Bot,
+  ClipboardList,
 } from "lucide-react";
 
 const tools = [
@@ -60,6 +61,12 @@ const tools = [
     title: "Wilson - OHS Consultant",
     description: "Your AI expert on South African OHS acts.",
     href: "/ohs-consultant",
+  },
+  {
+    icon: <ClipboardList className="h-8 w-8 text-primary" />,
+    title: "Employee Training Tracker",
+    description: "Track employee training records and certifications.",
+    href: "/employee-training-tracker",
   },
 ];
 

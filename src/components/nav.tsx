@@ -11,6 +11,7 @@ import {
   DraftingCompass,
   LineChart,
   Bot,
+  ClipboardList,
 } from "lucide-react";
 import {
   Sidebar,
@@ -35,6 +36,7 @@ const aiTools = [
   { href: "/safe-work-procedure", label: "Safe Work Procedure", icon: ClipboardCheck },
   { href: "/method-statement", label: "Method Statement", icon: DraftingCompass },
   { href: "/ltir-analysis", label: "LTIR Trend Analysis", icon: LineChart },
+  { href: "/employee-training-tracker", label: "Training Tracker", icon: ClipboardList },
 ];
 
 const consultant = [
