@@ -37,6 +37,13 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
+// Hardcoded credentials
+const ADMIN_EMAIL = "ruan@sitesafety.services";
+const ADMIN_PASSWORD = "50700Koen*";
+const CLIENT_EMAIL = "info@sitesafety.services";
+const CLIENT_PASSWORD = "50700Koen*";
+
+
 export async function POST(request: Request) {
   try {
     const { email, password } = await request.json();
@@ -44,14 +51,28 @@ export async function POST(request: Request) {
     if (!email || !password) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
     }
+
+    // Hardcoded credentials check
+    const isAdmin = email === ADMIN_EMAIL && password === ADMIN_PASSWORD;
+    const isClient = email === CLIENT_EMAIL && password === CLIENT_PASSWORD;
+
+    if (!isAdmin && !isClient) {
+        return NextResponse.json({ error: 'Invalid email or password. Please try again.' }, { status: 401 });
+    }
     
+    // We still need a valid Firebase user to create a session.
+    // For this temporary solution, we'll sign in as one of the real users 
+    // in Firebase to generate a token, but the login access is controlled by the hardcoded check above.
+    // IMPORTANT: The email used here MUST exist in your Firebase Authentication users.
+    const firebaseEmail = isAdmin ? ADMIN_EMAIL : CLIENT_EMAIL;
+    const firebasePassword = isAdmin ? ADMIN_PASSWORD : CLIENT_PASSWORD;
+
     // Initialize client auth within the handler to avoid module scope issues
     const clientApp = !getClientApps().length ? initializeClientApp(firebaseConfig) : getClientApp();
     const clientAuth = getClientAuth(clientApp);
 
-
     // 1. Sign in with client SDK to get user and ID token
-    const userCredential = await signInWithEmailAndPassword(clientAuth, email, password);
+    const userCredential = await signInWithEmailAndPassword(clientAuth, firebaseEmail, firebasePassword);
     const user = userCredential.user;
     const idToken = await user.getIdToken();
 
@@ -72,13 +93,10 @@ export async function POST(request: Request) {
 
   } catch (error: any) {
     console.error('Login API Error:', error);
-    let errorMessage = 'An unexpected error occurred.';
-
-    // Provide more specific error messages for common auth issues
+    // If the Firebase sign-in fails, it means the underlying user doesn't exist.
     if (error.code?.startsWith('auth/')) {
-        errorMessage = 'Invalid email or password. Please try again.';
+        return NextResponse.json({ error: 'Authentication failed. Please ensure the hardcoded user exists in Firebase Auth.' }, { status: 401 });
     }
-
-    return NextResponse.json({ error: errorMessage }, { status: 401 });
+    return NextResponse.json({ error: 'An unexpected error occurred.' }, { status: 500 });
   }
 }
