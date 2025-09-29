@@ -49,7 +49,18 @@ export default function LoginPage() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, values.email, values.password);
+      const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
+      const idToken = await userCredential.user.getIdToken();
+      
+      // Set cookie for server-side rendering
+      await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ idToken }),
+      });
+
       toast({
         title: "Success",
         description: "Logged in successfully. Redirecting to dashboard...",

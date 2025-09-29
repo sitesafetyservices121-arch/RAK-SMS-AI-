@@ -6,11 +6,11 @@ export function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl
  
-  if (!currentUser && pathname !== '/login') {
+  if (!currentUser && !pathname.startsWith('/login')) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  if(currentUser && pathname === '/login') {
+  if(currentUser && pathname.startsWith('/login')) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
  
