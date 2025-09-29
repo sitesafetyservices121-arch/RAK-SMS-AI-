@@ -1,6 +1,5 @@
 import {NextResponse} from 'next/server';
 import type {NextRequest} from 'next/server';
-import admin from '@/lib/firebase-admin';
 
 export async function middleware(request: NextRequest) {
   const {pathname} = request.nextUrl;
@@ -22,7 +21,10 @@ export async function middleware(request: NextRequest) {
 
   // If there is a session cookie, verify it.
   try {
-    await admin.auth().verifySessionCookie(sessionCookie, true);
+    // Dynamically import 'firebase-admin' only within the middleware
+    const { getAdminAuth } = await import('@/lib/firebase-admin');
+    const auth = getAdminAuth();
+    await auth.verifySessionCookie(sessionCookie, true);
     
     // If the cookie is valid and the user is on the login page, redirect to the dashboard.
     if (pathname.startsWith('/login')) {

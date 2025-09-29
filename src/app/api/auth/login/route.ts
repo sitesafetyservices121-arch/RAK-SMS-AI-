@@ -1,6 +1,6 @@
 import {NextResponse} from 'next/server';
 import type {NextRequest} from 'next/server';
-import admin from '@/lib/firebase-admin';
+import { getAdminAuth } from '@/lib/firebase-admin';
 
 export async function POST(request: NextRequest) {
   const idToken = request.headers.get('Authorization')?.split('Bearer ')[1];
@@ -10,14 +10,15 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    const auth = getAdminAuth();
     // Exchange the ID token for a session cookie.
     // Set session expiration to 5 days.
     const expiresIn = 60 * 60 * 24 * 5 * 1000;
-    const decodedIdToken = await admin.auth().verifyIdToken(idToken);
+    const decodedIdToken = await auth.verifyIdToken(idToken);
     
     // Only create a session cookie if the user is verified and not disabled.
     if (new Date().getTime() / 1000 - decodedIdToken.auth_time < 5 * 60) {
-      const sessionCookie = await admin.auth().createSessionCookie(idToken, {expiresIn});
+      const sessionCookie = await auth.createSessionCookie(idToken, {expiresIn});
       const response = NextResponse.json({status: 'success'}, {status: 200});
 
       response.cookies.set({
