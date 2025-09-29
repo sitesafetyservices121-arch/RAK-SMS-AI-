@@ -51,17 +51,23 @@ export default function LoginPage() {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
       const idToken = await userCredential.user.getIdToken();
-      
-      // Manually set cookie for middleware to pick up
-      document.cookie = `firebase-auth-token=${idToken}; path=/; max-age=${60 * 60 * 24}`;
+
+      // Call the API route to set the auth cookie
+      await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${idToken}`,
+        },
+      });
 
       toast({
         title: "Success",
         description: "Logged in successfully. Redirecting to dashboard...",
       });
-      // Instead of router.push, we reload the page.
-      // The middleware will then catch the cookie and handle the redirect.
-      window.location.href = "/dashboard";
+
+      // Use the Next.js router to navigate
+      router.push("/dashboard");
+      
     } catch (error) {
       console.error("Login Error:", error);
       toast({
