@@ -45,7 +45,7 @@ export default function ToolboxTalksPage() {
 
   useEffect(() => {
     const today = new Date();
-    // Use getMonth() which is 0-indexed (0 for January)
+    // getMonth() is 0-indexed, so we add 1 for our 1-indexed array
     const monthIndex = getMonth(today); 
     const topicsForMonth = allTopics[monthIndex % allTopics.length] || allTopics[0];
     setCurrentTopics(topicsForMonth);
