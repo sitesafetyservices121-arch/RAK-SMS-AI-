@@ -22,6 +22,7 @@ import {
   Users,
   Shield,
   BrainCircuit,
+  Bot,
 } from "lucide-react";
 import {
   Sidebar,
@@ -147,7 +148,7 @@ export function AppNav() {
                     tooltip={{ children: "AI Tools", side: "right", align: "center" }}
                   >
                     <div className="flex items-center gap-2">
-                      <WilsonLogo />
+                      <Bot />
                       <span>AI Tools</span>
                     </div>
                     <ChevronDown className="h-4 w-4 transition-transform [&[data-state=open]]:rotate-180" />
