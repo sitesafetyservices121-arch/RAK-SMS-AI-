@@ -11,14 +11,14 @@ export async function POST(request: NextRequest) {
   try {
     const response = NextResponse.json({ status: 'success' }, { status: 200 });
 
-    // Set the cookie on the response
     response.cookies.set({
       name: 'firebase-auth-token',
       value: idToken,
       path: '/',
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      maxAge: 60 * 60 * 24, // 1 day
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24,
     });
 
     return response;

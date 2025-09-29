@@ -64,8 +64,10 @@ export default function LoginPage() {
           title: "Success",
           description: "Logged in successfully. Redirecting to dashboard...",
         });
-        // Only redirect after the session cookie has been successfully set.
-        router.push("/dashboard");
+        setTimeout(() => {
+          router.push("/dashboard");
+          router.refresh();
+        }, 100);
       } else {
         throw new Error('Failed to create session on the server.');
       }
