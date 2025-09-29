@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -30,7 +29,6 @@ import LoadingDots from "@/components/ui/loading-dots";
 
 
 const formSchema = z.object({
-    clientCompanyId: z.string().min(1, "Client ID is required."),
     category: z.string().min(1, "Category is required."),
     subCategory: z.string().min(1, "Sub-category is required."),
     document: z.instanceof(File).refine(file => file.size > 0, "File is required."),
@@ -43,7 +41,6 @@ export default function DocumentUploadPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      clientCompanyId: "",
       category: "",
       subCategory: "",
     },
@@ -53,7 +50,6 @@ export default function DocumentUploadPage() {
     setIsLoading(true);
     
     const formData = new FormData();
-    formData.append("clientCompanyId", values.clientCompanyId);
     formData.append("category", values.category);
     formData.append("subCategory", values.subCategory);
     formData.append("document", values.document);
@@ -88,20 +84,6 @@ export default function DocumentUploadPage() {
       <CardContent>
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField
-                    control={form.control}
-                    name="clientCompanyId"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Client Company ID</FormLabel>
-                            <FormControl>
-                                <Input placeholder="e.g., CLIENT-001" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-
                 <FormField
                     control={form.control}
                     name="category"
@@ -152,7 +134,7 @@ export default function DocumentUploadPage() {
                                 type="file" 
                                 {...fieldProps} 
                                 onChange={e => onChange(e.target.files?.[0])}
-                                accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                accept=".doc,.docx,.pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
                             />
                         </FormControl>
                         <FormMessage />
