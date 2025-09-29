@@ -92,6 +92,7 @@ export default function DocumentUploadPage() {
         description: `${values.document.name} has been processed.`,
       });
       form.reset();
+      // In a real app, you'd refetch the sections list here
     } else {
         toast({
             variant: "destructive",
@@ -118,7 +119,7 @@ export default function DocumentUploadPage() {
                     render={({ field }) => (
                     <FormItem>
                         <FormLabel>Category</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                             <SelectTrigger>
                             <SelectValue placeholder="Select a main category" />
@@ -148,7 +149,7 @@ export default function DocumentUploadPage() {
                                 value={field.value}
                                 onChange={field.onChange}
                                 placeholder="Select or create a section..."
-                                notFoundText="No sections found. Create a new one."
+                                notFoundText="No sections found."
                             />
                             <FormMessage />
                         </FormItem>
@@ -172,14 +173,13 @@ export default function DocumentUploadPage() {
                 <FormField
                     control={form.control}
                     name="document"
-                    render={({ field: { onChange, ...fieldProps } }) => (
+                    render={({ field: { onChange, value, ...fieldProps } }) => (
                         <FormItem>
                         <FormLabel>Document File</FormLabel>
                         <FormControl>
                             <Input 
                                 type="file" 
                                 {...fieldProps}
-                                value={undefined}
                                 onChange={e => onChange(e.target.files?.[0])}
                                 accept=".doc,.docx,.pdf,.xls,.xlsx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                             />

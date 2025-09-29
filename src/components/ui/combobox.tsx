@@ -12,7 +12,8 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
-  CommandList
+  CommandList,
+  CommandSeparator,
 } from "@/components/ui/command"
 import {
   Popover,
@@ -36,6 +37,8 @@ export function Combobox({ options, value, onChange, placeholder = "Select...", 
   const filteredOptions = query === "" ? options : options.filter(option =>
     option.label.toLowerCase().includes(query.toLowerCase())
   );
+  
+  const showCreateOption = query !== "" && !options.some(option => option.label.toLowerCase() === query.toLowerCase());
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -47,7 +50,7 @@ export function Combobox({ options, value, onChange, placeholder = "Select...", 
           className="w-full justify-between"
         >
           {value
-            ? options.find((option) => option.value === value)?.label
+            ? options.find((option) => option.value === value)?.label ?? value
             : placeholder}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
@@ -60,20 +63,9 @@ export function Combobox({ options, value, onChange, placeholder = "Select...", 
             onValueChange={setQuery}
           />
           <CommandList>
-            <CommandEmpty>
-                <CommandItem
-                    onSelect={() => {
-                        onChange(query);
-                        setOpen(false);
-                    }}
-                    className="flex items-center gap-2"
-                >
-                    <PlusCircle className="h-4 w-4" />
-                    Create "{query}"
-                </CommandItem>
-            </CommandEmpty>
+            {filteredOptions.length === 0 && !showCreateOption && <CommandEmpty>{notFoundText}</CommandEmpty>}
             <CommandGroup>
-            {options.map((option) => (
+            {filteredOptions.map((option) => (
               <CommandItem
                 key={option.value}
                 value={option.value}
@@ -92,6 +84,24 @@ export function Combobox({ options, value, onChange, placeholder = "Select...", 
               </CommandItem>
             ))}
           </CommandGroup>
+           {showCreateOption && (
+              <>
+                <CommandSeparator />
+                <CommandGroup>
+                    <CommandItem
+                        onSelect={() => {
+                            onChange(query.toLowerCase().replace(/ /g, '-'));
+                            setOpen(false);
+                            setQuery("");
+                        }}
+                        className="flex items-center gap-2"
+                        >
+                        <PlusCircle className="h-4 w-4" />
+                        Create "{query}"
+                    </CommandItem>
+                </CommandGroup>
+              </>
+            )}
           </CommandList>
         </Command>
       </PopoverContent>
