@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Download, CreditCard } from "lucide-react";
+import Link from "next/link";
 
 const subscriptionDetails = {
   plan: "Pro Tier",
@@ -86,9 +87,11 @@ export default function ClientBillingPage() {
             </div>
           </CardContent>
           <CardFooter>
-            <Button className="w-full" disabled>
-              <CreditCard className="mr-2 h-4 w-4" />
-              PayFast Integration Pending
+            <Button className="w-full" asChild>
+                <Link href="/account/billing/top-up">
+                    <CreditCard className="mr-2 h-4 w-4" />
+                    Top-up Account
+                </Link>
             </Button>
           </CardFooter>
         </Card>
