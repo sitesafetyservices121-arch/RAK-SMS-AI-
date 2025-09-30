@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -28,12 +27,18 @@ import { generatePayFastSignatureAction } from "./actions";
 import { CreditCard } from "lucide-react";
 
 const formSchema = z.object({
-  amount: z.coerce.number().min(5, "Amount must be at least R5.00"),
-  itemName: z.string().min(1, "Item name is required"),
+  amount: z.coerce
+    .number()
+    .min(5, "Amount must be at least R5.00")
+    .max(1000000, "Amount is too large"),
+  itemName: z
+    .string()
+    .min(1, "Item name is required")
+    .max(100, "Item name is too long"),
 });
 
 type PayFastFormData = {
-    [key: string]: string;
+  [key: string]: string;
 };
 
 export default function TopUpPage() {
@@ -50,96 +55,139 @@ export default function TopUpPage() {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
-    
-    // In a real app, user details would come from the current session
-    const paymentData = {
+
+    try {
+      // In a real app, user details would come from the current session
+      const paymentData = {
         amount: values.amount.toFixed(2),
         item_name: values.itemName,
-        email_address: 'admin@rak-sms.co.za',
-        name_first: 'Admin',
-        name_last: 'User',
-        m_payment_id: `RAK-${Date.now()}` // Example payment ID
-    };
+        email_address: "admin@rak-sms.co.za",
+        name_first: "Admin",
+        name_last: "User",
+        m_payment_id: `RAK-${Date.now()}`, // Unique payment ID
+      };
 
-    const response = await generatePayFastSignatureAction(paymentData);
+      const response = await generatePayFastSignatureAction(paymentData);
 
-    if (response.success && response.data) {
-        const payfastForm = document.createElement('form');
-        payfastForm.method = 'POST';
-        // Use sandbox URL for testing
-        payfastForm.action = 'https://sandbox.payfast.co.za/eng/process';
-        payfastForm.style.display = 'none';
+      if (response.success && response.data) {
+        // Create and submit PayFast form
+        const payfastForm = document.createElement("form");
+        payfastForm.method = "POST";
+        // Use sandbox URL for testing, switch to production when ready
+        payfastForm.action = "https://sandbox.payfast.co.za/eng/process";
+        payfastForm.style.display = "none";
 
         const allData: PayFastFormData = {
-            ...paymentData,
-            ...response.data,
-        }
+          ...paymentData,
+          ...response.data,
+        };
 
-        for (const key in allData) {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = key;
-            input.value = allData[key];
-            payfastForm.appendChild(input);
-        }
+        // Add all data as hidden form fields
+        Object.entries(allData).forEach(([key, value]) => {
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = key;
+          input.value = value;
+          payfastForm.appendChild(input);
+        });
 
         document.body.appendChild(payfastForm);
         payfastForm.submit();
-
-    } else {
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error Generating Payment",
+          description: response.error || "Failed to generate payment signature",
+        });
+        setIsLoading(false);
+      }
+    } catch (error) {
+      console.error("Payment error:", error);
       toast({
         variant: "destructive",
-        title: "Error Generating Payment",
-        description: response.error,
+        title: "Payment Error",
+        description: "An unexpected error occurred. Please try again.",
       });
       setIsLoading(false);
     }
   };
 
   return (
-    <Card className="max-w-md mx-auto">
-      <CardHeader>
-        <CardTitle>Account Top-up</CardTitle>
-        <CardDescription>
-          Add funds to your account using PayFast.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="amount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Amount (ZAR)</FormLabel>
-                  <FormControl>
-                    <Input type="number" step="0.01" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-             <FormField
-              control={form.control}
-              name="itemName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Payment For</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button type="submit" disabled={isLoading} className="w-full">
-              {isLoading ? <LoadingDots /> : <CreditCard className="mr-2 h-4 w-4" />}
-              Proceed to PayFast
-            </Button>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+    <div className="flex min-h-screen items-center justify-center p-4">
+      <Card className="max-w-md w-full">
+        <CardHeader>
+          <CardTitle>Account Top-up</CardTitle>
+          <CardDescription>
+            Add funds to your account using PayFast secure payment gateway.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="amount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Amount (ZAR)</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                          R
+                        </span>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          min="5"
+                          className="pl-7"
+                          placeholder="500.00"
+                          disabled={isLoading}
+                          {...field}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="itemName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Payment Description</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="e.g., RAK-SMS Subscription"
+                        disabled={isLoading}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" disabled={isLoading} className="w-full">
+                {isLoading ? (
+                  <>
+                    <LoadingDots />
+                    <span className="ml-2">Processing...</span>
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className="mr-2 h-4 w-4" />
+                    Proceed to PayFast
+                  </>
+                )}
+              </Button>
+              <p className="text-xs text-muted-foreground text-center mt-4">
+                You will be redirected to PayFast to complete your payment
+                securely.
+              </p>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
