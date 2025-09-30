@@ -218,10 +218,10 @@ export default function SafeWorkProcedurePage() {
                 name="taskDescription"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Task Description</FormLabel>
+                    <FormLabel>Task & Equipment Description</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="e.g., Changing a flat tire on a light commercial vehicle on the side of a highway."
+                        placeholder="e.g., Safe use of a 9-inch angle grinder for cutting steel beams."
                         {...field}
                         rows={8}
                       />

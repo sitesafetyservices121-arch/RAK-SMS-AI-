@@ -37,12 +37,12 @@ const prompt = ai.definePrompt({
       retrievedDocuments: z.array(z.string()).optional(),
   })},
   output: {schema: GenerateSafeWorkProcedureOutputSchema},
-  prompt: `You are an expert in creating Safe Work Procedures (SWP) for industrial and construction work in South Africa.
+  prompt: `You are an expert in creating Safe Work Procedures (SWP) for industrial and construction work in South Africa. An SWP focuses specifically on the safe use of tools and equipment for a particular task.
 
   Based on the task description provided for the client, generate a comprehensive, step-by-step Safe Work Procedure. The output should be a single block of markdown text, formatted professionally for a site-ready document.
   
-  IMPORTANT: Prioritize information from any 'retrieved documents' provided. These are approved examples and templates from the company's knowledge base. Use them as a style and content guide to ensure the final document meets company standards.
-  
+  IMPORTANT: Prioritize information from any 'retrieved documents' provided. These are approved examples from the company's knowledge base. Use them as a style and content guide.
+
   {{#if retrievedDocuments}}
   Here are some reference documents from the knowledge base. Use these as your primary guide:
   ---
@@ -55,13 +55,14 @@ const prompt = ai.definePrompt({
   Client: {{{clientName}}}
   Task Description: {{{taskDescription}}}
 
-  The procedure must include the following sections, formatted with markdown (e.g., ## for headings, * or - for list items):
+  The procedure must include the following sections, with a strong focus on the tools and equipment involved. Format with markdown (e.g., ## for headings, * or - for list items):
   1.  **## Purpose:** The objective of the task.
-  2.  **## Personal Protective Equipment (PPE):** A list of required PPE for this specific task.
-  3.  **## Pre-operational Checks:** Steps to take before starting the work (e.g., inspect tools, check work area).
-  4.  **## Step-by-Step Procedure:** The core safe execution steps, broken down into a clear, numbered or bulleted list.
-  5.  **## Post-operational Checks:** Steps to perform after completing the task (e.g., cleanup, tool storage).
-  6.  **## Emergency Procedures:** What to do in case of an emergency (e.g., injury, fire, spill).
+  2.  **## Tools & Equipment:** List all tools and equipment required.
+  3.  **## Personal Protective Equipment (PPE):** List required PPE, specific to the tools being used.
+  4.  **## Pre-operational Checks:** Detail the inspection steps for the tools and equipment before use. Check the work area for related hazards.
+  5.  **## Step-by-Step Procedure:** The core safe execution steps, detailing how to operate the tools/equipment safely from start to finish.
+  6.  **## Post-operational Checks:** Steps for safely powering down, cleaning, and storing tools and equipment.
+  7.  **## Emergency Procedures:** What to do in case of an emergency related to tool/equipment failure or misuse (e.g., injury, fire).
   `,
 });
 
