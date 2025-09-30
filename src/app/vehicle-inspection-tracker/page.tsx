@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -44,18 +45,18 @@ const VehicleDiagram = ({ damages, onClick }: { damages: DamageReport[], onClick
         viewBox="0 0 800 300"
         xmlns="http://www.w3.org/2000/svg"
       >
-        {/* Bakkie Outline */}
-        <path
-          d="M100 200 L100 150 Q100 130, 120 130 L250 130 L300 90 L550 90 L600 130 L700 130 Q720 130, 720 150 L720 200 L700 200 Q680 200, 680 220 L620 220 Q620 200, 600 200 L200 200 Q180 200, 180 220 L120 220 Q120 200, 100 200 Z"
-          stroke="hsl(var(--foreground))"
-          strokeWidth="3"
-          fill="hsl(var(--muted))"
-        />
-        <rect x="250" y="130" width="350" height="70" fill="hsl(var(--muted))" />
-        <path d="M250 130 L300 90 L550 90 L600 130 Z" stroke="hsl(var(--foreground))" strokeWidth="2" fill="hsl(var(--card))" />
+        {/* Bakkie Outline - Improved */}
+        <path d="M100 200 L100 160 Q100 140 120 140 L280 140 L330 100 L550 100 L600 140 L700 140 Q720 140 720 160 L720 200 L700 200 Q680 200 680 220 L620 220 Q620 200 600 200 L200 200 Q180 200 180 220 L120 220 Q120 200 100 200 Z" stroke="hsl(var(--foreground))" strokeWidth="3" fill="hsl(var(--muted))" />
+        <path d="M280 140 L330 100 L550 100 L600 140 L580 140 L550 115 L350 115 L300 140 Z" stroke="hsl(var(--foreground))" strokeWidth="2" fill="hsl(var(--card))" />
+        <rect x="120" y="195" width="60" height="10" fill="hsl(var(--foreground))" opacity="0.2" />
+        <rect x="620" y="195" width="60" height="10" fill="hsl(var(--foreground))" opacity="0.2" />
+
         {/* Wheels */}
         <circle cx="150" cy="220" r="25" fill="hsl(var(--foreground))" />
         <circle cx="650" cy="220" r="25" fill="hsl(var(--foreground))" />
+        <circle cx="150" cy="220" r="12" fill="hsl(var(--muted))" />
+        <circle cx="650" cy="220" r="12" fill="hsl(var(--muted))" />
+
 
         {/* Damage Points */}
         {damages.map((damage, index) => (
