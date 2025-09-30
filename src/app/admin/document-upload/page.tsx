@@ -23,8 +23,9 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { uploadDocumentAction } from "./actions";
+import { getDocumentSectionsAction } from "@/app/documents/actions";
 import LoadingDots from "@/components/ui/loading-dots";
 import { Combobox } from "@/components/ui/combobox";
 
@@ -36,33 +37,22 @@ const formSchema = z.object({
     document: z.instanceof(File).refine(file => file.size > 0, "A file is required."),
 });
 
-// In a real app, this would be fetched from a database
-const existingSections = [
-    "Safety Policy & Objectives",
-    "Legal & Compliance Framework",
-    "Risk Management",
-    "Safe Work Procedures",
-    "Method Statements",
-    "Emergency Preparedness & Response",
-    "Incident & Accident Reporting",
-    "First Aid & Medical Surveillance",
-    "PPE Management",
-    "Training & Competency Records",
-    "Toolbox Talks & Safety Communication",
-    "Contractor & Visitor Management",
-    "Environmental Management",
-    "Quality Management",
-    "Inspections & Audits",
-    "Vehicle & Equipment Safety",
-    "Resource & Site Management",
-    "Storeroom & Inventory Control",
-    "Monitoring & Reporting",
-    "Continuous Improvement & Review",
-].map(s => ({ value: s.toLowerCase().replace(/ /g, '-'), label: s }));
+type SectionOption = { value: string; label: string };
 
 export default function DocumentUploadPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const [existingSections, setExistingSections] = useState<SectionOption[]>([]);
   const { toast } = useToast();
+
+  useEffect(() => {
+    async function fetchSections() {
+      const response = await getDocumentSectionsAction();
+      if (response.success && response.data) {
+        setExistingSections(response.data);
+      }
+    }
+    fetchSections();
+  }, []);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -92,7 +82,13 @@ export default function DocumentUploadPage() {
         description: `${values.document.name} has been processed.`,
       });
       form.reset();
-      // In a real app, you'd refetch the sections list here
+      
+      // Optimistically update sections list
+      const newSectionValue = values.section.toLowerCase().replace(/ /g, '-');
+      if (!existingSections.some(s => s.value === newSectionValue)) {
+          setExistingSections(prev => [...prev, { value: newSectionValue, label: values.section}].sort((a,b) => a.label.localeCompare(b.label)));
+      }
+
     } else {
         toast({
             variant: "destructive",
@@ -107,7 +103,7 @@ export default function DocumentUploadPage() {
       <CardHeader>
         <CardTitle>Upload to Document Library</CardTitle>
         <CardDescription>
-          Add new documents to the centralized library.
+          Add new documents to the centralized library in Firebase.
         </CardDescription>
       </CardHeader>
       <CardContent>
