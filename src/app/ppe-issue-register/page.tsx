@@ -1,3 +1,6 @@
+
+"use client";
+
 import {
   Card,
   CardContent,
@@ -13,35 +16,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-const ppeRegister = [
-  {
-    employee: "John Doe",
-    item: "Hard Hat",
-    dateIssued: "2024-01-10",
-    signature: "Signed",
-  },
-  {
-    employee: "Jane Smith",
-    item: "Safety Boots",
-    dateIssued: "2024-02-15",
-    signature: "Signed",
-  },
-  {
-    employee: "Mike Johnson",
-    item: "Reflective Vest",
-    dateIssued: "2024-03-01",
-    signature: "Signed",
-  },
-  {
-    employee: "John Doe",
-    item: "Safety Gloves",
-    dateIssued: "2024-05-20",
-    signature: "Signed",
-  },
-];
+import { initialEmployees, ppeRegister } from "@/lib/employee-data";
 
 export default function PpeIssueRegisterPage() {
+  const employeeMap = new Map(initialEmployees.map(e => [e.id, `${e.firstName} ${e.surname}`]));
+
   return (
     <Card>
       <CardHeader>
@@ -63,7 +42,7 @@ export default function PpeIssueRegisterPage() {
           <TableBody>
             {ppeRegister.map((entry, index) => (
               <TableRow key={index}>
-                <TableCell className="font-medium">{entry.employee}</TableCell>
+                <TableCell className="font-medium">{employeeMap.get(entry.employeeId) || entry.employeeId}</TableCell>
                 <TableCell>{entry.item}</TableCell>
                 <TableCell>{entry.dateIssued}</TableCell>
                 <TableCell>{entry.signature}</TableCell>

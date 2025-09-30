@@ -52,46 +52,7 @@ import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
-
-type Course = {
-  courseName: string;
-  status: "Completed" | "Expired" | "Scheduled";
-  expiryDate: string;
-};
-
-type Employee = {
-  id: string;
-  firstName: string;
-  surname: string;
-  idNumber: string;
-  codeLicense: string;
-  courses: Course[];
-};
-
-const initialEmployees: Employee[] = [
-  {
-    id: "EMP-001",
-    firstName: "John",
-    surname: "Doe",
-    idNumber: "8501015000087",
-    codeLicense: "C1",
-    courses: [
-      { courseName: "First Aid Level 1", status: "Completed", expiryDate: "2025-08-01" },
-      { courseName: "Working at Heights", status: "Completed", expiryDate: "2026-01-15" },
-    ],
-  },
-  {
-    id: "EMP-002",
-    firstName: "Jane",
-    surname: "Smith",
-    idNumber: "9003155111086",
-    codeLicense: "N/A",
-    courses: [
-        { courseName: "HIRA", status: "Scheduled", expiryDate: "N/A" },
-        { courseName: "Fire Fighting", status: "Expired", expiryDate: "2024-05-20" },
-    ],
-  },
-];
+import { initialEmployees, type Employee, type Course } from "@/lib/employee-data";
 
 
 export default function EmployeeTrainingTrackerPage() {
@@ -381,5 +342,3 @@ function AddCourseForm({ onSubmit }: { onSubmit: (e: React.FormEvent<HTMLFormEle
         </form>
     )
 }
-
-    
