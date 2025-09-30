@@ -8,3 +8,4 @@ import '@/ai/flows/ai-ltir-trend-analysis.ts';
 import '@/ai/flows/ai-safe-work-procedure-generator.ts';
 import '@/ai/flows/ai-method-statement-generator.ts';
 import '@/ai/flows/ai-document-indexer.ts';
+import '@/ai/flows/ai-model-inspector.ts';

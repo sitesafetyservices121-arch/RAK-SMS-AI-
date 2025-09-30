@@ -30,6 +30,7 @@ import {
   LifeBuoy,
   CreditCard,
   MessageSquare,
+  List,
 } from "lucide-react";
 import {
   Sidebar,
@@ -91,6 +92,7 @@ const adminTools = [
   { href: "/admin/document-upload", label: "Document Upload", icon: Library },
   { href: "/admin/create-news", label: "Create News", icon: FilePlus },
   { href: "/admin/wilson-training", label: "AI Training", icon: BrainCircuit },
+  { href: "/admin/model-inspector", label: "Model Inspector", icon: List },
 ]
 
 export function AppNav() {

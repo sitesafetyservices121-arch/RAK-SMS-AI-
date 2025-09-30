@@ -14,6 +14,7 @@ import {
   ClipboardCheck,
   Library,
   BrainCircuit,
+  List,
 } from "lucide-react";
 
 const adminTools = [
@@ -40,6 +41,12 @@ const adminTools = [
     title: "AI Training",
     description: "Upload reference documents for the AI consultant.",
     href: "/admin/wilson-training",
+  },
+  {
+    icon: <List className="h-8 w-8 text-primary" />,
+    title: "Model Inspector",
+    description: "View available AI models for the system.",
+    href: "/admin/model-inspector",
   },
 ];
 
