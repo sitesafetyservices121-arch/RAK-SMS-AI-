@@ -14,6 +14,15 @@ export type Employee = {
   courses: Course[];
 };
 
+export type PpeRegisterEntry = {
+    employeeId: string;
+    ppeItemId: string;
+    dateIssued: string;
+    validUntil: string;
+    signature: "Signed" | "Pending";
+};
+
+
 export const initialEmployees: Employee[] = [
   {
     id: "EMP-001",
@@ -49,29 +58,33 @@ export const initialEmployees: Employee[] = [
   },
 ];
 
-export const ppeRegister = [
+export const ppeRegister: PpeRegisterEntry[] = [
   {
     employeeId: "EMP-001",
-    item: "Hard Hat",
+    ppeItemId: "ppe-hd-01",
     dateIssued: "2024-01-10",
+    validUntil: "2025-01-10",
     signature: "Signed",
   },
   {
     employeeId: "EMP-002",
-    item: "Safety Boots",
+    ppeItemId: "ppe-ft-01",
     dateIssued: "2024-02-15",
+    validUntil: "2025-02-15",
     signature: "Signed",
   },
   {
     employeeId: "EMP-003",
-    item: "Reflective Vest",
+    ppeItemId: "ppe-bd-01",
     dateIssued: "2024-03-01",
+    validUntil: "2025-03-01",
     signature: "Signed",
   },
   {
     employeeId: "EMP-001",
-    item: "Safety Gloves",
+    ppeItemId: "ppe-hg-01",
     dateIssued: "2024-05-20",
+    validUntil: "2024-11-20",
     signature: "Signed",
   },
 ];
