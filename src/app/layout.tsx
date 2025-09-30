@@ -14,7 +14,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { LiveClock } from "@/components/live-clock";
 import { ThemeProvider, ThemeToggle } from "@/components/theme-toggle";
 import Link from "next/link";
-import { ScriptProps } from "next/script";
+import Script from "next/script";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-body" });
 
@@ -27,7 +27,7 @@ export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
-}> & ScriptProps) {
+}>) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body
@@ -86,7 +86,7 @@ export default function RootLayout({
           </SidebarProvider>
         </ThemeProvider>
         <Toaster />
-        <script async src='https://www.payfast.io/assets/scripts/checkout.js' />
+        <Script src='https://www.payfast.io/assets/scripts/checkout.js' strategy="beforeInteractive" />
       </body>
     </html>
   );
