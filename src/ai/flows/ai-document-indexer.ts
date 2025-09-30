@@ -11,21 +11,21 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 
-export const IndexDocumentInputSchema = z.object({
+const IndexDocumentInputSchema = z.object({
   documentDataUri: z
     .string()
     .describe(
       "The document to index, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
     ),
 });
-export type IndexDocumentInput = z.infer<typeof IndexDocumentInputSchema>;
+type IndexDocumentInput = z.infer<typeof IndexDocumentInputSchema>;
 
-export const IndexDocumentOutputSchema = z.object({
+const IndexDocumentOutputSchema = z.object({
   success: z.boolean(),
   chunksIndexed: z.number(),
   message: z.string().optional(),
 });
-export type IndexDocumentOutput = z.infer<typeof IndexDocumentOutputSchema>;
+type IndexDocumentOutput = z.infer<typeof IndexDocumentOutputSchema>;
 
 export async function indexDocument(input: IndexDocumentInput): Promise<IndexDocumentOutput> {
   return indexDocumentFlow(input);

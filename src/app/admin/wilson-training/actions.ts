@@ -2,8 +2,11 @@
 
 import {
   indexDocument,
-  type IndexDocumentInput,
 } from "@/ai/flows/ai-document-indexer";
+
+type IndexDocumentInput = {
+  documentDataUri: string;
+};
 
 export async function indexDocumentAction(input: IndexDocumentInput) {
   try {

@@ -1,10 +1,15 @@
-
 "use server";
 
 import {
   generateMethodStatement,
-  type GenerateMethodStatementInput,
 } from "@/ai/flows/ai-method-statement-generator";
+
+type GenerateMethodStatementInput = {
+    clientName: string;
+    siteLocation: string;
+    taskDescription: string;
+    hazardsAndRisks: string;
+}
 
 export async function generateMethodStatementAction(input: GenerateMethodStatementInput) {
   try {

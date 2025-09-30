@@ -4,8 +4,6 @@
  * @fileOverview An AI consultant specializing in OHS Act, COID Act, and all relevant South African acts.
  *
  * - ohsActConsultant - A function that provides answers to questions related to South African acts.
- * - OhsActConsultantInput - The input type for the ohsActConsultant function.
- * - OhsActConsultantOutput - The return type for the ohsActConsultant function.
  */
 
 import {ai} from '@/ai/genkit';
@@ -17,12 +15,12 @@ const OhsActConsultantInputSchema = z.object({
   history: z.array(z.any()).optional().describe("The chat history."),
   documentDataUri: z.string().optional().describe("A document provided by the user for context, as a data URI.")
 });
-export type OhsActConsultantInput = z.infer<typeof OhsActConsultantInputSchema>;
+type OhsActConsultantInput = z.infer<typeof OhsActConsultantInputSchema>;
 
 const OhsActConsultantOutputSchema = z.object({
   answer: z.string().describe('The answer to the question, based on the OHS Act, COID Act, and other relevant South African acts.'),
 });
-export type OhsActConsultantOutput = z.infer<typeof OhsActConsultantOutputSchema>;
+type OhsActConsultantOutput = z.infer<typeof OhsActConsultantOutputSchema>;
 
 export async function ohsActConsultant(input: OhsActConsultantInput): Promise<OhsActConsultantOutput> {
   return ohsActConsultantFlow(input);

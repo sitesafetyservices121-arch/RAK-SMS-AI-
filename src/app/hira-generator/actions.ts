@@ -2,8 +2,12 @@
 
 import {
   generateHira,
-  type HiraInput,
 } from "@/ai/flows/ai-hira-generator";
+
+type HiraInput = {
+    projectDetails: string;
+    regulatoryRequirements: string;
+}
 
 export async function generateHiraAction(input: HiraInput) {
   try {

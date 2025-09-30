@@ -4,15 +4,13 @@
  * @fileOverview Generates a Method Statement from a text prompt describing the task.
  *
  * - generateMethodStatement - A function that generates the method statement.
- * - GenerateMethodStatementInput - The input type for the function.
- * - GenerateMethodStatementOutput - The return type for the function.
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import { retrieveSimilarChunksFlow } from './ai-document-indexer';
 
-export const GenerateMethodStatementInputSchema = z.object({
+const GenerateMethodStatementInputSchema = z.object({
   clientName: z.string().describe('The name of the client or company for whom the work is being done.'),
   siteLocation: z.string().describe('The specific location or address where the work will take place.'),
   taskDescription: z
@@ -20,12 +18,12 @@ export const GenerateMethodStatementInputSchema = z.object({
     .describe('A detailed description of the work/task for which the Method Statement is required.'),
   hazardsAndRisks: z.string().describe('A list of known or anticipated hazards and risks associated with the task.'),
 });
-export type GenerateMethodStatementInput = z.infer<typeof GenerateMethodStatementInputSchema>;
+type GenerateMethodStatementInput = z.infer<typeof GenerateMethodStatementInputSchema>;
 
-export const GenerateMethodStatementOutputSchema = z.object({
+const GenerateMethodStatementOutputSchema = z.object({
   methodStatement: z.string().describe('The generated Method Statement, formatted for professional presentation.'),
 });
-export type GenerateMethodStatementOutput = z.infer<typeof GenerateMethodStatementOutputSchema>;
+type GenerateMethodStatementOutput = z.infer<typeof GenerateMethodStatementOutputSchema>;
 
 export async function generateMethodStatement(input: GenerateMethodStatementInput): Promise<GenerateMethodStatementOutput> {
   return generateMethodStatementFlow(input);

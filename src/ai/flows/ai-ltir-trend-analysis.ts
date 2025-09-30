@@ -5,8 +5,6 @@
  * @fileOverview Analyzes Lost Time Injury Rate (LTIR) data to identify trends and areas for improvement using AI.
  *
  * - analyzeLtirTrend - A function that handles the LTIR trend analysis process.
- * - AnalyzeLtirTrendInput - The input type for the analyzeLtirTrend function.
- * - AnalyzeLtirTrendOutput - The return type for the analyzeLtirTrend function.
  */
 
 import {ai} from '@/ai/genkit';
@@ -17,14 +15,14 @@ const AnalyzeLtirTrendInputSchema = z.object({
   totalHoursWorked: z.number().describe("The total hours worked for the period."),
   additionalContext: z.string().optional().describe('Any additional context, historical data, or specific questions about the data.'),
 });
-export type AnalyzeLtirTrendInput = z.infer<typeof AnalyzeLtirTrendInputSchema>;
+type AnalyzeLtirTrendInput = z.infer<typeof AnalyzeLtirTrendInputSchema>;
 
 const AnalyzeLtirTrendOutputSchema = z.object({
   trendAnalysis: z.string().describe('AI-driven analysis of the provided data and LTIR score.'),
   improvementAreas: z.string().describe('Identified areas for safety improvement based on the context.'),
   recommendations: z.string().describe('Specific recommendations to address identified issues and reduce the LTIR.'),
 });
-export type AnalyzeLtirTrendOutput = z.infer<typeof AnalyzeLtirTrendOutputSchema>;
+type AnalyzeLtirTrendOutput = z.infer<typeof AnalyzeLtirTrendOutputSchema>;
 
 export async function analyzeLtirTrend(input: AnalyzeLtirTrendInput): Promise<AnalyzeLtirTrendOutput> {
   return analyzeLtirTrendFlow(input);

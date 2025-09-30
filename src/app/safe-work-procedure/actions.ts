@@ -1,10 +1,13 @@
-
 "use server";
 
 import {
   generateSafeWorkProcedure,
-  type GenerateSafeWorkProcedureInput,
 } from "@/ai/flows/ai-safe-work-procedure-generator";
+
+type GenerateSafeWorkProcedureInput = {
+    clientName: string;
+    taskDescription: string;
+}
 
 export async function generateSwpAction(input: GenerateSafeWorkProcedureInput) {
   try {

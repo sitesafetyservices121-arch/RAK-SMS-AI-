@@ -1,10 +1,12 @@
-
 "use server";
 
 import {
   generateShePlan,
-  type GenerateShePlanInput,
 } from "@/ai/flows/ai-she-plan-from-prompt";
+
+type GenerateShePlanInput = {
+  projectDescription: string;
+};
 
 // The input type is now just the projectDescription string
 export async function generateShePlanAction(input: GenerateShePlanInput) {

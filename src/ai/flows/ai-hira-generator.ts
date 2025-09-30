@@ -6,8 +6,6 @@
  * @fileOverview AI-powered Hazard Identification and Risk Assessment (HIRA) generator.
  *
  * - generateHira - A function that generates a HIRA report based on project details.
- * - HiraInput - The input type for the generateHira function.
- * - HiraOutput - The return type for the generateHira function.
  */
 
 import {ai} from '@/ai/genkit';
@@ -22,14 +20,14 @@ const HiraInputSchema = z.object({
     .string()
     .describe('Applicable regulatory requirements and industry standards, e.g., OHS Act & Construction Regulations.'),
 });
-export type HiraInput = z.infer<typeof HiraInputSchema>;
+type HiraInput = z.infer<typeof HiraInputSchema>;
 
 const HiraOutputSchema = z.object({
   controlMeasures: z
     .string()
     .describe('Recommended additional control measures to mitigate the identified hazard, based on South African regulations.'),
 });
-export type HiraOutput = z.infer<typeof HiraOutputSchema>;
+type HiraOutput = z.infer<typeof HiraOutputSchema>;
 
 export async function generateHira(input: HiraInput): Promise<HiraOutput> {
   return generateHiraFlow(input);
@@ -77,5 +75,3 @@ const generateHiraFlow = ai.defineFlow(
     return output!;
   }
 );
-
-    

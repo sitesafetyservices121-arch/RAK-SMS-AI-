@@ -4,8 +4,6 @@
  * @fileOverview Generates a SHE (Safety, Health, and Environment) plan from a text prompt describing the project.
  *
  * - generateShePlan - A function that generates the SHE plan.
- * - GenerateShePlanInput - The input type for the generateShePlan function.
- * - GenerateShePlanOutput - The return type for the generateShePlan function.
  */
 
 import {ai} from '@/ai/genkit';
@@ -17,7 +15,7 @@ const GenerateShePlanInputSchema = z.object({
     .string()
     .describe('A detailed description of the project, including Client Name, Site Location, Scope of Work, Number of employees + contractors, Types of hazards expected, Appointed Safety Officer & Supervisors, Emergency contacts, and Project start & end dates.'),
 });
-export type GenerateShePlanInput = z.infer<typeof GenerateShePlanInputSchema>;
+type GenerateShePlanInput = z.infer<typeof GenerateShePlanInputSchema>;
 
 const GenerateShePlanOutputSchema = z.object({
   introduction: z.string().describe("Introduction and scope of the project, tailored to the provided details."),
@@ -31,7 +29,7 @@ const GenerateShePlanOutputSchema = z.object({
   incidentReporting: z.string().describe("A standard procedure for reporting and investigating incidents as per the OHS Act."),
   monitoringAndReview: z.string().describe("How the SHE plan will be monitored and reviewed throughout the project timeline."),
 });
-export type GenerateShePlanOutput = z.infer<typeof GenerateShePlanOutputSchema>;
+type GenerateShePlanOutput = z.infer<typeof GenerateShePlanOutputSchema>;
 
 export async function generateShePlan(input: GenerateShePlanInput): Promise<GenerateShePlanOutput> {
   return generateShePlanFlow(input);

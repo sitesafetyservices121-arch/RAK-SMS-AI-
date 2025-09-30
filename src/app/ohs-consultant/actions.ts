@@ -2,8 +2,13 @@
 
 import {
   ohsActConsultant,
-  type OhsActConsultantInput,
 } from "@/ai/flows/ai-ohs-act-consultant";
+
+type OhsActConsultantInput = {
+    query: string;
+    history?: any[];
+    documentDataUri?: string;
+}
 
 export async function askWilsonAction(input: OhsActConsultantInput) {
   try {

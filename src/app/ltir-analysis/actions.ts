@@ -1,10 +1,14 @@
-
 "use server";
 
 import {
   analyzeLtirTrend,
-  type AnalyzeLtirTrendInput,
 } from "@/ai/flows/ai-ltir-trend-analysis";
+
+type AnalyzeLtirTrendInput = {
+    numberOfInjuries: number;
+    totalHoursWorked: number;
+    additionalContext?: string;
+}
 
 export async function analyzeLtirAction(input: AnalyzeLtirTrendInput) {
   try {

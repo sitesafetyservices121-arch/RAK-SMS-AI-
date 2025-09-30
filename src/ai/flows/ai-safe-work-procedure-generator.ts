@@ -4,26 +4,24 @@
  * @fileOverview Generates a Safe Work Procedure from a text prompt describing the task.
  *
  * - generateSafeWorkProcedure - A function that generates the procedure.
- * - GenerateSafeWorkProcedureInput - The input type for the function.
- * - GenerateSafeWorkProcedureOutput - The return type for the function.
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import { retrieveSimilarChunksFlow } from './ai-document-indexer';
 
-export const GenerateSafeWorkProcedureInputSchema = z.object({
+const GenerateSafeWorkProcedureInputSchema = z.object({
   clientName: z.string().describe("The name of the client for whom the work is being done."),
   taskDescription: z
     .string()
     .describe('A detailed description of the task for which the Safe Work Procedure is required.'),
 });
-export type GenerateSafeWorkProcedureInput = z.infer<typeof GenerateSafeWorkProcedureInputSchema>;
+type GenerateSafeWorkProcedureInput = z.infer<typeof GenerateSafeWorkProcedureInputSchema>;
 
-export const GenerateSafeWorkProcedureOutputSchema = z.object({
+const GenerateSafeWorkProcedureOutputSchema = z.object({
   procedure: z.string().describe('The generated step-by-step Safe Work Procedure, formatted in markdown.'),
 });
-export type GenerateSafeWorkProcedureOutput = z.infer<typeof GenerateSafeWorkProcedureOutputSchema>;
+type GenerateSafeWorkProcedureOutput = z.infer<typeof GenerateSafeWorkProcedureOutputSchema>;
 
 export async function generateSafeWorkProcedure(input: GenerateSafeWorkProcedureInput): Promise<GenerateSafeWorkProcedureOutput> {
   return generateSafeWorkProcedureFlow(input);
