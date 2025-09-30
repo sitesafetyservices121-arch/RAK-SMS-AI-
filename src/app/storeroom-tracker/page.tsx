@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -30,7 +31,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Search, Edit } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type ItemCategory = "PPE" | "Consumable" | "Tool" | "Equipment";
@@ -63,6 +64,9 @@ const initialStock: StockItem[] = [
 export default function StoreroomTrackerPage() {
   const [stock, setStock] = useState<StockItem[]>(initialStock);
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<StockItem | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const { toast } = useToast();
 
   const handleAddItem = (event: React.FormEvent<HTMLFormElement>) => {
@@ -90,6 +94,28 @@ export default function StoreroomTrackerPage() {
     setIsAddOpen(false);
   }
 
+  const handleEditItem = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!editingItem) return;
+
+    const formData = new FormData(event.currentTarget);
+    
+    setStock(stock.map(item => item.id === editingItem.id ? {
+      ...item,
+      name: formData.get("name") as string,
+      category: formData.get("category") as ItemCategory,
+      prefix: formData.get("prefix") as string || undefined,
+      quantity: parseInt(formData.get("quantity") as string || "1"),
+      location: formData.get("location") as string,
+      expiryDate: formData.get("expiryDate") as string || undefined,
+      condition: formData.get("condition") as ItemCondition || undefined,
+      status: formData.get("status") as ItemStatus || "In Storeroom",
+    } : item));
+
+    toast({ title: "Item Updated" });
+    setEditingItem(null);
+  }
+
   const getStatusBadgeVariant = (status?: ItemStatus | ItemCondition) => {
     switch (status) {
       case "In Use":
@@ -106,6 +132,18 @@ export default function StoreroomTrackerPage() {
     }
   };
 
+  const filteredStock = useMemo(() => {
+    return stock.filter(item => {
+        const matchesSearch = searchTerm === "" || 
+            item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (item.prefix && item.prefix.toLowerCase().includes(searchTerm.toLowerCase()));
+        
+        const matchesStatus = statusFilter === "all" || item.status === statusFilter || item.condition === statusFilter;
+
+        return matchesSearch && matchesStatus;
+    });
+  }, [stock, searchTerm, statusFilter]);
+
   const renderTable = (items: StockItem[], category: ItemCategory) => (
     <Table>
       <TableHeader>
@@ -115,6 +153,7 @@ export default function StoreroomTrackerPage() {
           <TableHead>Location</TableHead>
           <TableHead>Status / Condition</TableHead>
           <TableHead>Expiry Date</TableHead>
+          <TableHead className="text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -128,6 +167,11 @@ export default function StoreroomTrackerPage() {
               {item.condition && <Badge className="ml-1" variant={getStatusBadgeVariant(item.condition)}>{item.condition}</Badge>}
             </TableCell>
             <TableCell>{item.expiryDate || "N/A"}</TableCell>
+            <TableCell className="text-right">
+              <Button variant="ghost" size="icon" onClick={() => setEditingItem(item)}>
+                <Edit className="h-4 w-4" />
+              </Button>
+            </TableCell>
           </TableRow>
         ))}
       </TableBody>
@@ -136,85 +180,55 @@ export default function StoreroomTrackerPage() {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle>Storeroom & Stocktake Tracker</CardTitle>
-          <CardDescription>
-            Manage storeroom inventory, including PPE, consumables, tools, and equipment.
-          </CardDescription>
+      <CardHeader>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+            <CardTitle>Storeroom & Stocktake Tracker</CardTitle>
+            <CardDescription>
+                Manage storeroom inventory, including PPE, consumables, tools, and equipment.
+            </CardDescription>
+            </div>
+            <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+                <DialogTrigger asChild>
+                    <Button>
+                        <PlusCircle className="mr-2 h-4 w-4" /> Add Item
+                    </Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Add New Storeroom Item</DialogTitle>
+                    </DialogHeader>
+                    <ItemForm onSubmit={handleAddItem} />
+                </DialogContent>
+            </Dialog>
         </div>
-        <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-            <DialogTrigger asChild>
-                <Button>
-                    <PlusCircle className="mr-2 h-4 w-4" /> Add Item
-                </Button>
-            </DialogTrigger>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Add New Storeroom Item</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleAddItem} className="space-y-4 py-2">
-                    <div className="space-y-2">
-                        <Label htmlFor="category">Category</Label>
-                        <Select name="category" required>
-                            <SelectTrigger id="category"><SelectValue placeholder="Select a category" /></SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="PPE">PPE</SelectItem>
-                                <SelectItem value="Consumable">Consumable</SelectItem>
-                                <SelectItem value="Tool">Tool</SelectItem>
-                                <SelectItem value="Equipment">Equipment</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="name">Item Name</Label>
-                        <Input id="name" name="name" placeholder="e.g., Safety Helmet" required />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="prefix">Prefix / Code (for Tools/Equipment)</Label>
-                        <Input id="prefix" name="prefix" placeholder="e.g., RAK-T-015" />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="quantity">Quantity</Label>
-                        <Input id="quantity" name="quantity" type="number" defaultValue="1" required />
-                    </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="location">Location</Label>
-                        <Input id="location" name="location" placeholder="e.g., Shelf A1" required />
-                    </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="expiryDate">Expiry Date (if applicable)</Label>
-                        <Input id="expiryDate" name="expiryDate" type="date" />
-                    </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="condition">Condition (for Tools/Equipment)</Label>
-                        <Select name="condition">
-                            <SelectTrigger id="condition"><SelectValue placeholder="Select condition" /></SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="Good">Good</SelectItem>
-                                <SelectItem value="Needs Repair">Needs Repair</SelectItem>
-                                <SelectItem value="Awaiting Discard">Awaiting Discard</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="status">Status</Label>
-                         <Select name="status" defaultValue="In Storeroom">
-                            <SelectTrigger id="status"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="In Storeroom">In Storeroom</SelectItem>
-                                <SelectItem value="In Use">In Use</SelectItem>
-                                <SelectItem value="Out for Repair">Out for Repair</SelectItem>
-                                <SelectItem value="Discarded">Discarded</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <DialogFooter>
-                        <Button type="submit">Add Item</Button>
-                    </DialogFooter>
-                </form>
-            </DialogContent>
-        </Dialog>
+         <div className="mt-4 flex flex-col md:flex-row md:items-center gap-4">
+            <div className="relative flex-1">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                type="search"
+                placeholder="Search by item name or prefix..."
+                className="w-full pl-8"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                />
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full md:w-[220px]">
+                    <SelectValue placeholder="Filter by status/condition" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="all">All Statuses/Conditions</SelectItem>
+                    <SelectItem value="In Storeroom">In Storeroom</SelectItem>
+                    <SelectItem value="In Use">In Use</SelectItem>
+                    <SelectItem value="Good">Good</SelectItem>
+                    <SelectItem value="Needs Repair">Needs Repair</SelectItem>
+                    <SelectItem value="Out for Repair">Out for Repair</SelectItem>
+                    <SelectItem value="Awaiting Discard">Awaiting Discard</SelectItem>
+                    <SelectItem value="Discarded">Discarded</SelectItem>
+                </SelectContent>
+            </Select>
+        </div>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="PPE">
@@ -225,19 +239,95 @@ export default function StoreroomTrackerPage() {
             <TabsTrigger value="Equipment">Equipment</TabsTrigger>
           </TabsList>
           <TabsContent value="PPE">
-            {renderTable(stock.filter(item => item.category === 'PPE'), "PPE")}
+            {renderTable(filteredStock.filter(item => item.category === 'PPE'), "PPE")}
           </TabsContent>
           <TabsContent value="Consumable">
-            {renderTable(stock.filter(item => item.category === 'Consumable'), "Consumable")}
+            {renderTable(filteredStock.filter(item => item.category === 'Consumable'), "Consumable")}
           </TabsContent>
           <TabsContent value="Tool">
-             {renderTable(stock.filter(item => item.category === 'Tool'), "Tool")}
+             {renderTable(filteredStock.filter(item => item.category === 'Tool'), "Tool")}
           </TabsContent>
            <TabsContent value="Equipment">
-             {renderTable(stock.filter(item => item.category === 'Equipment'), "Equipment")}
+             {renderTable(filteredStock.filter(item => item.category === 'Equipment'), "Equipment")}
            </TabsContent>
         </Tabs>
+        
+        {/* Edit Dialog */}
+        <Dialog open={!!editingItem} onOpenChange={(open) => !open && setEditingItem(null)}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Edit: {editingItem?.name}</DialogTitle>
+                </DialogHeader>
+                <ItemForm onSubmit={handleEditItem} defaultValues={editingItem} />
+            </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );
 }
+
+function ItemForm({ onSubmit, defaultValues }: { onSubmit: (e: React.FormEvent<HTMLFormElement>) => void, defaultValues?: StockItem | null }) {
+    return (
+        <form onSubmit={onSubmit} className="space-y-4 py-2">
+            <div className="space-y-2">
+                <Label htmlFor="category">Category</Label>
+                <Select name="category" required defaultValue={defaultValues?.category}>
+                    <SelectTrigger id="category"><SelectValue placeholder="Select a category" /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="PPE">PPE</SelectItem>
+                        <SelectItem value="Consumable">Consumable</SelectItem>
+                        <SelectItem value="Tool">Tool</SelectItem>
+                        <SelectItem value="Equipment">Equipment</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+                <div className="space-y-2">
+                <Label htmlFor="name">Item Name</Label>
+                <Input id="name" name="name" placeholder="e.g., Safety Helmet" required defaultValue={defaultValues?.name} />
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="prefix">Prefix / Code (for Tools/Equipment)</Label>
+                <Input id="prefix" name="prefix" placeholder="e.g., RAK-T-015" defaultValue={defaultValues?.prefix} />
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="quantity">Quantity</Label>
+                <Input id="quantity" name="quantity" type="number" required defaultValue={defaultValues?.quantity} />
+            </div>
+                <div className="space-y-2">
+                <Label htmlFor="location">Location</Label>
+                <Input id="location" name="location" placeholder="e.g., Shelf A1" required defaultValue={defaultValues?.location} />
+            </div>
+                <div className="space-y-2">
+                <Label htmlFor="expiryDate">Expiry Date (if applicable)</Label>
+                <Input id="expiryDate" name="expiryDate" type="date" defaultValue={defaultValues?.expiryDate} />
+            </div>
+                <div className="space-y-2">
+                <Label htmlFor="condition">Condition (for Tools/Equipment)</Label>
+                <Select name="condition" defaultValue={defaultValues?.condition}>
+                    <SelectTrigger id="condition"><SelectValue placeholder="Select condition" /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="Good">Good</SelectItem>
+                        <SelectItem value="Needs Repair">Needs Repair</SelectItem>
+                        <SelectItem value="Awaiting Discard">Awaiting Discard</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
+                    <Select name="status" defaultValue={defaultValues?.status}>
+                    <SelectTrigger id="status"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="In Storeroom">In Storeroom</SelectItem>
+                        <SelectItem value="In Use">In Use</SelectItem>
+                        <SelectItem value="Out for Repair">Out for Repair</SelectItem>
+                        <SelectItem value="Discarded">Discarded</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+            <DialogFooter>
+                <Button type="submit">Save Changes</Button>
+            </DialogFooter>
+        </form>
+    );
+}
+
