@@ -79,11 +79,16 @@ export default function ClientBillingPage() {
               <span className="text-muted-foreground">Next Invoice Amount</span>
               <span className="font-semibold">{subscriptionDetails.amount}</span>
             </div>
+             <Separator />
+             <div className="flex items-center justify-between pt-2">
+                <span className="text-muted-foreground">Payment Provider</span>
+                 <img src="https://www.payfast.io/assets/images/payfast_logo_2-1.png" alt="PayFast Logo" className="h-6" />
+            </div>
           </CardContent>
           <CardFooter>
-            <Button className="w-full">
+            <Button className="w-full" disabled>
               <CreditCard className="mr-2 h-4 w-4" />
-              Manage Payment Method
+              PayFast Integration Pending
             </Button>
           </CardFooter>
         </Card>

@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, FileText, Send } from "lucide-react";
+import { MoreHorizontal, FileText, Send, AlertTriangle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -69,10 +69,20 @@ export default function AdminBillingPage() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Client Billing Management</CardTitle>
-        <CardDescription>
-          Track and manage client subscriptions and payments.
-        </CardDescription>
+        <div className="flex items-center justify-between">
+            <div>
+                <CardTitle>Client Billing Management</CardTitle>
+                <CardDescription>
+                Track and manage client subscriptions and payments.
+                </CardDescription>
+            </div>
+            <div className="flex items-center gap-2 p-3 rounded-md bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800">
+                <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                <p className="text-sm text-yellow-800 dark:text-yellow-300">
+                    PayFast integration is pending. Please complete setup.
+                </p>
+            </div>
+        </div>
       </CardHeader>
       <CardContent>
         <Table>
