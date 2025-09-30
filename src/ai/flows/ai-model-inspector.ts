@@ -1,12 +1,11 @@
-
 'use server';
 /**
  * @fileOverview A flow for listing available generative models.
  */
 
 import { ai } from '@/ai/genkit';
-import { listModels as listGenkitModels } from 'genkit/ai';
 import { z } from 'genkit';
+import fetch from 'node-fetch';
 
 const ModelInfoSchema = z.object({
   name: z.string(),
@@ -30,16 +29,20 @@ const listModelsFlow = ai.defineFlow(
     outputSchema: ListModelsOutputSchema,
   },
   async () => {
-    const models = await listGenkitModels();
+    const apiKey = process.env.GEMINI_API_KEY;
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`
+    );
+    const { models } = await res.json();
     const generationModels = models.filter(
-      (m) => m.supports.generate && m.name.startsWith('googleai/gemini')
+      (m: any) => m.supportedGenerationMethods.includes('generateContent') && m.name.includes('gemini')
     );
     return {
-      models: generationModels.map((m) => ({
+      models: generationModels.map((m: any) => ({
         name: m.name,
-        description: m.info?.description || 'No description available.',
-        inputTokenLimit: m.info?.inputTokenLimit || 0,
-        outputTokenLimit: m.info?.outputTokenLimit || 0,
+        description: m.description || 'No description available.',
+        inputTokenLimit: m.inputTokenLimit || 0,
+        outputTokenLimit: m.outputTokenLimit || 0,
       })),
     };
   }
