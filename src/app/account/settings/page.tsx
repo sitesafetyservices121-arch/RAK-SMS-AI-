@@ -19,6 +19,9 @@ export default function AccountSettingsPage() {
 
     // In a real app, you'd fetch user data here.
     const currentUser = {
+        firstName: "Admin",
+        surname: "User",
+        position: "System Administrator",
         email: "admin@rak-sms.co.za",
         phone: "+27 82 123 4567"
     };
@@ -42,6 +45,20 @@ export default function AccountSettingsPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                <Label htmlFor="firstName">First Name</Label>
+                <Input id="firstName" defaultValue={currentUser.firstName} />
+                </div>
+                <div className="grid gap-2">
+                <Label htmlFor="surname">Surname</Label>
+                <Input id="surname" defaultValue={currentUser.surname} />
+                </div>
+            </div>
+             <div className="grid gap-2">
+              <Label htmlFor="position">Position</Label>
+              <Input id="position" defaultValue={currentUser.position} />
+            </div>
             <div className="grid gap-2">
               <Label htmlFor="email">Email Address</Label>
               <Input id="email" type="email" defaultValue={currentUser.email} />
