@@ -23,9 +23,9 @@ import { PlusCircle } from "lucide-react";
 
 // Mock data for existing clients
 const clients = [
-  { id: "CLIENT-001", name: "ConstructCo", contact: "info@constructco.com", status: "Active" },
-  { id: "CLIENT-002", name: "BuildIt Right", contact: "contact@buildit.com", status: "Active" },
-  { id: "CLIENT-003", name: "InfraWorks", contact: "projects@infraworks.co.za", status: "Pending" },
+  { id: "CLIENT-001", name: "ConstructCo", contact: "info@constructco.com", status: "Active", userCount: 5 },
+  { id: "CLIENT-002", name: "BuildIt Right", contact: "contact@buildit.com", status: "Active", userCount: 1 },
+  { id: "CLIENT-003", name: "InfraWorks", contact: "projects@infraworks.co.za", status: "Pending", userCount: 12 },
 ];
 
 export default function OnboardingPage() {
@@ -52,9 +52,15 @@ export default function OnboardingPage() {
                 placeholder="Enter contact email"
               />
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="clientId">Client ID</Label>
-              <Input id="clientId" placeholder="e.g., CLIENT-004" />
+            <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                <Label htmlFor="clientId">Client ID</Label>
+                <Input id="clientId" placeholder="e.g., CLIENT-004" />
+                </div>
+                <div className="grid gap-2">
+                <Label htmlFor="userCount">Number of Users</Label>
+                <Input id="userCount" type="number" placeholder="e.g., 5" />
+                </div>
             </div>
             <Button type="submit" className="w-full">
               <PlusCircle className="mr-2 h-4 w-4" /> Add Client
@@ -73,7 +79,7 @@ export default function OnboardingPage() {
               <TableRow>
                 <TableHead>Client ID</TableHead>
                 <TableHead>Company Name</TableHead>
-                <TableHead>Contact Email</TableHead>
+                <TableHead>Users</TableHead>
                 <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
@@ -82,7 +88,7 @@ export default function OnboardingPage() {
                 <TableRow key={client.id}>
                   <TableCell className="font-medium">{client.id}</TableCell>
                   <TableCell>{client.name}</TableCell>
-                  <TableCell>{client.contact}</TableCell>
+                  <TableCell>{client.userCount}</TableCell>
                   <TableCell>{client.status}</TableCell>
                 </TableRow>
               ))}

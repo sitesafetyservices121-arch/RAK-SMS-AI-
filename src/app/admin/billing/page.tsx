@@ -28,33 +28,38 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 
-// Mock data for client billing
-const billingData = [
+// Mock data for client subscriptions
+const clientData = [
   {
     clientId: "CLIENT-001",
     companyName: "ConstructCo",
-    plan: "Pro Tier",
+    userCount: 5,
     status: "Paid",
-    amountDue: "R0.00",
     lastPayment: "2024-07-01",
   },
   {
     clientId: "CLIENT-002",
     companyName: "BuildIt Right",
-    plan: "Pro Tier",
+    userCount: 1,
     status: "Paid",
-    amountDue: "R0.00",
     lastPayment: "2024-07-01",
   },
   {
     clientId: "CLIENT-003",
     companyName: "InfraWorks",
-    plan: "Starter Tier",
+    userCount: 12,
     status: "Overdue",
-    amountDue: "R1500.00",
     lastPayment: "2024-05-30",
   },
 ];
+
+const calculateSubscription = (userCount: number) => {
+    if (userCount <= 0) return { plan: "No users", amount: 0 };
+    if (userCount === 1) return { plan: "Base Plan", amount: 2500 };
+    const additionalUsers = userCount - 1;
+    const amount = 2500 + (additionalUsers * 350);
+    return { plan: `Base Plan + ${additionalUsers} user(s)`, amount };
+}
 
 export default function AdminBillingPage() {
     const { toast } = useToast();
@@ -87,47 +92,50 @@ export default function AdminBillingPage() {
             <TableRow>
               <TableHead>Client ID</TableHead>
               <TableHead>Company Name</TableHead>
-              <TableHead>Plan</TableHead>
+              <TableHead>Subscription Plan</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Amount Due</TableHead>
+              <TableHead>Monthly Amount</TableHead>
               <TableHead>Last Payment</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {billingData.map((client) => (
-              <TableRow key={client.clientId}>
-                <TableCell className="font-medium">{client.clientId}</TableCell>
-                <TableCell>{client.companyName}</TableCell>
-                <TableCell>{client.plan}</TableCell>
-                <TableCell>
-                  <Badge variant={client.status === "Overdue" ? "destructive" : "default"}>
-                    {client.status}
-                  </Badge>
-                </TableCell>
-                <TableCell>{client.amountDue}</TableCell>
-                <TableCell>{client.lastPayment}</TableCell>
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="h-8 w-8 p-0">
-                        <span className="sr-only">Open menu</span>
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem onClick={() => handleSendReminder(client.companyName)}>
-                         <Send className="mr-2 h-4 w-4" /> Send Reminder
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <FileText className="mr-2 h-4 w-4" /> View Invoice
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
+            {clientData.map((client) => {
+              const { plan, amount } = calculateSubscription(client.userCount);
+              return (
+                <TableRow key={client.clientId}>
+                  <TableCell className="font-medium">{client.clientId}</TableCell>
+                  <TableCell>{client.companyName}</TableCell>
+                  <TableCell>{plan}</TableCell>
+                  <TableCell>
+                    <Badge variant={client.status === "Overdue" ? "destructive" : "default"}>
+                      {client.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>R{client.status === "Overdue" ? amount.toFixed(2) : '0.00'}</TableCell>
+                  <TableCell>{client.lastPayment}</TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <span className="sr-only">Open menu</span>
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuItem onClick={() => handleSendReminder(client.companyName)} disabled={client.status !== 'Overdue'}>
+                           <Send className="mr-2 h-4 w-4" /> Send Reminder
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <FileText className="mr-2 h-4 w-4" /> View Invoice
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </CardContent>
