@@ -1,5 +1,4 @@
 
-// 'use server'
 'use server';
 
 /**
@@ -14,19 +13,16 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const AnalyzeLtirTrendInputSchema = z.object({
-  ltirData: z
-    .string()
-    .describe(
-      'Historical LTIR data, preferably in CSV format. Include date, number of injuries, and hours worked.'
-    ),
-  additionalContext: z.string().optional().describe('Any additional context about the data.'),
+  numberOfInjuries: z.number().describe("The number of lost time injuries for the period."),
+  totalHoursWorked: z.number().describe("The total hours worked for the period."),
+  additionalContext: z.string().optional().describe('Any additional context, historical data, or specific questions about the data.'),
 });
 export type AnalyzeLtirTrendInput = z.infer<typeof AnalyzeLtirTrendInputSchema>;
 
 const AnalyzeLtirTrendOutputSchema = z.object({
-  trendAnalysis: z.string().describe('AI-driven analysis of LTIR trends.'),
-  improvementAreas: z.string().describe('Identified areas for safety improvement.'),
-  recommendations: z.string().describe('Specific recommendations to address identified issues.'),
+  trendAnalysis: z.string().describe('AI-driven analysis of the provided data and LTIR score.'),
+  improvementAreas: z.string().describe('Identified areas for safety improvement based on the context.'),
+  recommendations: z.string().describe('Specific recommendations to address identified issues and reduce the LTIR.'),
 });
 export type AnalyzeLtirTrendOutput = z.infer<typeof AnalyzeLtirTrendOutputSchema>;
 
@@ -36,21 +32,29 @@ export async function analyzeLtirTrend(input: AnalyzeLtirTrendInput): Promise<An
 
 const prompt = ai.definePrompt({
   name: 'analyzeLtirTrendPrompt',
-  input: {schema: AnalyzeLtirTrendInputSchema},
+  input: {schema: z.object({
+      ltirScore: z.number(),
+      numberOfInjuries: z.number(),
+      totalHoursWorked: z.number(),
+      additionalContext: z.string().optional()
+  })},
   output: {schema: AnalyzeLtirTrendOutputSchema},
-  prompt: `You are an AI safety analyst. Analyze the provided LTIR data to identify trends, areas for improvement, and provide recommendations.
+  prompt: `You are an AI safety analyst. Your task is to analyze the provided Lost Time Injury Rate (LTIR) data and context.
 
-LTIR Data:
-{{{ltirData}}}
+  The calculated LTIR for the period is: {{{ltirScore}}}
+  This was based on:
+  - Number of Lost Time Injuries: {{{numberOfInjuries}}}
+  - Total Hours Worked: {{{totalHoursWorked}}}
 
-Additional Context: {{{additionalContext}}}
+  The user has also provided the following context or historical data:
+  {{{additionalContext}}}
 
-Analyze the data and provide:
-1. A summary of the LTIR trends.
-2. Identified areas for safety improvement.
-3. Specific recommendations to reduce workplace injuries.
+  Based on all this information, please provide:
+  1.  A concise analysis of what the calculated LTIR score means. If historical data is provided, comment on the trend (is it improving, worsening, or stable?).
+  2.  Based on the context, identify potential root causes or areas that may require safety improvement.
+  3.  Provide specific, actionable recommendations to help reduce workplace injuries and lower the LTIR.
 
-Ensure the analysis is clear, concise, and actionable.
+  Ensure the analysis is clear, concise, and professional.
 `,
 });
 
@@ -61,7 +65,15 @@ const analyzeLtirTrendFlow = ai.defineFlow(
     outputSchema: AnalyzeLtirTrendOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
+    // The calculation is now done on the client, we just use the data for analysis
+    const ltirScore = input.totalHoursWorked > 0 ? (input.numberOfInjuries * 200000) / input.totalHoursWorked : 0;
+    
+    const {output} = await prompt({
+        ltirScore,
+        numberOfInjuries: input.numberOfInjuries,
+        totalHoursWorked: input.totalHoursWorked,
+        additionalContext: input.additionalContext,
+    });
     return output!;
   }
 );

@@ -1,9 +1,12 @@
+
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -21,6 +24,7 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
+  CardFooter,
 } from "@/components/ui/card";
 import { analyzeLtirAction } from "./actions";
 import type { AnalyzeLtirTrendOutput } from "@/ai/flows/ai-ltir-trend-analysis";
@@ -28,28 +32,44 @@ import LoadingDots from "@/components/ui/loading-dots";
 import { useToast } from "@/hooks/use-toast";
 import { CopyButton } from "@/components/copy-button";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { Download, Save } from "lucide-react";
 
 const formSchema = z.object({
-  ltirData: z.string().min(20, {
-    message: "LTIR data must be at least 20 characters.",
-  }),
+  numberOfInjuries: z.coerce.number().min(0, "Cannot be negative."),
+  totalHoursWorked: z.coerce.number().min(1, "Hours must be greater than zero."),
   additionalContext: z.string().optional(),
 });
+
+type FormValues = z.infer<typeof formSchema>;
 
 export default function LtirAnalysisPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<AnalyzeLtirTrendOutput | null>(null);
+  const [calculatedLtir, setCalculatedLtir] = useState<number | null>(null);
   const { toast } = useToast();
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      ltirData: "",
+      numberOfInjuries: 0,
+      totalHoursWorked: 200000,
       additionalContext: "",
     },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  const { numberOfInjuries, totalHoursWorked } = form.watch();
+
+  useEffect(() => {
+    if (totalHoursWorked > 0) {
+      const ltir = (numberOfInjuries * 200000) / totalHoursWorked;
+      setCalculatedLtir(ltir);
+    } else {
+      setCalculatedLtir(null);
+    }
+  }, [numberOfInjuries, totalHoursWorked]);
+
+  async function onSubmit(values: FormValues) {
     setIsLoading(true);
     setResult(null);
     const response = await analyzeLtirAction(values);
@@ -66,48 +86,113 @@ export default function LtirAnalysisPage() {
     }
   }
 
-  const fullTextResult = result ? `Trend Analysis:\n${result.trendAnalysis}\n\nImprovement Areas:\n${result.improvementAreas}\n\nRecommendations:\n${result.recommendations}` : "";
+  const fullTextResult = result ? `Calculated LTIR: ${calculatedLtir?.toFixed(2)}\n\nTrend Analysis:\n${result.trendAnalysis}\n\nImprovement Areas:\n${result.improvementAreas}\n\nRecommendations:\n${result.recommendations}` : "";
+
+  const handleDownloadReport = () => {
+    if (!calculatedLtir || !result) return;
+    const doc = new jsPDF();
+    doc.text("LTIR Analysis Report", 14, 15);
+
+    (doc as any).autoTable({
+        startY: 25,
+        head: [['Metric', 'Value']],
+        body: [
+            ['Number of Lost Time Injuries', numberOfInjuries],
+            ['Total Hours Worked', totalHoursWorked.toLocaleString()],
+            ['Calculated LTIR', calculatedLtir.toFixed(2)],
+        ],
+    });
+    
+    let finalY = (doc as any).autoTable.previous.finalY + 10;
+    
+    const addSection = (title: string, content: string) => {
+        doc.setFontSize(12);
+        doc.text(title, 14, finalY);
+        finalY += 6;
+        doc.setFontSize(10);
+        const splitContent = doc.splitTextToSize(content, 180);
+        doc.text(splitContent, 14, finalY);
+        finalY += splitContent.length * 5 + 10;
+    }
+    
+    addSection("Trend Analysis", result.trendAnalysis);
+    addSection("Improvement Areas", result.improvementAreas);
+    addSection("Recommendations", result.recommendations);
+    
+    doc.save("LTIR_Analysis_Report.pdf");
+  };
+
+  const handleSave = () => {
+    toast({
+      title: "Report Saved",
+      description: "The LTIR report has been saved to Generated Documents."
+    });
+  };
 
   return (
     <div className="grid gap-6 lg:grid-cols-5">
       <Card className="lg:col-span-2">
         <CardHeader>
-          <CardTitle>LTIR Trend Analysis</CardTitle>
+          <CardTitle>LTIR Calculator & Analysis</CardTitle>
           <CardDescription>
-            Analyze Lost Time Injury Rate (LTIR) data with AI.
+            Calculate your Lost Time Injury Rate and get AI-driven analysis.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="ltirData"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>LTIR Data</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Paste historical LTIR data here, preferably in CSV format (e.g., Date,Injuries,HoursWorked)."
-                        {...field}
-                        rows={10}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-2 gap-4">
+                 <FormField
+                    control={form.control}
+                    name="numberOfInjuries"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Lost Time Injuries (LTI)</FormLabel>
+                        <FormControl>
+                            <Input type="number" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+                 <FormField
+                    control={form.control}
+                    name="totalHoursWorked"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Total Hours Worked</FormLabel>
+                        <FormControl>
+                            <Input type="number" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+              </div>
+
+               <Card className="bg-muted/50 text-center">
+                    <CardHeader className="pb-2">
+                        <CardDescription>Calculated LTIR</CardDescription>
+                        <CardTitle className="text-4xl">
+                            {calculatedLtir !== null ? calculatedLtir.toFixed(2) : 'N/A'}
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-xs text-muted-foreground pb-4">
+                        (LTI &times; 200,000) / Hours Worked
+                    </CardContent>
+               </Card>
+              
               <FormField
                 control={form.control}
                 name="additionalContext"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Additional Context (Optional)</FormLabel>
+                    <FormLabel>Data & Context for AI Analysis</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="e.g., Change in safety policies in Q2, new machinery introduced, etc."
+                        placeholder="Provide historical data or context. E.g., 'Q1: 2 LTI, 300k hours; Q2: 1 LTI, 320k hours. Implemented new training in Q2.'"
                         {...field}
-                        rows={4}
+                        rows={6}
                       />
                     </FormControl>
                     <FormMessage />
@@ -115,7 +200,7 @@ export default function LtirAnalysisPage() {
                 )}
               />
               <Button type="submit" disabled={isLoading} className="w-full">
-                {isLoading ? "Analyzing..." : "Analyze Data"}
+                {isLoading ? "Analyzing..." : "Generate AI Analysis"}
               </Button>
             </form>
           </Form>
@@ -123,19 +208,27 @@ export default function LtirAnalysisPage() {
       </Card>
       <div className="lg:col-span-3">
         <Card className="min-h-[600px] sticky top-20">
-          <CardHeader>
-            <CardTitle>Analysis Result</CardTitle>
-            <CardDescription>
-              Review the AI-generated analysis below.
-            </CardDescription>
+           <CardHeader className="flex flex-row items-center justify-between">
+             <div>
+                <CardTitle>Analysis Result</CardTitle>
+                <CardDescription>
+                Review the AI-generated analysis below.
+                </CardDescription>
+            </div>
+             <div className="flex gap-2">
+                {result && <CopyButton textToCopy={fullTextResult} />}
+                 {result && (
+                    <>
+                        <Button variant="secondary" size="sm" onClick={handleSave}><Save className="mr-2 h-4 w-4" /> Save</Button>
+                        <Button variant="outline" size="sm" onClick={handleDownloadReport}><Download className="mr-2 h-4 w-4" /> Download</Button>
+                    </>
+                 )}
+            </div>
           </CardHeader>
           <CardContent>
             {isLoading && <LoadingDots />}
             {result && (
               <div className="space-y-4">
-                <div className="flex justify-end">
-                  <CopyButton textToCopy={fullTextResult} />
-                </div>
                 <div>
                   <h3 className="font-semibold text-lg">Trend Analysis</h3>
                   <pre className="mt-2 w-full whitespace-pre-wrap rounded-md bg-secondary p-4 font-sans text-sm text-secondary-foreground">
