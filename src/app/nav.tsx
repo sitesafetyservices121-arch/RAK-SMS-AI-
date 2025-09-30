@@ -40,7 +40,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
-import { AppLogo } from "./app-logo";
+import { AppLogo } from "@/components/app-logo";
 import {
   Collapsible,
   CollapsibleContent,

@@ -29,6 +29,8 @@ import {
   User,
   LifeBuoy,
   CreditCard,
+  MessageSquare,
+  List,
 } from "lucide-react";
 import {
   Sidebar,
@@ -38,14 +40,14 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
-import { AppLogo } from "./app-logo";
+import { AppLogo } from "../app-logo";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import React from "react";
-import { WilsonLogo } from "./wilson-logo";
+import { WilsonLogo } from "@/components/wilson-logo";
 
 const menuItems = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
@@ -61,6 +63,7 @@ const managementTools = [
   { href: "/site-resource-tracker", label: "Site & Resource Tracker", icon: Map },
   { href: "/vehicle-inspection-tracker", label: "Vehicle Inspection", icon: Car },
   { href: "/ppe-issue-register", label: "PPE Issue Register", icon: Shirt },
+  { href: "/toolbox-talks", label: "Toolbox Talks", icon: MessageSquare },
 ];
 
 const aiTools = [
@@ -89,6 +92,7 @@ const adminTools = [
   { href: "/admin/document-upload", label: "Document Upload", icon: Library },
   { href: "/admin/create-news", label: "Create News", icon: FilePlus },
   { href: "/admin/wilson-training", label: "AI Training", icon: BrainCircuit },
+  { href: "/admin/model-inspector", label: "Model Inspector", icon: List },
 ]
 
 export function AppNav() {
