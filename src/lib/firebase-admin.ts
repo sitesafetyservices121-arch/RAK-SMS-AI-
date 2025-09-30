@@ -12,17 +12,12 @@ function initializeAdmin() {
   // Retrieve the service account key from environment variables.
   const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
   if (!serviceAccountKey) {
-    throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY environment variable is not set.');
+    throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY environment variable is not set or not a valid JSON string.');
   }
   
-  // Parse the service account key from a JSON string.
+  // The private key needs to have its escaped newline characters replaced with actual newlines before parsing.
   const serviceAccount = JSON.parse(serviceAccountKey);
-
-  // The private key needs to have its escaped newline characters replaced with actual newlines.
-  if (serviceAccount.private_key) {
-      serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
-  }
-
+  
   // Initialize the Firebase Admin app with the service account credentials.
   return admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
