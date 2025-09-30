@@ -14,16 +14,20 @@ function initializeAdmin() {
   if (!serviceAccountKey) {
     throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY environment variable is not set or not a valid JSON string.');
   }
-  
-  // The private key needs to have its escaped newline characters replaced with actual newlines before parsing.
-  const serviceAccount = JSON.parse(serviceAccountKey);
-  
-  // Initialize the Firebase Admin app with the service account credentials.
-  return admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    projectId: serviceAccount.project_id,
-    storageBucket: `${serviceAccount.project_id}.appspot.com`
-  });
+
+  try {
+    const serviceAccount = JSON.parse(serviceAccountKey);
+
+    // Initialize the Firebase Admin app with the service account credentials.
+    return admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+      projectId: serviceAccount.project_id,
+      storageBucket: `${serviceAccount.project_id}.appspot.com`
+    });
+  } catch (error) {
+    console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY. Ensure it is a valid JSON string.', error);
+    throw new Error('Could not initialize Firebase Admin SDK. Service account key is invalid.');
+  }
 }
 
 export const adminApp = initializeAdmin();
