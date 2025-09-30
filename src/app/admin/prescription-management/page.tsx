@@ -1,6 +1,7 @@
 
 "use client";
 
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -20,9 +21,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { MoreHorizontal, PauseCircle, Trash2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 
 // Mock data for prescriptions
-const prescriptions = [
+const initialPrescriptions = [
   {
     id: "PRE-001",
     clientId: "CLIENT-002",
@@ -42,6 +54,49 @@ const prescriptions = [
 ];
 
 export default function PrescriptionManagementPage() {
+  const [prescriptions, setPrescriptions] = useState(initialPrescriptions);
+  const { toast } = useToast();
+
+  const handleDelete = (id: string) => {
+    setPrescriptions(prescriptions.filter((p) => p.id !== id));
+    toast({
+      title: "Prescription Deleted",
+      description: `Prescription ${id} has been removed.`,
+    });
+  };
+
+  const handlePause = (id: string) => {
+    setPrescriptions(
+      prescriptions.map((p) =>
+        p.id === id
+          ? {
+              ...p,
+              status: p.status === "Paused" ? "Issued" : "Paused",
+            }
+          : p
+      )
+    );
+    const newStatus = prescriptions.find(p => p.id === id)?.status === 'Paused' ? 'Resumed' : 'Paused';
+    toast({
+      title: `Prescription ${newStatus}`,
+      description: `Prescription ${id} has been ${newStatus.toLowerCase()}.`,
+    });
+  };
+
+  const getStatusVariant = (status: string) => {
+    switch (status) {
+      case "Completed":
+        return "default";
+      case "Issued":
+        return "secondary";
+      case "Paused":
+        return "outline";
+      default:
+        return "outline";
+    }
+  };
+
+
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       <Card>
@@ -86,7 +141,7 @@ export default function PrescriptionManagementPage() {
                 <TableHead>Client ID</TableHead>
                 <TableHead>Issue</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Date</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -95,8 +150,34 @@ export default function PrescriptionManagementPage() {
                   <TableCell>{p.id}</TableCell>
                   <TableCell>{p.clientId}</TableCell>
                   <TableCell>{p.issue}</TableCell>
-                  <TableCell>{p.status}</TableCell>
-                  <TableCell>{p.date}</TableCell>
+                  <TableCell>
+                     <Badge variant={getStatusVariant(p.status) as any}>{p.status}</Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <span className="sr-only">Open menu</span>
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => handlePause(p.id)}>
+                          <PauseCircle className="mr-2 h-4 w-4" />
+                          {p.status === "Paused" ? "Resume" : "Pause"}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="text-destructive"
+                          onClick={() => handleDelete(p.id)}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
