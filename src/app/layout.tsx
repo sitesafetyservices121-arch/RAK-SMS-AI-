@@ -14,7 +14,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { LiveClock } from "@/components/live-clock";
 import { ThemeProvider, ThemeToggle } from "@/components/theme-toggle";
 import Link from "next/link";
-import Script from "next/script";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-body" });
 
@@ -86,7 +85,6 @@ export default function RootLayout({
           </SidebarProvider>
         </ThemeProvider>
         <Toaster />
-        <Script src='https://www.payfast.io/assets/scripts/checkout.js' strategy="beforeInteractive" />
       </body>
     </html>
   );

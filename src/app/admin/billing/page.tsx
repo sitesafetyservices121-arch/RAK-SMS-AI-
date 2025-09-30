@@ -82,7 +82,7 @@ export default function AdminBillingPage() {
                 </CardDescription>
             </div>
              <div className="flex items-center gap-2">
-                 <img src="https://www.payfast.io/assets/images/payfast_logo_2-1.png" alt="PayFast Logo" className="h-8" />
+                 <img src="https://www.payfast.co.za/assets/images/payfast_logo_2-1.png" alt="PayFast Logo" className="h-8" />
             </div>
         </div>
       </CardHeader>
