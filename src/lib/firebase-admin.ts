@@ -15,28 +15,31 @@ function initializeAdmin() {
     throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY environment variable is not set.');
   }
 
-  let serviceAccount;
   try {
-    serviceAccount = JSON.parse(serviceAccountKey);
-  } catch (error) {
-    console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY. Ensure it is a valid JSON string.', error);
-    throw new Error('Could not initialize Firebase Admin SDK. Service account key is invalid JSON.');
-  }
+    let serviceAccount;
+    try {
+      // First, try to parse the key directly. This is the most common case.
+      serviceAccount = JSON.parse(serviceAccountKey);
+    } catch (e) {
+      // If parsing fails, it might be due to escaped newlines.
+      // Let's try to fix that and parse again.
+      console.log("Initial JSON.parse failed, attempting to fix newlines...");
+      const correctedKey = serviceAccountKey.replace(/\\n/g, '\n');
+      serviceAccount = JSON.parse(correctedKey);
+    }
 
-  // Validate the parsed service account object
-  if (!serviceAccount.project_id || !serviceAccount.private_key) {
-      throw new Error('Service account key is missing required fields like "project_id" or "private_key".');
-  }
+    // At this point, serviceAccount should be a valid object.
+    // Validate the parsed service account object
+    if (!serviceAccount.project_id || !serviceAccount.private_key) {
+        throw new Error('Service account key is missing required fields like "project_id" or "private_key".');
+    }
 
-  // Correctly format the private_key by replacing escaped newlines with actual newlines.
-  serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
-
-  try {
     return admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
       projectId: serviceAccount.project_id,
       storageBucket: `${serviceAccount.project_id}.appspot.com`
     });
+
   } catch (error) {
      console.error('Firebase Admin initialization error:', error);
      throw new Error('Could not initialize Firebase Admin SDK. Please check your service account credentials.');
