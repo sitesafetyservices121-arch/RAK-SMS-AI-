@@ -24,7 +24,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -102,6 +101,12 @@ export default function VehicleInspectionPage() {
     const formData = new FormData(event.currentTarget);
     const newInspection: Inspection = {
       vehicle: formData.get("vehicleName") as string,
+      numberPlate: formData.get("numberPlate") as string,
+      driverName: formData.get("driverName") as string,
+      driverSurname: formData.get("driverSurname") as string,
+      lastService: formData.get("lastService") as string,
+      nextService: formData.get("nextService") as string,
+      licenseDiscExpiry: formData.get("licenseDiscExpiry") as string,
       date: new Date().toISOString().split('T')[0],
       inspector: "System",
       status: "Awaiting Inspection",
@@ -189,14 +194,45 @@ export default function VehicleInspectionPage() {
             <DialogTrigger asChild>
                 <Button><PlusCircle className="mr-2 h-4 w-4" /> Add Vehicle</Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="sm:max-w-[480px]">
                 <DialogHeader>
                     <DialogTitle>Add New Vehicle</DialogTitle>
+                     <DialogDescription>Add a new vehicle to the fleet for tracking.</DialogDescription>
                 </DialogHeader>
-                <form onSubmit={handleAddVehicle}>
-                    <div className="py-4">
-                        <Label htmlFor="vehicleName">Vehicle Name / Reg. No.</Label>
-                        <Input id="vehicleName" name="vehicleName" placeholder="e.g., Bakkie 2 - ABC 123 GP" required />
+                <form onSubmit={handleAddVehicle} className="grid gap-4 py-4">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                           <Label htmlFor="vehicleName">Vehicle Name</Label>
+                           <Input id="vehicleName" name="vehicleName" placeholder="e.g., Bakkie 1" required />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="numberPlate">Number Plate</Label>
+                            <Input id="numberPlate" name="numberPlate" placeholder="e.g., ABC 123 GP" required />
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="driverName">Driver Name</Label>
+                            <Input id="driverName" name="driverName" required />
+                        </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="driverSurname">Driver Surname</Label>
+                            <Input id="driverSurname" name="driverSurname" required />
+                        </div>
+                    </div>
+                     <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="lastService">Last Service</Label>
+                            <Input id="lastService" name="lastService" type="date" required />
+                        </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="nextService">Next Service</Label>
+                            <Input id="nextService" name="nextService" type="date" required />
+                        </div>
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="licenseDiscExpiry">License Disc Expiry</Label>
+                        <Input id="licenseDiscExpiry" name="licenseDiscExpiry" type="date" required />
                     </div>
                     <DialogFooter>
                         <Button type="submit">Add Vehicle</Button>
@@ -210,7 +246,8 @@ export default function VehicleInspectionPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Vehicle</TableHead>
-                <TableHead>Last Inspection</TableHead>
+                <TableHead>Driver</TableHead>
+                <TableHead>License Disc Expiry</TableHead>
                 <TableHead>Inspector</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Damages</TableHead>
@@ -220,8 +257,9 @@ export default function VehicleInspectionPage() {
             <TableBody>
               {inspections.map((item) => (
                 <TableRow key={item.vehicle}>
-                  <TableCell className="font-medium">{item.vehicle}</TableCell>
-                  <TableCell>{item.date}</TableCell>
+                  <TableCell className="font-medium">{item.vehicle} <span className="text-xs text-muted-foreground">{item.numberPlate}</span></TableCell>
+                  <TableCell>{item.driverName} {item.driverSurname}</TableCell>
+                  <TableCell>{item.licenseDiscExpiry}</TableCell>
                   <TableCell>{item.inspector}</TableCell>
                   <TableCell>
                     <Badge variant={getStatusVariant(item.status) as any}>
