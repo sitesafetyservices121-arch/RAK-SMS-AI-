@@ -1,9 +1,7 @@
 
 "use server";
 
-// In a real application, this would import Firebase Admin SDK
-// and use it to upload the file to Cloud Storage and save
-// metadata to Firestore.
+import { db, storage } from "@/lib/firebase-admin";
 
 export async function uploadDocumentAction(formData: FormData) {
   try {
@@ -16,30 +14,39 @@ export async function uploadDocumentAction(formData: FormData) {
         throw new Error("Missing form data. All fields are required.");
     }
     
-    console.log("Simulating document upload...");
-    console.log("Category:", category);
-    console.log("Section:", section);
-    console.log("Document Name:", documentName);
-    console.log("File Name:", documentFile.name);
-    console.log("File Size:", documentFile.size);
-    console.log("File Type:", documentFile.type);
-    
-    // **
-    // ** ENTERPRISE LOGIC WOULD GO HERE **
-    // ** 1. Authenticate user as admin.
-    // ** 2. Generate a unique ID for the document.
-    // ** 3. Upload the file buffer to Firebase Cloud Storage at a path like:
-    // **    /documents/{category}/{section}/{uniqueId}-{fileName}
-    // ** 4. Get the download URL from Cloud Storage.
-    // ** 5. Save the document metadata (including download URL, documentName, category, section) to a Firestore 'documents' collection.
-    // **
-    
-    // Simulating a delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // 1. Upload to Firebase Storage
+    const bucket = storage.bucket();
+    const filePath = `documents/${category}/${section}/${Date.now()}-${documentFile.name}`;
+    const fileUpload = bucket.file(filePath);
 
-    console.log("Simulation complete.");
+    const buffer = Buffer.from(await documentFile.arrayBuffer());
 
-    return { success: true, data: { message: "File processed successfully." } };
+    await fileUpload.save(buffer, {
+        metadata: {
+            contentType: documentFile.type,
+        },
+    });
+
+    // Make the file public and get the URL
+    await fileUpload.makePublic();
+    const downloadURL = fileUpload.publicUrl();
+
+    // 2. Save metadata to Firestore
+    const docRef = db.collection('documents').doc();
+    await docRef.set({
+        id: docRef.id,
+        name: documentName,
+        category,
+        section,
+        fileName: documentFile.name,
+        downloadURL,
+        type: documentFile.type,
+        size: documentFile.size,
+        lastUpdated: new Date().toISOString(),
+        version: '1.0' // Initial version
+    });
+
+    return { success: true, data: { message: "File uploaded and indexed successfully." } };
   } catch (e: any) {
     console.error("Upload Action Error:", e);
     return { success: false, error: e.message || "An unknown error occurred." };
