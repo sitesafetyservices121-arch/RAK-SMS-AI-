@@ -18,7 +18,7 @@ function initializeAdmin() {
   // Parse the service account key from a JSON string.
   const serviceAccount = JSON.parse(serviceAccountKey);
 
-  // The private key needs to have its newline characters properly formatted.
+  // The private key needs to have its escaped newline characters replaced with actual newlines.
   if (serviceAccount.private_key) {
       serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
   }
