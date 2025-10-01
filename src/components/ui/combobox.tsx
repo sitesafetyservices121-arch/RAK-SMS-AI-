@@ -56,6 +56,14 @@ export function Combobox({
     setOpen(false)
     setQuery("") // clear search on select
   }
+  
+  const handleCreate = () => {
+    const slug = normalizedQuery.toLowerCase().replace(/\s+/g, "-");
+    onChange(slug);
+    setOpen(false);
+    setQuery("");
+  };
+
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -79,6 +87,11 @@ export function Combobox({
             placeholder={placeholder}
             value={query}
             onValueChange={setQuery}
+            onBlur={() => {
+              if (showCreateOption) {
+                handleCreate();
+              }
+            }}
           />
           <CommandList>
             {filteredOptions.length === 0 && !showCreateOption && (
@@ -106,14 +119,7 @@ export function Combobox({
                 <CommandSeparator />
                 <CommandGroup>
                   <CommandItem
-                    onSelect={() => {
-                      const slug = normalizedQuery
-                        .toLowerCase()
-                        .replace(/\s+/g, "-")
-                      onChange(slug)
-                      setOpen(false)
-                      setQuery("")
-                    }}
+                    onSelect={handleCreate}
                     className="flex items-center gap-2"
                   >
                     <PlusCircle className="h-4 w-4" />
