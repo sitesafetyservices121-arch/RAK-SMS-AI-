@@ -5,6 +5,8 @@ const nextConfig = {
     serverActions: {
       allowedOrigins: ["*.google.com"],
     },
+    // Add allowedDevOrigins to address cross-origin warnings in development
+    allowedDevOrigins: ["*.google.com"],
   },
   typescript: {
     // ❗ Better to keep strict in production; set to false only if CI/type-checking handled separately
