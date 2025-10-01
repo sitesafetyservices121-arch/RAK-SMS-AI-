@@ -37,7 +37,7 @@ const indexDocumentFlow = ai.defineFlow(
     inputSchema: IndexDocumentInputSchema,
     outputSchema: IndexDocumentOutputSchema,
   },
-  async input => {
+  async () => {
     // Temporarily disabled due to build issues with vectordb
     console.warn("Document indexing is temporarily disabled.");
     return { success: true, chunksIndexed: 0, message: "Indexing is disabled." };
@@ -53,7 +53,7 @@ export const retrieveSimilarChunksFlow = ai.defineFlow(
     inputSchema: z.string(),
     outputSchema: z.array(z.string()),
   },
-  async (query) => {
+  async () => {
     // Temporarily disabled
     return [];
   }

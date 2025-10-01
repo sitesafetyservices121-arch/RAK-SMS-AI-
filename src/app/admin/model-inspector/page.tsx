@@ -37,8 +37,9 @@ export default function ModelInspectorPage() {
         setError(null);
         const { models } = await listModels();
         setModels(models);
-      } catch (e: any) {
-        setError(e.message || "Failed to fetch models.");
+      } catch (e: unknown) {
+        const error = e instanceof Error ? e.message : "Failed to fetch models.";
+        setError(error);
       } finally {
         setLoading(false);
       }

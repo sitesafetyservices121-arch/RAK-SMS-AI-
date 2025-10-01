@@ -7,6 +7,19 @@ import { z } from "zod";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 
+interface jsPDFWithAutoTable extends jsPDF {
+  autoTable: (options: {
+    startY: number;
+    head: string[][];
+    body: (string | number)[][];
+  }) => jsPDF;
+  autoTable: {
+    previous: {
+      finalY: number;
+    };
+  };
+}
+
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -96,10 +109,10 @@ export default function LtirAnalysisPage() {
   const handleDownloadReport = () => {
     if (calculatedLtir === null || !result) return;
 
-    const doc = new jsPDF();
+    const doc = new jsPDF() as jsPDFWithAutoTable;
     doc.text("LTIR Analysis Report", 14, 15);
 
-    (doc as any).autoTable({
+    doc.autoTable({
       startY: 25,
       head: [["Metric", "Value"]],
       body: [
@@ -109,7 +122,7 @@ export default function LtirAnalysisPage() {
       ],
     });
 
-    let finalY = (doc as any).autoTable.previous.finalY + 10;
+    let finalY = doc.autoTable.previous.finalY + 10;
 
     const addSection = (title: string, content: string) => {
       doc.setFontSize(12);

@@ -33,14 +33,26 @@ const listModelsFlow = ai.defineFlow(
     const res = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`
     );
-    const { models } = await res.json();
+interface GoogleAIModel {
+  name: string;
+  description?: string;
+  inputTokenLimit?: number;
+  outputTokenLimit?: number;
+  supportedGenerationMethods: string[];
+}
+
+// ... (rest of the file)
+
+    const { models } = (await res.json()) as { models: GoogleAIModel[] };
     const generationModels = models.filter(
-      (m: any) => m.supportedGenerationMethods.includes('generateContent') && m.name.includes('gemini')
+      (m) =>
+        m.supportedGenerationMethods.includes("generateContent") &&
+        m.name.includes("gemini")
     );
     return {
-      models: generationModels.map((m: any) => ({
+      models: generationModels.map((m) => ({
         name: m.name,
-        description: m.description || 'No description available.',
+        description: m.description || "No description available.",
         inputTokenLimit: m.inputTokenLimit || 0,
         outputTokenLimit: m.outputTokenLimit || 0,
       })),

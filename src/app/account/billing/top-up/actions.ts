@@ -76,11 +76,12 @@ export async function generatePayFastSignatureAction(
         signature,
       },
     };
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error("PayFast Signature Error:", e);
+    const error = e instanceof Error ? e.message : "An unknown error occurred.";
     return {
       success: false,
-      error: e.message || "An unknown error occurred.",
+      error,
     };
   }
 }

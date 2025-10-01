@@ -45,11 +45,13 @@ import { format, addMonths } from "date-fns";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 
-type PpeItem = {
-  id: string;
-  name: string;
-  category: string;
-};
+interface jsPDFWithAutoTable extends jsPDF {
+  autoTable: (options: {
+    head: string[][];
+    body: (string | number)[][];
+    startY: number;
+  }) => jsPDF;
+}
 
 type PpeRegisterEntry = {
   employeeId: string;
@@ -165,13 +167,13 @@ export default function PpeIssueRegisterPage() {
       title: "PPE Issued",
       description: `${ppeItemMap.get(ppeItemId)} issued to ${employeeMap.get(
         employeeId
-      )}.`,
+      )}.`, 
     });
     setIsIssueOpen(false);
   };
 
   const handleDownloadReport = () => {
-    const doc = new jsPDF();
+    const doc = new jsPDF() as jsPDFWithAutoTable;
     doc.setFontSize(16);
     doc.text("PPE Issue Register Report", 14, 15);
 
@@ -183,7 +185,7 @@ export default function PpeIssueRegisterPage() {
       entry.signature,
     ]);
 
-    (doc as any).autoTable({
+    doc.autoTable({
       head: [["Employee", "PPE Item", "Date Issued", "Valid Until", "Signature"]],
       body: tableData,
       startY: 25,

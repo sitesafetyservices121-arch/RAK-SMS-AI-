@@ -21,7 +21,7 @@ async function initializeAdmin() {
     try {
       // Unescape newline characters and parse the JSON
       serviceAccount = JSON.parse(serviceAccountKey.replace(/\\n/g, "\n"));
-    } catch (e) {
+    } catch {
       throw new Error(
         "Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY. Ensure it is a valid JSON string."
       );
@@ -73,22 +73,16 @@ const getStorage = async () => {
   return admin.storage(app);
 };
 
-const getBucket = async () => {
-    const storage = await getStorage();
-    return storage.bucket();
-};
-
-
 // To use in other server files, you will now need to `await` these.
 // e.g., `const db = await getDb();`
 // This is a temporary solution to a complex race condition.
 // A more robust solution might involve a singleton pattern.
-export const db = {
+export const db: Pick<FirebaseFirestore.Firestore, "collection"> = {
   collection: (...args: Parameters<FirebaseFirestore.Firestore["collection"]>) =>
     getDb().then((db) => db.collection(...args)),
-} as any;
+};
 
-export const storage = {
+export const storage: Pick<ReturnType<typeof admin.storage>, "bucket"> = {
   bucket: (...args: Parameters<ReturnType<typeof admin.storage>["bucket"]>) =>
     getStorage().then((s) => s.bucket(...args)),
-} as any;
+};

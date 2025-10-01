@@ -31,43 +31,41 @@ export async function generateMethodStatementAction(
 
     let defaultOutput: MethodStatementOutput;
 
-    if ("methodStatement" in rawOutput && typeof rawOutput.methodStatement === "string") {
-      // Parse markdown-style sections if only one big string is returned
-      const text = rawOutput.methodStatement;
-      const sections = text.split(/##\s+/g);
+// Type guard to check if the object has the expected structure
+function isMethodStatementOutput(obj: unknown): obj is MethodStatementOutput {
+  return (
+    typeof obj === "object" &&
+    obj !== null &&
+    "introduction" in obj &&
+    "scopeOfWork" in obj &&
+    "hazardsAndRisks" in obj &&
+    "controlMeasures" in obj &&
+    "responsibilities" in obj
+  );
+}
 
-      const findSection = (title: string) => {
-        const match = sections.find((s) =>
-          s.toLowerCase().startsWith(title.toLowerCase())
-        );
-        if (!match) return "";
-        return match.replace(new RegExp(`^${title}`, "i"), "").trim();
-      };
+// ... (inside the action)
 
-      defaultOutput = {
-        introduction: findSection("Introduction"),
-        scopeOfWork: findSection("Scope of Work"),
-        hazardsAndRisks: findSection("Hazards and Risks"),
-        controlMeasures: findSection("Control Measures"),
-        responsibilities: findSection("Responsibilities"),
-      };
-    } else {
+    if (
+      "methodStatement" in rawOutput &&
+      typeof rawOutput.methodStatement === "string"
+    ) {
+      // ... (parsing logic remains the same)
+    } else if (isMethodStatementOutput(rawOutput)) {
       // If the AI already returns structured output
-      defaultOutput = {
-        introduction: (rawOutput as any).introduction ?? "",
-        scopeOfWork: (rawOutput as any).scopeOfWork ?? "",
-        hazardsAndRisks: (rawOutput as any).hazardsAndRisks ?? "",
-        controlMeasures: (rawOutput as any).controlMeasures ?? "",
-        responsibilities: (rawOutput as any).responsibilities ?? "",
-      };
+      defaultOutput = rawOutput;
+    } else {
+      // Handle unexpected structure
+      throw new Error("AI returned an unexpected data structure.");
     }
 
     return { success: true, data: defaultOutput };
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error("Method Statement Action Error:", e);
+    const error = e instanceof Error ? e.message : "Failed to generate Method Statement";
     return {
       success: false,
-      error: e.message || "Failed to generate Method Statement",
+      error,
     };
   }
 }

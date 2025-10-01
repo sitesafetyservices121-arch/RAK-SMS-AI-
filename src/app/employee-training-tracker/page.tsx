@@ -3,6 +3,15 @@
 import { useState } from "react";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
+
+interface jsPDFWithAutoTable extends jsPDF {
+  autoTable: (options: {
+    head: string[][];
+    body: (string | number)[][];
+    startY: number;
+  }) => jsPDF;
+}
+
 import {
   Card,
   CardContent,
@@ -133,7 +142,7 @@ export default function EmployeeTrainingTrackerPage() {
   };
 
   const handleDownloadReport = () => {
-    const doc = new jsPDF({ orientation: "landscape" });
+    const doc = new jsPDF({ orientation: "landscape" }) as jsPDFWithAutoTable;
     doc.text("Employee Training Report", 14, 15);
 
     const tableData = employees.flatMap((emp) =>
@@ -158,7 +167,7 @@ export default function EmployeeTrainingTrackerPage() {
           ]
     );
 
-    (doc as any).autoTable({
+    doc.autoTable({
       head: [
         [
           "First Name",

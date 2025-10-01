@@ -1,92 +1,95 @@
 "use client";
 
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import {
   Card,
   CardContent,
+  CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
-  CardDescription,
-  CardFooter
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, MapPin, Car, Download, Save } from "lucide-react";
-import { initialEmployees, type Employee } from "@/lib/employee-data";
-import { allInspections, type Inspection } from "@/lib/vehicle-data";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
+import { User, Car, MapPin, Save, Download } from "lucide-react";
+import {
+  initialEmployees,
+  Employee,
+  initialVehicles,
+  Vehicle,
+  Site,
+  initialSites,
+} from "@/lib/site-resource-data";
 
-type Site = {
-  id: string;
-  name: string;
-  location: string;
-};
-
-const sites: Site[] = [
-  { id: "site-01", name: "Sasolburg Main Site", location: "Sasolburg, Free State" },
-  { id: "site-02", name: "Secunda Expansion Project", location: "Secunda, Mpumalanga" }
-];
-
-const availableVehicles = allInspections.filter(v => v.status === "Passed");
+interface jsPDFWithAutoTable extends jsPDF {
+  lastAutoTable: {
+    finalY: number;
+  };
+}
 
 export default function SiteResourceTrackerPage() {
-  const [employeeAssignments, setEmployeeAssignments] = useState<Record<string, string>>({});
-  const [vehicleAssignments, setVehicleAssignments] = useState<Record<string, string>>({});
   const { toast } = useToast();
+  const [sites, setSites] = useState<Site[]>(initialSites);
+  const [employeeAssignments, setEmployeeAssignments] = useState<
+    Record<string, string>
+  >({});
+  const [vehicleAssignments, setVehicleAssignments] = useState<
+    Record<string, string>
+  >({});
+  
+  const availableVehicles = initialVehicles.filter(
+    (v) => v.status === "Passed"
+  );
 
   const handleAssignEmployee = (employeeId: string, siteId: string) => {
-    setEmployeeAssignments(prev => ({
-      ...prev,
-      [employeeId]: prev[employeeId] === siteId ? "" : siteId
-    }));
+    setEmployeeAssignments((prev) => ({ ...prev, [employeeId]: siteId }));
   };
 
-  const handleAssignVehicle = (vehicleName: string, siteId: string) => {
-    setVehicleAssignments(prev => ({
-      ...prev,
-      [vehicleName]: prev[vehicleName] === siteId ? "" : siteId
-    }));
+  const handleAssignVehicle = (vehicleId: string, siteId: string) => {
+    setVehicleAssignments((prev) => ({ ...prev, [vehicleId]: siteId }));
   };
 
   const handleDownloadReport = () => {
     const doc = new jsPDF();
-    doc.setFontSize(16);
-    doc.text("Site & Resource Allocation Report", 14, 15);
-    let y = 25;
+    doc.setFontSize(18);
+    doc.text("Site Resource Allocation Report", 14, 22);
+
+    let y = 30;
 
     sites.forEach((site, index) => {
       doc.setFontSize(14);
-      doc.text(site.name, 14, y);
-      y += 6;
+      doc.text(`${site.name} - ${site.location}`, 14, y);
+      y += 8;
 
-      doc.setFontSize(10);
-      doc.text(`Location: ${site.location}`, 14, y);
-      y += 10;
-
-      const employeesOnSite = initialEmployees.filter(emp => employeeAssignments[emp.id] === site.id);
-      const vehiclesOnSite = availableVehicles.filter(v => vehicleAssignments[v.vehicle] === site.id);
+      const employeesOnSite = initialEmployees.filter(
+        (emp) => employeeAssignments[emp.id] === site.id
+      );
+      const vehiclesOnSite = availableVehicles.filter(
+        (v) => vehicleAssignments[v.vehicle] === site.id
+      );
 
       if (employeesOnSite.length > 0) {
         autoTable(doc, {
           head: [["Assigned Personnel"]],
-          body: employeesOnSite.map(e => [`${e.firstName} ${e.surname}`]),
+          body: employeesOnSite.map((e) => [`${e.firstName} ${e.surname}`]),
           startY: y,
-          theme: "grid"
+          theme: "grid",
         });
-        y = (doc as any).lastAutoTable.finalY + 10;
+        y = (doc as jsPDFWithAutoTable).lastAutoTable.finalY + 10;
       }
 
       if (vehiclesOnSite.length > 0) {
         autoTable(doc, {
           head: [["Assigned Vehicles"]],
-          body: vehiclesOnSite.map(v => [v.vehicle]),
+          body: vehiclesOnSite.map((v) => [v.vehicle]),
           startY: y,
-          theme: "grid"
+          theme: "grid",
         });
-        y = (doc as any).lastAutoTable.finalY + 10;
+        y = (doc as jsPDFWithAutoTable).lastAutoTable.finalY + 10;
       }
 
       if (employeesOnSite.length === 0 && vehiclesOnSite.length === 0) {
@@ -110,7 +113,8 @@ export default function SiteResourceTrackerPage() {
   const handleSaveToGenerated = () => {
     toast({
       title: "Report Saved",
-      description: "The resource allocation report has been saved to Generated Documents."
+      description:
+        "The resource allocation report has been saved to Generated Documents.",
     });
   };
 
@@ -124,18 +128,25 @@ export default function SiteResourceTrackerPage() {
             <CardDescription>Assign employees to a site.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 max-h-[300px] overflow-y-auto">
-            {initialEmployees.map(employee => (
-              <Card key={employee.id} className="p-3 flex items-center justify-between">
+            {initialEmployees.map((employee) => (
+              <Card
+                key={employee.id}
+                className="p-3 flex items-center justify-between"
+              >
                 <div className="flex items-center gap-3">
                   <User className="h-5 w-5 text-primary" />
                   <div>
                     <p className="font-semibold">
                       {employee.firstName} {employee.surname}
                     </p>
-                    <p className="text-xs text-muted-foreground">{employee.idNumber}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {employee.idNumber}
+                    </p>
                   </div>
                 </div>
-                {employeeAssignments[employee.id] && <Badge variant="secondary">Assigned</Badge>}
+                {employeeAssignments[employee.id] && (
+                  <Badge variant="secondary">Assigned</Badge>
+                )}
               </Card>
             ))}
           </CardContent>
@@ -144,16 +155,23 @@ export default function SiteResourceTrackerPage() {
         <Card>
           <CardHeader>
             <CardTitle>Available Vehicles</CardTitle>
-            <CardDescription>Assign vehicles with passed inspections.</CardDescription>
+            <CardDescription>
+              Assign vehicles with passed inspections.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 max-h-[300px] overflow-y-auto">
-            {availableVehicles.map(vehicle => (
-              <Card key={vehicle.vehicle} className="p-3 flex items-center justify-between">
+            {availableVehicles.map((vehicle) => (
+              <Card
+                key={vehicle.vehicle}
+                className="p-3 flex items-center justify-between"
+              >
                 <div className="flex items-center gap-3">
                   <Car className="h-5 w-5 text-primary" />
                   <p className="font-semibold">{vehicle.vehicle}</p>
                 </div>
-                {vehicleAssignments[vehicle.vehicle] && <Badge variant="secondary">Assigned</Badge>}
+                {vehicleAssignments[vehicle.vehicle] && (
+                  <Badge variant="secondary">Assigned</Badge>
+                )}
               </Card>
             ))}
           </CardContent>
@@ -165,25 +183,30 @@ export default function SiteResourceTrackerPage() {
         <Card>
           <CardHeader>
             <CardTitle>Site Assignments</CardTitle>
-            <CardDescription>Manage resource allocation for each site.</CardDescription>
+            <CardDescription>
+              Manage resource allocation for each site.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {sites.map(site => (
+            {sites.map((site) => (
               <Card key={site.id}>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <MapPin className="h-5 w-5 text-muted-foreground" /> {site.name}
+                    <MapPin className="h-5 w-5 text-muted-foreground" />{" "}
+                    {site.name}
                   </CardTitle>
                   <CardDescription>{site.location}</CardDescription>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Assigned Personnel */}
                   <div>
-                    <p className="text-sm font-medium mb-2">Assigned Personnel:</p>
+                    <p className="text-sm font-medium mb-2">
+                      Assigned Personnel:
+                    </p>
                     <div className="space-y-2">
                       {initialEmployees
-                        .filter(emp => employeeAssignments[emp.id] === site.id)
-                        .map(emp => (
+                        .filter((emp) => employeeAssignments[emp.id] === site.id)
+                        .map((emp) => (
                           <div
                             key={emp.id}
                             className="text-sm text-muted-foreground p-2 border rounded-md"
@@ -191,19 +214,24 @@ export default function SiteResourceTrackerPage() {
                             {emp.firstName} {emp.surname}
                           </div>
                         ))}
-                      {initialEmployees.filter(emp => employeeAssignments[emp.id] === site.id).length ===
-                        0 && (
-                        <p className="text-xs text-muted-foreground italic">No employees assigned.</p>
+                      {initialEmployees.filter(
+                        (emp) => employeeAssignments[emp.id] === site.id
+                      ).length === 0 && (
+                        <p className="text-xs text-muted-foreground italic">
+                          No employees assigned.
+                        </p>
                       )}
                     </div>
                   </div>
                   {/* Assigned Vehicles */}
                   <div>
-                    <p className="text-sm font-medium mb-2">Assigned Vehicles:</p>
+                    <p className="text-sm font-medium mb-2">
+                      Assigned Vehicles:
+                    </p>
                     <div className="space-y-2">
                       {availableVehicles
-                        .filter(v => vehicleAssignments[v.vehicle] === site.id)
-                        .map(v => (
+                        .filter((v) => vehicleAssignments[v.vehicle] === site.id)
+                        .map((v) => (
                           <div
                             key={v.vehicle}
                             className="text-sm text-muted-foreground p-2 border rounded-md"
@@ -211,9 +239,12 @@ export default function SiteResourceTrackerPage() {
                             {v.vehicle}
                           </div>
                         ))}
-                      {availableVehicles.filter(v => vehicleAssignments[v.vehicle] === site.id).length ===
-                        0 && (
-                        <p className="text-xs text-muted-foreground italic">No vehicles assigned.</p>
+                      {availableVehicles.filter(
+                        (v) => vehicleAssignments[v.vehicle] === site.id
+                      ).length === 0 && (
+                        <p className="text-xs text-muted-foreground italic">
+                          No vehicles assigned.
+                        </p>
                       )}
                     </div>
                   </div>
@@ -223,8 +254,8 @@ export default function SiteResourceTrackerPage() {
                     Assign Resources:
                   </p>
                   {initialEmployees
-                    .filter(emp => employeeAssignments[emp.id] !== site.id)
-                    .map(emp => (
+                    .filter((emp) => employeeAssignments[emp.id] !== site.id)
+                    .map((emp) => (
                       <Button
                         key={`assign-emp-${emp.id}`}
                         size="sm"
@@ -235,8 +266,8 @@ export default function SiteResourceTrackerPage() {
                       </Button>
                     ))}
                   {availableVehicles
-                    .filter(v => vehicleAssignments[v.vehicle] !== site.id)
-                    .map(v => (
+                    .filter((v) => vehicleAssignments[v.vehicle] !== site.id)
+                    .map((v) => (
                       <Button
                         key={`assign-veh-${v.vehicle}`}
                         size="sm"

@@ -15,8 +15,9 @@ export async function generateShePlanAction(
   try {
     const output = await generateShePlan(input);
     return { success: true, data: output };
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error("SHE Plan generation error:", e);
-    return { success: false, error: e.message || "Failed to generate SHE Plan" };
+    const error = e instanceof Error ? e.message : "Failed to generate SHE Plan";
+    return { success: false, error };
   }
 }

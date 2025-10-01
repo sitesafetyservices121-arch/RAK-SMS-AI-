@@ -226,7 +226,7 @@ export default function DocumentsPage() {
                   ) : (
                      <div className="flex h-40 items-center justify-center rounded-md border border-dashed mt-4">
                         <p className="text-muted-foreground">
-                            No documents found in the '{category}' category.
+                            No documents found in the &apos;{category}&apos; category.
                         </p>
                     </div>
                   )}

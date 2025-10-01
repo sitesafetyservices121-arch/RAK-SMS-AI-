@@ -29,7 +29,7 @@ export async function getDocumentsAction(): Promise<{
       return { success: true, data: [] };
     }
 
-    let documents: Document[] = snapshot.docs.map((doc) => {
+    const documents: Document[] = snapshot.docs.map((doc) => {
       const data = doc.data();
 
       let lastUpdated: string;

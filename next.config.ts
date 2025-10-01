@@ -9,9 +9,6 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  experimental: {
-    allowedDevOrigins: ["https://*.cloudworkstations.dev"],
-  },
   images: {
     remotePatterns: [
       {
@@ -29,6 +26,12 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "picsum.photos",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "www.payfast.co.za",
         port: "",
         pathname: "/**",
       },

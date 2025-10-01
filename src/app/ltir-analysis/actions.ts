@@ -26,8 +26,9 @@ export async function analyzeLtirAction(
   try {
     const output = await analyzeLtirTrend(input);
     return { success: true, data: output };
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error(e);
-    return { success: false, error: e.message };
+    const error = e instanceof Error ? e.message : "An unknown error occurred.";
+    return { success: false, error };
   }
 }

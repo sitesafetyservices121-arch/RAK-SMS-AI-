@@ -2,6 +2,16 @@
 
 import { db, storage } from "@/lib/firebase-admin";
 
+const MAX_FILE_SIZE_MB = 10;
+const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+const ALLOWED_FILE_TYPES = [
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+];
+
 export async function uploadDocumentAction(formData: FormData) {
   try {
     const category = formData.get("category") as string | null;
@@ -9,13 +19,34 @@ export async function uploadDocumentAction(formData: FormData) {
     const documentName = formData.get("documentName") as string | null;
     const documentFile = formData.get("document") as File | null;
 
+    // --- Validation ---
     if (!category || !section || !documentName || !documentFile) {
-      throw new Error("Missing form data. All fields are required.");
+      return {
+        success: false,
+        error: "Missing form data. All fields are required.",
+      };
     }
 
+    if (documentFile.size > MAX_FILE_SIZE_BYTES) {
+      return {
+        success: false,
+        error: `File is too large. Maximum size is ${MAX_FILE_SIZE_MB}MB.`,
+      };
+    }
+
+    if (!ALLOWED_FILE_TYPES.includes(documentFile.type)) {
+      return {
+        success: false,
+        error: "Invalid file type. Only PDF, Word, and Excel documents are allowed.",
+      };
+    }
+
+    // Sanitize file name
+    const safeName = documentFile.name.replace(/[^\w.-]/g, "_");
+
     // 1. Upload to Firebase Storage
-    const bucket = await storage.bucket(); // ✅ now a Bucket
-    const filePath = `documents/${category}/${section}/${Date.now()}-${documentFile.name}`;
+    const bucket = storage.bucket();
+    const filePath = `documents/${category}/${section}/${Date.now()}-${safeName}`;
     const fileUpload = bucket.file(filePath);
 
     const buffer = Buffer.from(await documentFile.arrayBuffer());
@@ -30,14 +61,14 @@ export async function uploadDocumentAction(formData: FormData) {
     const downloadURL = fileUpload.publicUrl();
 
     // 2. Save metadata to Firestore
-    const firestore = await db;
+    const firestore = db;
     const docRef = firestore.collection("documents").doc();
     await docRef.set({
-      id: docRef.id,
       name: documentName,
       category,
       section,
-      fileName: documentFile.name,
+      fileName: documentFile.name, // Keep original name for metadata
+      storagePath: filePath, // Store the path for future reference
       downloadURL,
       type: documentFile.type,
       size: documentFile.size,
@@ -49,11 +80,29 @@ export async function uploadDocumentAction(formData: FormData) {
       success: true,
       data: { message: "File uploaded and indexed successfully." },
     };
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error("Upload Action Error:", e);
+    // Type guard for Firebase errors
+    if (typeof e === "object" && e !== null && "code" in e) {
+      const errorCode = (e as { code: string }).code;
+      if (errorCode === "storage/unauthorized") {
+        return {
+          success: false,
+          error: "Permission denied. You are not authorized to upload files.",
+        };
+      }
+      if (errorCode === "storage/object-not-found") {
+        return {
+          success: false,
+          error: "File not found during upload process.",
+        };
+      }
+    }
+    // Generic error for other cases
     return {
       success: false,
-      error: e.message || "An unknown error occurred.",
+      error: "An unexpected error occurred on the server.",
     };
   }
 }
+

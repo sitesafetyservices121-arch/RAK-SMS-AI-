@@ -6,7 +6,7 @@ import {
 
 type OhsActConsultantInput = {
   query: string;
-  history?: any[];
+  history?: { role: string; content: string }[];
   documentDataUri?: string;
 };
 

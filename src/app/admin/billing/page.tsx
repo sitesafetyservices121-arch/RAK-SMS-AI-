@@ -26,6 +26,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
+import Image from "next/image";
 
 // Mock data for client subscriptions
 const clientData = [
@@ -33,61 +34,53 @@ const clientData = [
     clientId: "CLIENT-001",
     companyName: "ConstructCo",
     userCount: 5,
-    status: "Paid",
-    lastPayment: "2024-07-01",
+    status: "Active",
+    lastPayment: "2024-07-15",
   },
   {
     clientId: "CLIENT-002",
     companyName: "BuildIt Right",
     userCount: 1,
-    status: "Paid",
-    lastPayment: "2024-07-01",
+    status: "Overdue",
+    lastPayment: "2024-06-10",
   },
   {
     clientId: "CLIENT-003",
     companyName: "InfraWorks",
     userCount: 12,
-    status: "Overdue",
-    lastPayment: "2024-05-30",
+    status: "Active",
+    lastPayment: "2024-07-20",
   },
 ];
 
+// Calculate subscription based on user count
 const calculateSubscription = (userCount: number) => {
-  if (userCount <= 0) return { plan: "No users", amount: 0 };
-  if (userCount === 1) return { plan: "Base Plan", amount: 2500 };
-  const additionalUsers = userCount - 1;
-  const amount = 2500 + additionalUsers * 350;
-  return { plan: `Base Plan + ${additionalUsers} user(s)`, amount };
+  if (userCount === 1) {
+    return { plan: "Solo", amount: 1500 };
+  } else if (userCount > 1 && userCount <= 5) {
+    return { plan: "Team", amount: 6000 };
+  } else {
+    return { plan: "Enterprise", amount: 10000 };
+  }
 };
 
 export default function AdminBillingPage() {
   const { toast } = useToast();
 
-  const handleSendReminder = (clientName: string) => {
+  const handleSendReminder = (companyName: string) => {
     toast({
       title: "Reminder Sent",
-      description: `A payment reminder has been sent to ${clientName}.`,
+      description: `A payment reminder has been sent to ${companyName}.`,
     });
   };
 
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Client Billing Management</CardTitle>
-            <CardDescription>
-              Track and manage client subscriptions and payments via PayFast.
-            </CardDescription>
-          </div>
-          <div className="flex items-center gap-2">
-            <img
-              src="https://www.payfast.co.za/assets/images/payfast_logo_2-1.png"
-              alt="PayFast Logo"
-              className="h-8"
-            />
-          </div>
-        </div>
+        <CardTitle>Client Billing & Subscriptions</CardTitle>
+        <CardDescription>
+          Manage client subscriptions and view billing status.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <Table>

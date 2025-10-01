@@ -35,13 +35,31 @@ import { getDocumentSectionsAction } from "@/app/documents/actions";
 import LoadingDots from "@/components/ui/loading-dots";
 import { Combobox } from "@/components/ui/combobox";
 
+const MAX_FILE_SIZE_MB = 10;
+const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+const ALLOWED_FILE_TYPES = [
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+];
+
 const formSchema = z.object({
   category: z.string().min(1, "Category is required."),
   section: z.string().min(1, "Section is required."),
   documentName: z.string().min(1, "Document name is required."),
   document: z
     .instanceof(File)
-    .refine((file) => file.size > 0, "A file is required."),
+    .refine((file) => file?.size > 0, "A file is required.")
+    .refine(
+      (file) => file?.size <= MAX_FILE_SIZE_BYTES,
+      `File size must be less than ${MAX_FILE_SIZE_MB}MB.`
+    )
+    .refine(
+      (file) => ALLOWED_FILE_TYPES.includes(file?.type),
+      "Invalid file type. Only PDF, Word, or Excel files are allowed."
+    ),
 });
 
 type SectionOption = { value: string; label: string };
@@ -182,7 +200,7 @@ export default function DocumentUploadPage() {
             <FormField
               control={form.control}
               name="document"
-              render={({ field: { onChange, value, ...rest } }) => (
+              render={({ field: { onChange, ...rest } }) => (
                 <FormItem>
                   <FormLabel>Document File</FormLabel>
                   <FormControl>

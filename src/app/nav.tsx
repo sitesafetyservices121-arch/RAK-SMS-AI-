@@ -30,7 +30,6 @@ import {
   CreditCard,
   MessageSquare,
   List,
-  Bell,
 } from "lucide-react";
 import {
   Sidebar,

@@ -64,6 +64,21 @@ export default function PrescriptionManagementPage() {
   const [prescriptions, setPrescriptions] = useState(initialPrescriptions);
   const { toast } = useToast();
 
+  type BadgeVariant = "default" | "secondary" | "outline" | "destructive";
+
+  const getStatusVariant = (status: string): BadgeVariant => {
+    switch (status) {
+      case "Completed":
+        return "default";
+      case "Issued":
+        return "secondary";
+      case "Paused":
+        return "outline";
+      default:
+        return "outline";
+    }
+  };
+
   const handleDelete = (id: string) => {
     setPrescriptions((prev) => prev.filter((p) => p.id !== id));
     toast({
@@ -120,19 +135,6 @@ export default function PrescriptionManagementPage() {
     });
   };
 
-  const getStatusVariant = (status: string) => {
-    switch (status) {
-      case "Completed":
-        return "default";
-      case "Issued":
-        return "secondary";
-      case "Paused":
-        return "outline";
-      default:
-        return "outline";
-    }
-  };
-
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       <Card>
@@ -186,7 +188,7 @@ export default function PrescriptionManagementPage() {
                   <TableCell>{p.clientId}</TableCell>
                   <TableCell>{p.issue}</TableCell>
                   <TableCell>
-                    <Badge variant={getStatusVariant(p.status) as any}>
+                    <Badge variant={getStatusVariant(p.status)}>
                       {p.status}
                     </Badge>
                   </TableCell>

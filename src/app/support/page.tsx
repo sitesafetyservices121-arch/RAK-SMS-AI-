@@ -10,6 +10,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Mail, MessageSquare, Phone } from "lucide-react";
 
+interface CustomWindow extends Window {
+  $tawk?: {
+    toggle: () => void;
+  };
+}
+
+declare const window: CustomWindow;
+
 export default function SupportPage() {
   return (
     <div className="flex flex-col gap-8">
@@ -17,7 +25,7 @@ export default function SupportPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Support Center</h1>
         <p className="text-muted-foreground">
-          Get help with RAK-SMS. We're here to assist you.
+          Get help with RAK-SMS. We&apos;re here to assist you.
         </p>
       </div>
 
@@ -38,7 +46,7 @@ export default function SupportPage() {
             <Button
               className="w-full"
               aria-label="Start live chat"
-              onClick={() => (window as any).$tawk?.toggle()}
+              onClick={() => window.$tawk?.toggle()}
             >
               Start Live Chat (Tawk.to)
             </Button>
@@ -57,7 +65,7 @@ export default function SupportPage() {
               Email Support
             </CardTitle>
             <CardDescription>
-              Send us an email and we'll get back to you as soon as possible.
+              Send us an email and we&apos;ll get back to you as soon as possible.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">

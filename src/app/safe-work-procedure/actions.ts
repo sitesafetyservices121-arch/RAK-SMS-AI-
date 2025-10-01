@@ -39,7 +39,7 @@ type RawProcedureOutput = RawProcedureUnstructured | RawProcedureStructured;
 function isUnstructured(
   output: RawProcedureOutput
 ): output is RawProcedureUnstructured {
-  return typeof (output as any).procedure === "string";
+  return "procedure" in output && typeof output.procedure === "string";
 }
 
 export async function generateSwpAction(
@@ -95,11 +95,12 @@ export async function generateSwpAction(
     }
 
     return { success: true, data: normalized };
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error("Safe Work Procedure Action Error:", e);
+    const error = e instanceof Error ? e.message : "Failed to generate Safe Work Procedure";
     return {
       success: false,
-      error: e.message || "Failed to generate Safe Work Procedure",
+      error,
     };
   }
 }

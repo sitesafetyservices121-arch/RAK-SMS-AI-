@@ -179,9 +179,8 @@ const ChartTooltipContent = React.forwardRef<
         <div className="grid gap-1.5">
           {payload.map((item, index) => {
             const key = String(nameKey || item.name || item.dataKey || "value")
-            const itemConfig = getPayloadConfigFromPayload(config, item, key)
-            const indicatorColor = color || item.payload.fill || item.color
-
+                const itemConfig = getPayloadConfigFromPayload(config, item, key);
+                const indicatorColor = color || (item.payload as Payload)?.fill || item.color;
             return (
               <div
                 key={String(item.dataKey || index)}
@@ -304,6 +303,13 @@ const ChartLegendContent = React.forwardRef<
 )
 ChartLegendContent.displayName = "ChartLegend"
 
+type Payload = {
+  [key: string]: unknown;
+  payload?: {
+    [key: string]: unknown;
+  };
+};
+
 // Helper to extract item config from a payload.
 function getPayloadConfigFromPayload(
   config: ChartConfig,
@@ -311,31 +317,31 @@ function getPayloadConfigFromPayload(
   key: string
 ) {
   if (typeof payload !== "object" || payload === null) {
-    return undefined
+    return undefined;
   }
 
   const payloadPayload =
     "payload" in payload &&
-    typeof (payload as any).payload === "object" &&
-    (payload as any).payload !== null
-      ? (payload as any).payload
-      : undefined
+    typeof (payload as Payload).payload === "object" &&
+    (payload as Payload).payload !== null
+      ? (payload as Payload).payload
+      : undefined;
 
-  let configLabelKey: string = key
+  let configLabelKey: string = key;
 
-  if (key in (payload as any) && typeof (payload as any)[key] === "string") {
-    configLabelKey = (payload as any)[key] as string
+  if (key in (payload as Payload) && typeof (payload as Payload)[key] === "string") {
+    configLabelKey = (payload as Payload)[key] as string;
   } else if (
     payloadPayload &&
     key in payloadPayload &&
     typeof payloadPayload[key] === "string"
   ) {
-    configLabelKey = payloadPayload[key] as string
+    configLabelKey = payloadPayload[key] as string;
   }
 
   return configLabelKey in config
     ? config[configLabelKey]
-    : config[key as keyof typeof config]
+    : config[key as keyof typeof config];
 }
 
 export {

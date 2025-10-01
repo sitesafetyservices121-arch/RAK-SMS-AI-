@@ -5,7 +5,6 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import {
   DayPicker,
   type DayPickerProps,
-  type ClassNames as DayPickerClassNames,
 } from "react-day-picker"
 
 import { cn } from "@/lib/utils"

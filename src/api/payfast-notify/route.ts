@@ -6,13 +6,13 @@ import { db } from "@/lib/firebase-admin";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// Helper function to generate signature
+/**
+ * Generate PayFast signature
+ * PayFast docs: Concatenate 'key=value&' pairs in the order received, excluding signature itself.
+ */
 const generateSignature = (rawBody: string, passphrase?: string): string => {
-  // PayFast docs: "The data is concatenated into a string of 'key=value&' pairs in the order received."
-  let signatureString = rawBody;
-
-  // Remove the existing signature parameter if present
-  signatureString = signatureString.replace(/&?signature=[^&]*/i, "");
+  // Remove any existing signature param
+  let signatureString = rawBody.replace(/&?signature=[^&]*/i, "");
 
   // Append passphrase if configured
   if (passphrase) {
@@ -31,30 +31,29 @@ export async function POST(request: NextRequest) {
       return new NextResponse("Empty request body", { status: 400 });
     }
 
-    // Parse into key-value pairs
+    // Parse body into object
     const pfData = new URLSearchParams(bodyText);
     const pfDataObject: Record<string, string> = {};
     for (const [key, value] of pfData.entries()) {
       pfDataObject[key] = value;
     }
 
+    // Validate signature
     const pfValidSignature = generateSignature(
       bodyText,
       process.env.PAYFAST_PASSPHRASE
     );
-
     const isSignatureValid = pfDataObject.signature === pfValidSignature;
 
-    // TODO: implement proper PayFast IP validation
+    // TODO: Implement PayFast IP validation against their official IP list
     const isIpValid = true;
 
     if (isSignatureValid && isIpValid) {
-      // Payment was successful
       if (pfDataObject.payment_status === "COMPLETE") {
-        const amount = parseFloat(pfDataObject.amount_gross);
+        const amount = parseFloat(pfDataObject.amount_gross || "0");
         const paymentId = pfDataObject.m_payment_id;
         const userEmail = pfDataObject.email_address;
-        
+
         const firestore = await db;
         await firestore.collection("payments").doc(paymentId).set({
           paymentId,
@@ -62,13 +61,16 @@ export async function POST(request: NextRequest) {
           amount,
           status: "COMPLETE",
           timestamp: new Date().toISOString(),
-          payfastData: pfDataObject, // optional: could also just save bodyText
+          payfastData: pfDataObject, // optional: store raw data for auditing
         });
       }
 
       return new NextResponse(null, { status: 200 });
     } else {
-      console.warn("PayFast ITN: Invalid signature or IP.");
+      console.warn("PayFast ITN: Invalid signature or IP.", {
+        pfDataObject,
+        pfValidSignature,
+      });
       return new NextResponse("Invalid request", { status: 400 });
     }
   } catch (error) {

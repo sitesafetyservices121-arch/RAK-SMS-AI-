@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
 
-export async function middleware(request: NextRequest) {
+export async function middleware() {
   // Example: Add custom logic here
   // Redirect if user not authenticated, block paths, etc.
   
