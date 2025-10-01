@@ -1,3 +1,4 @@
+
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { db, storage, auth as adminAuth } from "@/lib/firebase-admin";
@@ -68,7 +69,6 @@ export async function POST(request: NextRequest) {
     const filePath = `documents/${category}/${section}/${Date.now()}-${safeName}`;
     const fileUpload = bucket.file(filePath);
 
-    // ✅ Use Node's Buffer to convert
     const arrayBuffer = await documentFile.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
@@ -115,3 +115,5 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+    

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -33,13 +34,31 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import LoadingDots from "@/components/ui/loading-dots";
 
-// ✅ Define schema with zod
+const MAX_FILE_SIZE_MB = 10;
+const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+const ALLOWED_MIME_TYPES = [
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+];
+
 const uploadSchema = z.object({
-  title: z.string().min(3, "Title must be at least 3 characters"),
   category: z.string().min(1, "Category is required"),
-  file: z
+  section: z.string().min(3, "Section must be at least 3 characters"),
+  documentName: z.string().min(3, "Document name must be at least 3 characters"),
+  document: z
     .any()
-    .refine((file) => file?.length > 0, "A file must be selected"),
+    .refine((files) => files?.length === 1, "A file must be selected.")
+    .refine(
+      (files) => files?.[0]?.size <= MAX_FILE_SIZE_BYTES,
+      `File size must be less than ${MAX_FILE_SIZE_MB}MB.`
+    )
+    .refine(
+      (files) => ALLOWED_MIME_TYPES.includes(files?.[0]?.type),
+      "Invalid file type. Only PDF, Word, or Excel files are allowed."
+    ),
 });
 
 type UploadFormValues = z.infer<typeof uploadSchema>;
@@ -52,35 +71,57 @@ export default function DocumentUploadPage() {
   const form = useForm<UploadFormValues>({
     resolver: zodResolver(uploadSchema),
     defaultValues: {
-      title: "",
       category: "",
-      file: null,
+      section: "",
+      documentName: "",
+      document: undefined,
     },
   });
 
   const onSubmit = async (values: UploadFormValues) => {
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "Not Authenticated",
+        description: "You must be logged in to upload documents.",
+      });
+      return;
+    }
     setLoading(true);
 
     try {
-      // Simulate upload delay
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const token = await user.getIdToken();
+      const formData = new FormData();
+      formData.append("category", values.category);
+      formData.append("section", values.section);
+      formData.append("documentName", values.documentName);
+      formData.append("document", values.document[0]);
 
-      // ✅ Fix: Use email or fallback instead of user.name
-      const uploadedBy =
-        (user as { email?: string; username?: string })?.email ||
-        (user as { username?: string })?.username ||
-        "Unknown User";
-
-      toast({
-        title: "Upload Successful",
-        description: `Document "${values.title}" uploaded by ${uploadedBy}`,
+      const response = await fetch("/api/document-upload", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
       });
 
-      form.reset();
+      const result = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "Upload Successful",
+          description: `${values.document[0].name} has been processed.`,
+        });
+        form.reset();
+      } else {
+        throw new Error(result.error || "An unknown error occurred.");
+      }
     } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Upload failed unexpectedly.";
       toast({
         title: "Upload Failed",
-        description: "Something went wrong. Please try again.",
+        description: message,
         variant: "destructive",
       });
     } finally {
@@ -94,27 +135,12 @@ export default function DocumentUploadPage() {
         <CardHeader>
           <CardTitle>Upload Document</CardTitle>
           <CardDescription>
-            Upload files with title and category for management.
+            Upload files with category, section, and name for management. Word, Excel, and PDF formats are accepted.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              {/* Title */}
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Title</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Document title" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
               {/* Category */}
               <FormField
                 control={form.control}
@@ -123,20 +149,21 @@ export default function DocumentUploadPage() {
                   <FormItem>
                     <FormLabel>Category</FormLabel>
                     <Select
-                      onValueChange={(value: string) => field.onChange(value)}
+                      onValueChange={field.onChange}
                       value={field.value}
+                      disabled={loading}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select category" />
+                          <SelectValue placeholder="Select a category" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="safety">Safety</SelectItem>
-                        <SelectItem value="quality">Quality</SelectItem>
-                        <SelectItem value="hr">HR</SelectItem>
-                        <SelectItem value="environment">Environment</SelectItem>
-                        <SelectItem value="toolbox-talks">Toolbox Talks</SelectItem>
+                        <SelectItem value="Safety">Safety</SelectItem>
+                        <SelectItem value="Quality">Quality</SelectItem>
+                        <SelectItem value="HR">HR</SelectItem>
+                        <SelectItem value="Environment">Environment</SelectItem>
+                        <SelectItem value="Toolbox Talks">Toolbox Talks</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -144,21 +171,58 @@ export default function DocumentUploadPage() {
                 )}
               />
 
-              {/* File */}
+              {/* Section */}
               <FormField
                 control={form.control}
-                name="file"
+                name="section"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>File</FormLabel>
+                    <FormLabel>Section</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="e.g., Risk Assessments"
+                        {...field}
+                        disabled={loading}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Document Name */}
+              <FormField
+                control={form.control}
+                name="documentName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Document Name</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="e.g., Site Entry Risk Assessment"
+                        {...field}
+                        disabled={loading}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* File Input */}
+              <FormField
+                control={form.control}
+                name="document"
+                render={({ field: { onChange, value, ...rest } }) => (
+                  <FormItem>
+                    <FormLabel>Document File</FormLabel>
                     <FormControl>
                       <Input
                         type="file"
-                        onChange={(e) =>
-                          field.onChange(
-                            e.target.files ? e.target.files : null
-                          )
-                        }
+                        accept=".pdf,.doc,.docx,.xls,.xlsx"
+                        onChange={(e) => onChange(e.target.files)}
+                        disabled={loading}
+                        {...rest}
                       />
                     </FormControl>
                     <FormMessage />
@@ -171,7 +235,7 @@ export default function DocumentUploadPage() {
                   <LoadingDots />
                 ) : (
                   <>
-                    <Upload className="h-4 w-4" /> Upload
+                    <Upload className="h-4 w-4" /> Upload Document
                   </>
                 )}
               </Button>
@@ -182,3 +246,5 @@ export default function DocumentUploadPage() {
     </div>
   );
 }
+
+    

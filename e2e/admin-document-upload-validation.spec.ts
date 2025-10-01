@@ -66,7 +66,7 @@ test.describe("Admin Document Upload with Validation", () => {
     await page.getByLabel("Document File").setInputFiles(LARGE_FILE_NAME);
 
     const errorMessage = page.getByText(
-      `File size must be less than ${LARGE_FILE_SIZE_MB - 1}MB.`
+      `File size must be less than ${MAX_FILE_SIZE_MB}MB.`
     );
     await expect(errorMessage).toBeVisible();
   });
@@ -87,3 +87,5 @@ test.describe("Admin Document Upload with Validation", () => {
     await expect(successToast).toBeVisible();
   });
 });
+
+    
