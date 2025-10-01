@@ -132,9 +132,11 @@ export default function DocumentUploadPage() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="reports">Reports</SelectItem>
-                        <SelectItem value="invoices">Invoices</SelectItem>
-                        <SelectItem value="policies">Policies</SelectItem>
+                        <SelectItem value="safety">Safety</SelectItem>
+                        <SelectItem value="quality">Quality</SelectItem>
+                        <SelectItem value="hr">HR</SelectItem>
+                        <SelectItem value="environment">Environment</SelectItem>
+                        <SelectItem value="toolbox-talks">Toolbox Talks</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
