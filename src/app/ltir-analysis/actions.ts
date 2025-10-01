@@ -1,16 +1,28 @@
 "use server";
 
-import {
-  analyzeLtirTrend,
-} from "@/ai/flows/ai-ltir-trend-analysis";
+import { analyzeLtirTrend } from "@/ai/flows/ai-ltir-trend-analysis";
 
-type AnalyzeLtirTrendInput = {
-    numberOfInjuries: number;
-    totalHoursWorked: number;
-    additionalContext?: string;
-}
+export type AnalyzeLtirTrendInput = {
+  numberOfInjuries: number;
+  totalHoursWorked: number;
+  additionalContext?: string;
+};
 
-export async function analyzeLtirAction(input: AnalyzeLtirTrendInput) {
+export type AnalyzeLtirTrendOutput = {
+  trendAnalysis: string;
+  improvementAreas: string;
+  recommendations: string;
+  ltir?: number;
+  interpretation?: string;
+};
+
+type ActionResponse<T> =
+  | { success: true; data: T }
+  | { success: false; error: string };
+
+export async function analyzeLtirAction(
+  input: AnalyzeLtirTrendInput
+): Promise<ActionResponse<AnalyzeLtirTrendOutput>> {
   try {
     const output = await analyzeLtirTrend(input);
     return { success: true, data: output };

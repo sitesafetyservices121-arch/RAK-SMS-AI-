@@ -22,8 +22,18 @@ import { Download, FileText, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 
+type DocumentType = "SHE Plan" | "HIRA" | "Method Statement" | "Safe Work Procedure";
+
+type GeneratedDoc = {
+  id: string;
+  clientCompanyId: string;
+  documentType: DocumentType;
+  generatedOn: string;
+  fileName: string;
+};
+
 // This is mock data. In a real app, you would fetch this from a database.
-const allGeneratedDocs = [
+const allGeneratedDocs: GeneratedDoc[] = [
   {
     id: "doc1",
     clientCompanyId: "CLIENT-001",
@@ -61,35 +71,22 @@ const allGeneratedDocs = [
   },
 ];
 
-type DocumentType = "SHE Plan" | "HIRA" | "Method Statement" | "Safe Work Procedure";
-
-type GeneratedDoc = {
-    id: string;
-    clientCompanyId: string;
-    documentType: DocumentType;
-    generatedOn: string;
-    fileName: string;
-};
-
 export default function GeneratedDocumentsPage() {
   const [searchTerm, setSearchTerm] = useState("");
 
   const groupedAndFilteredDocs = useMemo(() => {
-    const filtered = allGeneratedDocs.filter(doc => 
-      doc.clientCompanyId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.documentType.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.fileName.toLowerCase().includes(searchTerm.toLowerCase())
+    const filtered = allGeneratedDocs.filter((doc) =>
+      [doc.clientCompanyId, doc.documentType, doc.fileName]
+        .some((field) => field.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
     return filtered.reduce((acc, doc) => {
-      const { documentType } = doc;
-      if (!acc[documentType]) {
-        acc[documentType] = [];
+      if (!acc[doc.documentType]) {
+        acc[doc.documentType] = [];
       }
-      acc[documentType].push(doc);
+      acc[doc.documentType].push(doc);
       return acc;
     }, {} as Record<DocumentType, GeneratedDoc[]>);
-
   }, [searchTerm]);
 
   const hasResults = Object.keys(groupedAndFilteredDocs).length > 0;
@@ -104,6 +101,7 @@ export default function GeneratedDocumentsPage() {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {/* Search Input */}
         <div className="mb-6">
           <div className="relative">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -117,47 +115,54 @@ export default function GeneratedDocumentsPage() {
           </div>
         </div>
 
+        {/* Results */}
         {hasResults ? (
           <div className="space-y-8">
-            {Object.entries(groupedAndFilteredDocs).map(([documentType, docs]) => (
-              <div key={documentType}>
-                <h2 className="text-xl font-semibold tracking-tight">{documentType}s</h2>
-                <Separator className="my-2" />
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Client Company ID</TableHead>
-                      <TableHead>Filename</TableHead>
-                      <TableHead>Generated On</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {docs.map((doc) => (
-                      <TableRow key={doc.id}>
-                        <TableCell>
-                          <Badge variant="secondary">{doc.clientCompanyId}</Badge>
-                        </TableCell>
-                        <TableCell className="font-medium flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-red-500" />
-                          {doc.fileName}
-                        </TableCell>
-                        <TableCell>{doc.generatedOn}</TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="ghost" size="icon" asChild>
-                            {/* In a real app, this would trigger a download from cloud storage */}
-                            <a href="#" download={doc.fileName}>
-                              <Download className="h-4 w-4" />
-                              <span className="sr-only">Download</span>
-                            </a>
-                          </Button>
-                        </TableCell>
+            {Object.entries(groupedAndFilteredDocs).map(
+              ([documentType, docs]) => (
+                <div key={documentType}>
+                  <h2 className="text-xl font-semibold tracking-tight">
+                    {documentType}s
+                  </h2>
+                  <Separator className="my-2" />
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Client Company ID</TableHead>
+                        <TableHead>Filename</TableHead>
+                        <TableHead>Generated On</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            ))}
+                    </TableHeader>
+                    <TableBody>
+                      {docs.map((doc) => (
+                        <TableRow key={doc.id}>
+                          <TableCell>
+                            <Badge variant="secondary">
+                              {doc.clientCompanyId}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="font-medium flex items-center gap-2">
+                            <FileText className="h-4 w-4 text-red-500" />
+                            {doc.fileName}
+                          </TableCell>
+                          <TableCell>{doc.generatedOn}</TableCell>
+                          <TableCell className="text-right">
+                            <Button variant="ghost" size="icon" asChild>
+                              {/* In a real app, this would trigger a download from cloud storage */}
+                              <a href="#" download={doc.fileName}>
+                                <Download className="h-4 w-4" />
+                                <span className="sr-only">Download</span>
+                              </a>
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )
+            )}
           </div>
         ) : (
           <div className="flex h-40 items-center justify-center rounded-md border border-dashed">

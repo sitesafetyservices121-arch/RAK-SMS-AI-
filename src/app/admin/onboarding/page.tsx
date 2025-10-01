@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -20,15 +19,45 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusCircle } from "lucide-react";
+import { useState } from "react";
 
-// Mock data for existing clients
-const clients = [
+type Client = {
+  id: string;
+  name: string;
+  contact: string;
+  status: string;
+  userCount: number;
+};
+
+// Initial mock data
+const initialClients: Client[] = [
   { id: "CLIENT-001", name: "ConstructCo", contact: "info@constructco.com", status: "Active", userCount: 5 },
   { id: "CLIENT-002", name: "BuildIt Right", contact: "contact@buildit.com", status: "Active", userCount: 1 },
   { id: "CLIENT-003", name: "InfraWorks", contact: "projects@infraworks.co.za", status: "Pending", userCount: 12 },
 ];
 
 export default function OnboardingPage() {
+  const [clients, setClients] = useState<Client[]>(initialClients);
+
+  const handleAddClient = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.currentTarget);
+    const newClient: Client = {
+      id: (formData.get("clientId") as string) || `CLIENT-${clients.length + 1}`,
+      name: (formData.get("companyName") as string) || "Untitled",
+      contact: (formData.get("contactEmail") as string) || "unknown@example.com",
+      status: "Active",
+      userCount: Number(formData.get("userCount")) || 0,
+    };
+
+    // Update state
+    setClients((prev) => [...prev, newClient]);
+
+    // Reset form
+    e.currentTarget.reset();
+  };
+
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       <Card>
@@ -39,28 +68,24 @@ export default function OnboardingPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form className="space-y-4">
+          <form className="space-y-4" onSubmit={handleAddClient}>
             <div className="grid gap-2">
               <Label htmlFor="companyName">Company Name</Label>
-              <Input id="companyName" placeholder="Enter company name" />
+              <Input id="companyName" name="companyName" placeholder="Enter company name" />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="contactEmail">Contact Email</Label>
-              <Input
-                id="contactEmail"
-                type="email"
-                placeholder="Enter contact email"
-              />
+              <Input id="contactEmail" name="contactEmail" type="email" placeholder="Enter contact email" />
             </div>
             <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
+              <div className="grid gap-2">
                 <Label htmlFor="clientId">Client ID</Label>
-                <Input id="clientId" placeholder="e.g., CLIENT-004" />
-                </div>
-                <div className="grid gap-2">
+                <Input id="clientId" name="clientId" placeholder="e.g., CLIENT-004" />
+              </div>
+              <div className="grid gap-2">
                 <Label htmlFor="userCount">Number of Users</Label>
-                <Input id="userCount" type="number" placeholder="e.g., 5" />
-                </div>
+                <Input id="userCount" name="userCount" type="number" placeholder="e.g., 5" />
+              </div>
             </div>
             <Button type="submit" className="w-full">
               <PlusCircle className="mr-2 h-4 w-4" /> Add Client
@@ -68,6 +93,7 @@ export default function OnboardingPage() {
           </form>
         </CardContent>
       </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>Existing Clients</CardTitle>

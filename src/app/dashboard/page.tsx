@@ -23,8 +23,16 @@ import {
   Shirt,
   FolderKanban,
 } from "lucide-react";
+import { ReactNode } from "react";
 
-const tools = [
+type Tool = {
+  icon: ReactNode;
+  title: string;
+  description: string;
+  href: string;
+};
+
+const tools: Tool[] = [
   {
     icon: <Library className="h-8 w-8 text-primary" />,
     title: "Document Library",
@@ -108,22 +116,22 @@ const tools = [
 export default function DashboardPage() {
   return (
     <div className="flex flex-col gap-8">
-      <div>
+      <header>
         <h1 className="text-3xl font-bold tracking-tight">Welcome to RAK-SMS</h1>
         <p className="text-muted-foreground">
           Your AI-powered Safety Management System.
         </p>
-      </div>
+      </header>
 
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {tools.map((tool) => (
           <Card
             key={tool.href}
             className="flex flex-col transition-all hover:shadow-lg"
           >
-            <CardHeader className="flex-row items-center gap-4">
+            <CardHeader className="flex flex-row items-center gap-4">
               {tool.icon}
-              <div className="flex flex-col">
+              <div>
                 <CardTitle>{tool.title}</CardTitle>
                 <CardDescription>{tool.description}</CardDescription>
               </div>
@@ -137,7 +145,7 @@ export default function DashboardPage() {
             </CardFooter>
           </Card>
         ))}
-      </div>
+      </section>
     </div>
   );
 }

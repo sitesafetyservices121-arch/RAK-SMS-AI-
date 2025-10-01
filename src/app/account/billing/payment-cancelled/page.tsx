@@ -1,8 +1,13 @@
-
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { XCircle } from "lucide-react";
 import Link from "next/link";
 
@@ -14,14 +19,13 @@ export default function PaymentCancelledPage() {
           <XCircle className="h-16 w-16 text-destructive" />
           <CardTitle className="mt-4">Payment Cancelled</CardTitle>
           <CardDescription>
-            Your transaction was not completed. Your account has not been charged. You can try topping up again.
+            Your transaction was not completed. Your account has not been
+            charged. You can try topping up again.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Button asChild className="w-full">
-            <Link href="/account/billing/top-up">
-              Try Again
-            </Link>
+            <Link href="/account/billing/top-up">Try Again</Link>
           </Button>
         </CardContent>
       </Card>

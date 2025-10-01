@@ -1,8 +1,13 @@
-
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { CheckCircle } from "lucide-react";
 import Link from "next/link";
 
@@ -14,14 +19,13 @@ export default function PaymentSuccessPage() {
           <CheckCircle className="h-16 w-16 text-green-500" />
           <CardTitle className="mt-4">Payment Successful!</CardTitle>
           <CardDescription>
-            Thank you for your payment. Your account balance will be updated shortly once the transaction is confirmed.
+            Thank you for your payment. Your account balance will be updated
+            shortly once the transaction is confirmed.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Button asChild className="w-full">
-            <Link href="/account/billing">
-              Return to Billing
-            </Link>
+            <Link href="/account/billing">Return to Billing</Link>
           </Button>
         </CardContent>
       </Card>

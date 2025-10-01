@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -31,6 +30,7 @@ import {
   CreditCard,
   MessageSquare,
   List,
+  Bell,
 } from "lucide-react";
 import {
   Sidebar,
@@ -79,10 +79,10 @@ const consultant = [
 ];
 
 const accountItems = [
-    { href: "/account/settings", label: "Settings", icon: User },
-    { href: "/account/billing", label: "Billing", icon: CreditCard },
-    { href: "/support", label: "Support", icon: LifeBuoy }
-]
+  { href: "/account/settings", label: "Settings", icon: User },
+  { href: "/account/billing", label: "Billing", icon: CreditCard },
+  { href: "/support", label: "Support", icon: LifeBuoy },
+];
 
 const adminTools = [
   { href: "/admin", label: "Admin Dashboard", icon: Shield },
@@ -93,11 +93,13 @@ const adminTools = [
   { href: "/admin/create-news", label: "Create News", icon: FilePlus },
   { href: "/admin/wilson-training", label: "AI Training", icon: BrainCircuit },
   { href: "/admin/model-inspector", label: "Model Inspector", icon: List },
-]
+];
 
 export function AppNav() {
   const pathname = usePathname();
   const isActive = (path: string) => pathname === path;
+  const isSectionActive = (items: { href: string }[]) =>
+    items.some((item) => isActive(item.href));
 
   return (
     <Sidebar>
@@ -106,6 +108,7 @@ export function AppNav() {
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
+          {/* Top-level items */}
           {menuItems.map((item) => (
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton
@@ -121,82 +124,83 @@ export function AppNav() {
             </SidebarMenuItem>
           ))}
 
-          <Collapsible asChild>
+          {/* Management Tools */}
+          <Collapsible asChild defaultOpen={isSectionActive(managementTools)}>
             <SidebarMenuItem>
-              <>
-                <CollapsibleTrigger asChild>
-                  <SidebarMenuButton
-                    className="justify-between"
-                    tooltip={{ children: "Management Tools", side: "right", align: "center" }}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Briefcase />
-                      <span>Management Tools</span>
-                    </div>
-                    <ChevronDown className="h-4 w-4 transition-transform [&[data-state=open]]:rotate-180" />
-                  </SidebarMenuButton>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <SidebarMenu className="ml-4 mt-2">
-                    {managementTools.map((item) => (
-                      <SidebarMenuItem key={item.href}>
-                        <SidebarMenuButton
-                          asChild
-                          size="sm"
-                          isActive={isActive(item.href)}
-                          tooltip={{ children: item.label, side: "right", align: "center" }}
-                        >
-                          <Link href={item.href}>
-                            <item.icon />
-                            <span>{item.label}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))}
-                  </SidebarMenu>
-                </CollapsibleContent>
-              </>
-            </SidebarMenuItem>
-          </Collapsible>
-          
-          <Collapsible asChild>
-            <SidebarMenuItem>
-              <>
-                <CollapsibleTrigger asChild>
-                  <SidebarMenuButton
-                    className="justify-between"
-                    tooltip={{ children: "AI Tools", side: "right", align: "center" }}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Bot />
-                      <span>AI Tools</span>
-                    </div>
-                    <ChevronDown className="h-4 w-4 transition-transform [&[data-state=open]]:rotate-180" />
-                  </SidebarMenuButton>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <SidebarMenu className="ml-4 mt-2">
-                    {aiTools.map((item) => (
-                      <SidebarMenuItem key={item.href}>
-                        <SidebarMenuButton
-                          asChild
-                          size="sm"
-                          isActive={isActive(item.href)}
-                          tooltip={{ children: item.label, side: "right", align: "center" }}
-                        >
-                          <Link href={item.href}>
-                            <item.icon />
-                            <span>{item.label}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))}
-                  </SidebarMenu>
-                </CollapsibleContent>
-              </>
+              <CollapsibleTrigger asChild>
+                <SidebarMenuButton
+                  className="justify-between"
+                  tooltip={{ children: "Management Tools", side: "right", align: "center" }}
+                  aria-expanded={isSectionActive(managementTools)}
+                >
+                  <div className="flex items-center gap-2">
+                    <Briefcase />
+                    <span>Management Tools</span>
+                  </div>
+                  <ChevronDown className="h-4 w-4 transition-transform [&[data-state=open]]:rotate-180" />
+                </SidebarMenuButton>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarMenu className="ml-4 mt-2">
+                  {managementTools.map((item) => (
+                    <SidebarMenuItem key={item.href}>
+                      <SidebarMenuButton
+                        asChild
+                        size="sm"
+                        isActive={isActive(item.href)}
+                        tooltip={{ children: item.label, side: "right", align: "center" }}
+                      >
+                        <Link href={item.href}>
+                          <item.icon />
+                          <span>{item.label}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </CollapsibleContent>
             </SidebarMenuItem>
           </Collapsible>
 
+          {/* AI Tools */}
+          <Collapsible asChild defaultOpen={isSectionActive(aiTools)}>
+            <SidebarMenuItem>
+              <CollapsibleTrigger asChild>
+                <SidebarMenuButton
+                  className="justify-between"
+                  tooltip={{ children: "AI Tools", side: "right", align: "center" }}
+                  aria-expanded={isSectionActive(aiTools)}
+                >
+                  <div className="flex items-center gap-2">
+                    <Bot />
+                    <span>AI Tools</span>
+                  </div>
+                  <ChevronDown className="h-4 w-4 transition-transform [&[data-state=open]]:rotate-180" />
+                </SidebarMenuButton>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarMenu className="ml-4 mt-2">
+                  {aiTools.map((item) => (
+                    <SidebarMenuItem key={item.href}>
+                      <SidebarMenuButton
+                        asChild
+                        size="sm"
+                        isActive={isActive(item.href)}
+                        tooltip={{ children: item.label, side: "right", align: "center" }}
+                      >
+                        <Link href={item.href}>
+                          <item.icon />
+                          <span>{item.label}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </CollapsibleContent>
+            </SidebarMenuItem>
+          </Collapsible>
+
+          {/* Consultant */}
           {consultant.map((item) => (
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton
@@ -212,84 +216,81 @@ export function AppNav() {
             </SidebarMenuItem>
           ))}
 
-          {/* Account Section */}
-          <Collapsible asChild>
+          {/* My Account */}
+          <Collapsible asChild defaultOpen={isSectionActive(accountItems)}>
             <SidebarMenuItem>
-              <>
-                <CollapsibleTrigger asChild>
-                  <SidebarMenuButton
-                    className="justify-between"
-                    tooltip={{ children: "My Account", side: "right", align: "center" }}
-                  >
-                    <div className="flex items-center gap-2">
-                      <User />
-                      <span>My Account</span>
-                    </div>
-                    <ChevronDown className="h-4 w-4 transition-transform [&[data-state=open]]:rotate-180" />
-                  </SidebarMenuButton>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <SidebarMenu className="ml-4 mt-2">
-                    {accountItems.map((item) => (
-                      <SidebarMenuItem key={item.href}>
-                        <SidebarMenuButton
-                          asChild
-                          size="sm"
-                          isActive={isActive(item.href)}
-                          tooltip={{ children: item.label, side: "right", align: "center" }}
-                        >
-                          <Link href={item.href}>
-                            <item.icon />
-                            <span>{item.label}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))}
-                  </SidebarMenu>
-                </CollapsibleContent>
-              </>
+              <CollapsibleTrigger asChild>
+                <SidebarMenuButton
+                  className="justify-between"
+                  tooltip={{ children: "My Account", side: "right", align: "center" }}
+                  aria-expanded={isSectionActive(accountItems)}
+                >
+                  <div className="flex items-center gap-2">
+                    <User />
+                    <span>My Account</span>
+                  </div>
+                  <ChevronDown className="h-4 w-4 transition-transform [&[data-state=open]]:rotate-180" />
+                </SidebarMenuButton>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarMenu className="ml-4 mt-2">
+                  {accountItems.map((item) => (
+                    <SidebarMenuItem key={item.href}>
+                      <SidebarMenuButton
+                        asChild
+                        size="sm"
+                        isActive={isActive(item.href)}
+                        tooltip={{ children: item.label, side: "right", align: "center" }}
+                      >
+                        <Link href={item.href}>
+                          <item.icon />
+                          <span>{item.label}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </CollapsibleContent>
             </SidebarMenuItem>
           </Collapsible>
 
-          {/* Admin Section */}
-          <Collapsible asChild>
+          {/* Admin */}
+          <Collapsible asChild defaultOpen={isSectionActive(adminTools)}>
             <SidebarMenuItem>
-              <>
-                <CollapsibleTrigger asChild>
-                  <SidebarMenuButton
-                    className="justify-between"
-                    tooltip={{ children: "Admin", side: "right", align: "center" }}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Shield />
-                      <span>Admin</span>
-                    </div>
-                    <ChevronDown className="h-4 w-4 transition-transform [&[data-state=open]]:rotate-180" />
-                  </SidebarMenuButton>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <SidebarMenu className="ml-4 mt-2">
-                    {adminTools.map((item) => (
-                      <SidebarMenuItem key={item.href}>
-                        <SidebarMenuButton
-                          asChild
-                          size="sm"
-                          isActive={isActive(item.href)}
-                          tooltip={{ children: item.label, side: "right", align: "center" }}
-                        >
-                          <Link href={item.href}>
-                            <item.icon />
-                            <span>{item.label}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))}
-                  </SidebarMenu>
-                </CollapsibleContent>
-              </>
+              <CollapsibleTrigger asChild>
+                <SidebarMenuButton
+                  className="justify-between"
+                  tooltip={{ children: "Admin", side: "right", align: "center" }}
+                  aria-expanded={isSectionActive(adminTools)}
+                >
+                  <div className="flex items-center gap-2">
+                    <Shield />
+                    <span>Admin</span>
+                  </div>
+                  <ChevronDown className="h-4 w-4 transition-transform [&[data-state=open]]:rotate-180" />
+                </SidebarMenuButton>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarMenu className="ml-4 mt-2">
+                  {adminTools.map((item) => (
+                    <SidebarMenuItem key={item.href}>
+                      <SidebarMenuButton
+                        asChild
+                        size="sm"
+                        isActive={isActive(item.href)}
+                        tooltip={{ children: item.label, side: "right", align: "center" }}
+                      >
+                        <Link href={item.href}>
+                          <item.icon />
+                          <span>{item.label}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </CollapsibleContent>
             </SidebarMenuItem>
           </Collapsible>
-
         </SidebarMenu>
       </SidebarContent>
     </Sidebar>

@@ -1,19 +1,25 @@
 "use server";
 
-import {
-  indexDocument,
-} from "@/ai/flows/ai-document-indexer";
+import { indexDocument } from "@/ai/flows/ai-document-indexer";
 
-type IndexDocumentInput = {
+export type IndexDocumentInput = {
   documentDataUri: string;
 };
 
-export async function indexDocumentAction(input: IndexDocumentInput) {
+export type IndexDocumentResponse =
+  | { success: true; data: { chunksIndexed: number } }
+  | { success: false; error: string };
+
+export async function indexDocumentAction(
+  input: IndexDocumentInput
+): Promise<IndexDocumentResponse> {
   try {
     const output = await indexDocument(input);
     return { success: true, data: output };
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error(e);
-    return { success: false, error: e.message };
+    const message =
+      e instanceof Error ? e.message : "An unknown error occurred";
+    return { success: false, error: message };
   }
 }

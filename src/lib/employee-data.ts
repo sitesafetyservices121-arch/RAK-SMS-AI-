@@ -1,8 +1,7 @@
-
 export type Course = {
   courseName: string;
   status: "Completed" | "Expired" | "Scheduled";
-  expiryDate: string;
+  expiryDate: string | null; // ISO date string or null if not applicable
 };
 
 export type Employee = {
@@ -10,18 +9,25 @@ export type Employee = {
   firstName: string;
   surname: string;
   idNumber: string;
-  codeLicense: string;
+  codeLicense: string | null;
   courses: Course[];
 };
 
-export type PpeRegisterEntry = {
-    employeeId: string;
-    ppeItemId: string;
-    dateIssued: string;
-    validUntil: string;
-    signature: "Signed" | "Pending";
+export type PpeItem = {
+  id: string;
+  name: string;
+  category: "Head" | "Feet" | "Body" | "Hands" | "Other";
 };
 
+export type PpeRegisterEntry = {
+  employeeId: string;
+  ppeItemId: string;
+  dateIssued: string; // ISO date string
+  validUntil: string; // ISO date string
+  signature: "Signed" | "Pending";
+};
+
+// --- Initial Data ---
 
 export const initialEmployees: Employee[] = [
   {
@@ -31,8 +37,16 @@ export const initialEmployees: Employee[] = [
     idNumber: "8501015000087",
     codeLicense: "C1",
     courses: [
-      { courseName: "First Aid Level 1", status: "Completed", expiryDate: "2025-08-01" },
-      { courseName: "Working at Heights", status: "Completed", expiryDate: "2026-01-15" },
+      {
+        courseName: "First Aid Level 1",
+        status: "Completed",
+        expiryDate: "2025-08-01",
+      },
+      {
+        courseName: "Working at Heights",
+        status: "Completed",
+        expiryDate: "2026-01-15",
+      },
     ],
   },
   {
@@ -40,10 +54,14 @@ export const initialEmployees: Employee[] = [
     firstName: "Jane",
     surname: "Smith",
     idNumber: "9003155111086",
-    codeLicense: "N/A",
+    codeLicense: null,
     courses: [
-        { courseName: "HIRA", status: "Scheduled", expiryDate: "N/A" },
-        { courseName: "Fire Fighting", status: "Expired", expiryDate: "2024-05-20" },
+      { courseName: "HIRA", status: "Scheduled", expiryDate: null },
+      {
+        courseName: "Fire Fighting",
+        status: "Expired",
+        expiryDate: "2024-05-20",
+      },
     ],
   },
   {
@@ -53,9 +71,20 @@ export const initialEmployees: Employee[] = [
     idNumber: "7811235222081",
     codeLicense: "EC1",
     courses: [
-        { courseName: "Forklift Operator", status: "Completed", expiryDate: "2025-11-10" },
+      {
+        courseName: "Forklift Operator",
+        status: "Completed",
+        expiryDate: "2025-11-10",
+      },
     ],
   },
+];
+
+export const ppeItems: PpeItem[] = [
+  { id: "ppe-hd-01", name: "Hard Hat", category: "Head" },
+  { id: "ppe-ft-01", name: "Safety Boots", category: "Feet" },
+  { id: "ppe-bd-01", name: "Reflective Vest", category: "Body" },
+  { id: "ppe-hg-01", name: "Gloves", category: "Hands" },
 ];
 
 export const ppeRegister: PpeRegisterEntry[] = [
@@ -88,3 +117,32 @@ export const ppeRegister: PpeRegisterEntry[] = [
     signature: "Signed",
   },
 ];
+
+// --- Helper Functions ---
+
+// Get PPE issued to an employee
+export function getEmployeePpe(employeeId: string) {
+  return ppeRegister
+    .filter((entry) => entry.employeeId === employeeId)
+    .map((entry) => ({
+      ...entry,
+      item: ppeItems.find((i) => i.id === entry.ppeItemId),
+    }));
+}
+
+// Check if employee has any expired courses
+export function hasExpiredCourses(employee: Employee) {
+  return employee.courses.some((c) => c.status === "Expired");
+}
+
+// Get employee by ID with their PPE and courses
+export function getEmployeeProfile(employeeId: string) {
+  const employee = initialEmployees.find((e) => e.id === employeeId);
+  if (!employee) return null;
+
+  return {
+    ...employee,
+    ppe: getEmployeePpe(employeeId),
+    hasExpiredCourses: hasExpiredCourses(employee),
+  };
+}

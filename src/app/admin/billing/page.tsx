@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -54,36 +53,40 @@ const clientData = [
 ];
 
 const calculateSubscription = (userCount: number) => {
-    if (userCount <= 0) return { plan: "No users", amount: 0 };
-    if (userCount === 1) return { plan: "Base Plan", amount: 2500 };
-    const additionalUsers = userCount - 1;
-    const amount = 2500 + (additionalUsers * 350);
-    return { plan: `Base Plan + ${additionalUsers} user(s)`, amount };
-}
+  if (userCount <= 0) return { plan: "No users", amount: 0 };
+  if (userCount === 1) return { plan: "Base Plan", amount: 2500 };
+  const additionalUsers = userCount - 1;
+  const amount = 2500 + additionalUsers * 350;
+  return { plan: `Base Plan + ${additionalUsers} user(s)`, amount };
+};
 
 export default function AdminBillingPage() {
-    const { toast } = useToast();
+  const { toast } = useToast();
 
-    const handleSendReminder = (clientName: string) => {
-        toast({
-            title: "Reminder Sent",
-            description: `A payment reminder has been sent to ${clientName}.`,
-        });
-    }
+  const handleSendReminder = (clientName: string) => {
+    toast({
+      title: "Reminder Sent",
+      description: `A payment reminder has been sent to ${clientName}.`,
+    });
+  };
 
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-            <div>
-                <CardTitle>Client Billing Management</CardTitle>
-                <CardDescription>
-                Track and manage client subscriptions and payments via PayFast.
-                </CardDescription>
-            </div>
-             <div className="flex items-center gap-2">
-                 <img src="https://www.payfast.co.za/assets/images/payfast_logo_2-1.png" alt="PayFast Logo" className="h-8" />
-            </div>
+          <div>
+            <CardTitle>Client Billing Management</CardTitle>
+            <CardDescription>
+              Track and manage client subscriptions and payments via PayFast.
+            </CardDescription>
+          </div>
+          <div className="flex items-center gap-2">
+            <img
+              src="https://www.payfast.co.za/assets/images/payfast_logo_2-1.png"
+              alt="PayFast Logo"
+              className="h-8"
+            />
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -104,15 +107,26 @@ export default function AdminBillingPage() {
               const { plan, amount } = calculateSubscription(client.userCount);
               return (
                 <TableRow key={client.clientId}>
-                  <TableCell className="font-medium">{client.clientId}</TableCell>
+                  <TableCell className="font-medium">
+                    {client.clientId}
+                  </TableCell>
                   <TableCell>{client.companyName}</TableCell>
                   <TableCell>{plan}</TableCell>
                   <TableCell>
-                    <Badge variant={client.status === "Overdue" ? "destructive" : "default"}>
+                    <Badge
+                      variant={
+                        client.status === "Overdue" ? "destructive" : "default"
+                      }
+                    >
                       {client.status}
                     </Badge>
                   </TableCell>
-                  <TableCell>R{client.status === "Overdue" ? amount.toFixed(2) : '0.00'}</TableCell>
+                  <TableCell>
+                    R
+                    {client.status === "Overdue"
+                      ? amount.toFixed(2)
+                      : "0.00"}
+                  </TableCell>
                   <TableCell>{client.lastPayment}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
@@ -124,8 +138,13 @@ export default function AdminBillingPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => handleSendReminder(client.companyName)} disabled={client.status !== 'Overdue'}>
-                           <Send className="mr-2 h-4 w-4" /> Send Reminder
+                        <DropdownMenuItem
+                          onClick={() =>
+                            handleSendReminder(client.companyName)
+                          }
+                          disabled={client.status !== "Overdue"}
+                        >
+                          <Send className="mr-2 h-4 w-4" /> Send Reminder
                         </DropdownMenuItem>
                         <DropdownMenuItem>
                           <FileText className="mr-2 h-4 w-4" /> View Invoice

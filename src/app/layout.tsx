@@ -1,16 +1,22 @@
-
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { cn } from "@/lib/utils";
-import type { PropsWithChildren } from 'react';
+import type { PropsWithChildren } from "react";
 
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppNav } from "@/components/nav";
 import { Button } from "@/components/ui/button";
 import { Bell, UserCircle } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { LiveClock } from "@/components/live-clock";
 import { ThemeProvider, ThemeToggle } from "@/components/theme-toggle";
 import Link from "next/link";
@@ -22,25 +28,11 @@ export const metadata: Metadata = {
   description: "AI-powered Safety Management System",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: PropsWithChildren) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={cn(
-          "font-body antialiased",
-          inter.variable
-        )}
-      >
-        <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-        >
+      <body className={cn("antialiased", inter.variable)}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <SidebarProvider>
             <AppNav />
             <SidebarInset>
@@ -57,7 +49,7 @@ export default function RootLayout({
                   </Button>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
+                      <Button variant="ghost" size="icon" aria-haspopup="menu">
                         <UserCircle className="h-6 w-6" />
                         <span className="sr-only">User Profile</span>
                       </Button>
@@ -78,9 +70,7 @@ export default function RootLayout({
                   </DropdownMenu>
                 </div>
               </header>
-              <main className="flex-1 p-4 sm:p-6 lg:p-8">
-                  {children}
-              </main>
+              <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
             </SidebarInset>
           </SidebarProvider>
         </ThemeProvider>

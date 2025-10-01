@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -20,7 +19,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
@@ -29,12 +35,13 @@ import { getDocumentSectionsAction } from "@/app/documents/actions";
 import LoadingDots from "@/components/ui/loading-dots";
 import { Combobox } from "@/components/ui/combobox";
 
-
 const formSchema = z.object({
-    category: z.string().min(1, "Category is required."),
-    section: z.string().min(1, "Section is required."),
-    documentName: z.string().min(1, "Document name is required."),
-    document: z.instanceof(File).refine(file => file.size > 0, "A file is required."),
+  category: z.string().min(1, "Category is required."),
+  section: z.string().min(1, "Section is required."),
+  documentName: z.string().min(1, "Document name is required."),
+  document: z
+    .instanceof(File)
+    .refine((file) => file.size > 0, "A file is required."),
 });
 
 type SectionOption = { value: string; label: string };
@@ -65,7 +72,7 @@ export default function DocumentUploadPage() {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
-    
+
     const formData = new FormData();
     formData.append("category", values.category);
     formData.append("section", values.section);
@@ -82,19 +89,22 @@ export default function DocumentUploadPage() {
         description: `${values.document.name} has been processed.`,
       });
       form.reset();
-      
-      // Optimistically update sections list
-      const newSectionValue = values.section.toLowerCase().replace(/ /g, '-');
-      if (!existingSections.some(s => s.value === newSectionValue)) {
-          setExistingSections(prev => [...prev, { value: newSectionValue, label: values.section}].sort((a,b) => a.label.localeCompare(b.label)));
-      }
 
+      // Optimistically update sections list
+      const newSectionValue = values.section.toLowerCase().replace(/ /g, "-");
+      if (!existingSections.some((s) => s.value === newSectionValue)) {
+        setExistingSections((prev) =>
+          [...prev, { value: newSectionValue, label: values.section }].sort(
+            (a, b) => a.label.localeCompare(b.label)
+          )
+        );
+      }
     } else {
-        toast({
-            variant: "destructive",
-            title: "Upload Failed",
-            description: response.error,
-        });
+      toast({
+        variant: "destructive",
+        title: "Upload Failed",
+        description: response.error,
+      });
     }
   };
 
@@ -108,88 +118,97 @@ export default function DocumentUploadPage() {
       </CardHeader>
       <CardContent>
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField
-                    control={form.control}
-                    name="category"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Category</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                            <SelectTrigger>
-                            <SelectValue placeholder="Select a main category" />
-                            </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                            <SelectItem value="Safety">Safety</SelectItem>
-                            <SelectItem value="Quality">Quality</SelectItem>
-                            <SelectItem value="HR">HR</SelectItem>
-                            <SelectItem value="Environment">Environment</SelectItem>
-                            <SelectItem value="Toolbox Talks">Toolbox Talks</SelectItem>
-                        </SelectContent>
-                        </Select>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Category</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a main category" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Safety">Safety</SelectItem>
+                      <SelectItem value="Quality">Quality</SelectItem>
+                      <SelectItem value="HR">HR</SelectItem>
+                      <SelectItem value="Environment">Environment</SelectItem>
+                      <SelectItem value="Toolbox Talks">Toolbox Talks</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-                <FormField
-                    control={form.control}
-                    name="section"
-                    render={({ field }) => (
-                        <FormItem className="flex flex-col">
-                            <FormLabel>Section</FormLabel>
-                             <Combobox 
-                                options={existingSections}
-                                value={field.value}
-                                onChange={field.onChange}
-                                placeholder="Select or create a section..."
-                                notFoundText="No sections found."
-                            />
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                
-                <FormField
-                    control={form.control}
-                    name="documentName"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Document Name</FormLabel>
-                            <FormControl>
-                                <Input placeholder="e.g., Site Supervisor Appointment" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
+            <FormField
+              control={form.control}
+              name="section"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Section</FormLabel>
+                  <Combobox
+                    options={existingSections}
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder="Select or create a section..."
+                    notFoundText="No sections found."
+                  />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-                <FormField
-                    control={form.control}
-                    name="document"
-                    render={({ field: { onChange, value, ...fieldProps } }) => (
-                        <FormItem>
-                        <FormLabel>Document File</FormLabel>
-                        <FormControl>
-                            <Input 
-                                type="file" 
-                                {...fieldProps}
-                                onChange={e => onChange(e.target.files?.[0])}
-                                accept=".doc,.docx,.pdf,.xls,.xlsx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                            />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                />
+            <FormField
+              control={form.control}
+              name="documentName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Document Name</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="e.g., Site Supervisor Appointment"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? <LoadingDots /> : <Upload className="mr-2 h-4 w-4" />} 
-                    Upload Document
-                </Button>
-            </form>
+            <FormField
+              control={form.control}
+              name="document"
+              render={({ field: { onChange, value, ...rest } }) => (
+                <FormItem>
+                  <FormLabel>Document File</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="file"
+                      {...rest} // passes name, ref, onBlur, disabled
+                      onChange={(e) => onChange(e.target.files?.[0])}
+                      accept=".doc,.docx,.pdf,.xls,.xlsx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? (
+                <LoadingDots />
+              ) : (
+                <>
+                  <Upload className="mr-2 h-4 w-4" />
+                  Upload Document
+                </>
+              )}
+            </Button>
+          </form>
         </Form>
       </CardContent>
     </Card>

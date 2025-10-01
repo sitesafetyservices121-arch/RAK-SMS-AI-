@@ -1,5 +1,4 @@
-
-'use client';
+"use client";
 
 import {
   Card,
@@ -7,7 +6,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
+} from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -15,9 +14,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { listModels } from '@/ai/flows/ai-model-inspector';
-import { useEffect, useState } from 'react';
+} from "@/components/ui/table";
+import { listModels } from "@/ai/flows/ai-model-inspector";
+import { useEffect, useState } from "react";
 
 type ModelInfo = {
   name: string;
@@ -39,7 +38,7 @@ export default function ModelInspectorPage() {
         const { models } = await listModels();
         setModels(models);
       } catch (e: any) {
-        setError(e.message || 'Failed to fetch models.');
+        setError(e.message || "Failed to fetch models.");
       } finally {
         setLoading(false);
       }

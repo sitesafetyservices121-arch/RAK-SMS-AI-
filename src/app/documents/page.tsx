@@ -1,5 +1,4 @@
-
-"use client"
+"use client";
 
 import { useMemo, useEffect, useState } from "react";
 import {
@@ -23,7 +22,8 @@ import { Separator } from "@/components/ui/separator";
 import { getDocumentsAction, type Document } from "./actions";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const DocumentIcon = ({ type }: { type: string }) => {
+const DocumentIcon = ({ type }: { type?: string }) => {
+  if (!type) return <File className="h-4 w-4 text-gray-400" />;
   if (type.includes("pdf")) {
     return <FileText className="h-4 w-4 text-red-600" />;
   }
@@ -36,20 +36,26 @@ const DocumentIcon = ({ type }: { type: string }) => {
   return <File className="h-4 w-4 text-blue-600" />;
 };
 
-
 export default function DocumentsPage() {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchDocuments() {
-      const response = await getDocumentsAction();
-      if (response.success && response.data) {
-        setDocuments(response.data);
-      } else {
-        console.error("Failed to fetch documents:", response.error);
+      try {
+        const response = await getDocumentsAction();
+        if (response.success && response.data) {
+          setDocuments(response.data);
+        } else {
+          setError(response.error || "Failed to fetch documents.");
+        }
+      } catch (err) {
+        setError("Unexpected error while fetching documents.");
+        console.error(err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
     fetchDocuments();
   }, []);
@@ -93,37 +99,58 @@ export default function DocumentsPage() {
     "Continuous Improvement & Review",
   ];
 
-
   if (loading) {
     return (
-        <Card>
-            <CardHeader>
-                <Skeleton className="h-8 w-1/3" />
-                <Skeleton className="h-4 w-2/3" />
-            </CardHeader>
-            <CardContent className="space-y-8">
-                {[...Array(3)].map((_, i) => (
-                    <div key={i}>
-                        <Skeleton className="h-7 w-1/4 mb-2" />
-                        <Skeleton className="h-px w-full mb-4" />
-                        <div className="space-y-2">
-                           {[...Array(2)].map((_, j) => (
-                             <div key={j} className="flex justify-between items-center p-2">
-                                <div className="flex items-center gap-2">
-                                    <Skeleton className="h-4 w-4" />
-                                    <Skeleton className="h-4 w-48" />
-                                </div>
-                                <Skeleton className="h-4 w-12" />
-                                <Skeleton className="h-4 w-24" />
-                                <Skeleton className="h-8 w-8 rounded-full" />
-                            </div>
-                           ))}
-                        </div>
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-8 w-1/3" />
+          <Skeleton className="h-4 w-2/3" />
+        </CardHeader>
+        <CardContent className="space-y-8">
+          {[...Array(3)].map((_, i) => (
+            <div key={i}>
+              <Skeleton className="h-7 w-1/4 mb-2" />
+              <Skeleton className="h-px w-full mb-4" />
+              <div className="space-y-2">
+                {[...Array(2)].map((_, j) => (
+                  <div
+                    key={j}
+                    className="flex justify-between items-center p-2"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Skeleton className="h-4 w-4" />
+                      <Skeleton className="h-4 w-48" />
                     </div>
+                    <Skeleton className="h-4 w-12" />
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-8 w-8 rounded-full" />
+                  </div>
                 ))}
-            </CardContent>
-        </Card>
-    )
+              </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Document Library</CardTitle>
+          <CardDescription>
+            Centralized storage for safety, health, environment, and quality
+            documents from Firebase.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex h-40 items-center justify-center rounded-md border border-dashed">
+            <p className="text-red-600">{error}</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
@@ -137,24 +164,27 @@ export default function DocumentsPage() {
       </CardHeader>
       <CardContent>
         <div className="space-y-8">
-          {categoryOrder.map(category => {
+          {categoryOrder.map((category) => {
             const subCategories = groupedDocs[category];
             if (!subCategories) return null;
 
-            // Use specific order for Safety category, natural order for others
-            const subCategoryKeys = category === "Safety" 
-              ? safetySubCategoryOrder.filter(key => subCategories[key]) 
-              : Object.keys(subCategories).sort();
+            const subCategoryKeys =
+              category === "Safety"
+                ? safetySubCategoryOrder.filter((key) => subCategories[key])
+                : Object.keys(subCategories).sort();
 
             return (
               <div key={category}>
                 <h2 className="text-2xl font-bold tracking-tight">{category}</h2>
-                 {subCategoryKeys.map((subCategory) => {
+                {subCategoryKeys.length > 0 ? (
+                  subCategoryKeys.map((subCategory) => {
                     const docs = subCategories[subCategory];
                     if (!docs) return null;
                     return (
                       <div key={subCategory} className="pt-6">
-                        <h3 className="text-lg font-semibold tracking-tight">{subCategory}</h3>
+                        <h3 className="text-lg font-semibold tracking-tight">
+                          {subCategory}
+                        </h3>
                         <Separator className="my-2" />
                         <Table>
                           <TableHeader>
@@ -176,7 +206,12 @@ export default function DocumentsPage() {
                                 <TableCell>{doc.lastUpdated}</TableCell>
                                 <TableCell className="text-right">
                                   <Button variant="ghost" size="icon" asChild>
-                                    <a href={doc.downloadURL} target="_blank" rel="noopener noreferrer" download={doc.fileName}>
+                                    <a
+                                      href={doc.downloadURL}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      download={doc.fileName}
+                                    >
                                       <Download className="h-4 w-4" />
                                       <span className="sr-only">Download</span>
                                     </a>
@@ -188,17 +223,22 @@ export default function DocumentsPage() {
                         </Table>
                       </div>
                     );
-                  })}
+                  })
+                ) : (
+                  <p className="text-muted-foreground mt-2">
+                    No documents found under this category.
+                  </p>
+                )}
               </div>
-            )
+            );
           })}
-           {Object.keys(groupedDocs).length === 0 && (
-                <div className="flex h-40 items-center justify-center rounded-md border border-dashed">
-                    <p className="text-muted-foreground">
-                        No documents found in the library.
-                    </p>
-                </div>
-           )}
+          {Object.keys(groupedDocs).length === 0 && (
+            <div className="flex h-40 items-center justify-center rounded-md border border-dashed">
+              <p className="text-muted-foreground">
+                No documents found in the library.
+              </p>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -21,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { MoreHorizontal, PauseCircle, Trash2 } from "lucide-react";
+import { MoreHorizontal, PauseCircle, Trash2, CheckCircle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,8 +32,16 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 
-// Mock data for prescriptions
-const initialPrescriptions = [
+type Prescription = {
+  id: string;
+  clientId: string;
+  issue: string;
+  prescription: string;
+  status: "Issued" | "Paused" | "Completed";
+  date: string;
+};
+
+const initialPrescriptions: Prescription[] = [
   {
     id: "PRE-001",
     clientId: "CLIENT-002",
@@ -58,7 +65,7 @@ export default function PrescriptionManagementPage() {
   const { toast } = useToast();
 
   const handleDelete = (id: string) => {
-    setPrescriptions(prescriptions.filter((p) => p.id !== id));
+    setPrescriptions((prev) => prev.filter((p) => p.id !== id));
     toast({
       title: "Prescription Deleted",
       description: `Prescription ${id} has been removed.`,
@@ -66,20 +73,50 @@ export default function PrescriptionManagementPage() {
   };
 
   const handlePause = (id: string) => {
-    setPrescriptions(
-      prescriptions.map((p) =>
+    setPrescriptions((prev) =>
+      prev.map((p) =>
         p.id === id
-          ? {
-              ...p,
-              status: p.status === "Paused" ? "Issued" : "Paused",
-            }
+          ? { ...p, status: p.status === "Paused" ? "Issued" : "Paused" }
           : p
       )
     );
-    const newStatus = prescriptions.find(p => p.id === id)?.status === 'Paused' ? 'Resumed' : 'Paused';
+    const wasPaused = prescriptions.find((p) => p.id === id)?.status === "Paused";
     toast({
-      title: `Prescription ${newStatus}`,
-      description: `Prescription ${id} has been ${newStatus.toLowerCase()}.`,
+      title: `Prescription ${wasPaused ? "Resumed" : "Paused"}`,
+      description: `Prescription ${id} has been ${wasPaused ? "resumed" : "paused"}.`,
+    });
+  };
+
+  const handleComplete = (id: string) => {
+    setPrescriptions((prev) =>
+      prev.map((p) =>
+        p.id === id ? { ...p, status: "Completed" } : p
+      )
+    );
+    toast({
+      title: "Prescription Completed",
+      description: `Prescription ${id} has been marked as completed.`,
+    });
+  };
+
+  const handleIssue = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const newPrescription: Prescription = {
+      id: `PRE-${String(prescriptions.length + 1).padStart(3, "0")}`,
+      clientId: (formData.get("clientId") as string) || "Unknown",
+      issue: (formData.get("issue") as string) || "",
+      prescription: (formData.get("prescription") as string) || "",
+      status: "Issued",
+      date: new Date().toISOString().split("T")[0],
+    };
+
+    setPrescriptions((prev) => [...prev, newPrescription]);
+    e.currentTarget.reset();
+
+    toast({
+      title: "Prescription Issued",
+      description: `Prescription ${newPrescription.id} has been created.`,
     });
   };
 
@@ -96,7 +133,6 @@ export default function PrescriptionManagementPage() {
     }
   };
 
-
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       <Card>
@@ -107,18 +143,18 @@ export default function PrescriptionManagementPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form className="space-y-4">
+          <form className="space-y-4" onSubmit={handleIssue}>
             <div className="grid gap-2">
               <Label htmlFor="clientId">Client ID</Label>
-              <Input id="clientId" placeholder="Enter client ID" />
+              <Input id="clientId" name="clientId" placeholder="Enter client ID" />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="issue">Identified Issue</Label>
-              <Textarea id="issue" placeholder="Describe the safety issue or non-conformance" />
+              <Textarea id="issue" name="issue" placeholder="Describe the safety issue or non-conformance" />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="prescription">Prescription / Corrective Action</Label>
-              <Textarea id="prescription" placeholder="Describe the required corrective action" />
+              <Textarea id="prescription" name="prescription" placeholder="Describe the required corrective action" />
             </div>
             <Button type="submit" className="w-full">
               Issue Prescription
@@ -126,12 +162,11 @@ export default function PrescriptionManagementPage() {
           </form>
         </CardContent>
       </Card>
-       <Card>
+
+      <Card>
         <CardHeader>
           <CardTitle>Outstanding Prescriptions</CardTitle>
-          <CardDescription>
-            List of all issued corrective actions.
-          </CardDescription>
+          <CardDescription>List of all issued corrective actions.</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -151,7 +186,9 @@ export default function PrescriptionManagementPage() {
                   <TableCell>{p.clientId}</TableCell>
                   <TableCell>{p.issue}</TableCell>
                   <TableCell>
-                     <Badge variant={getStatusVariant(p.status) as any}>{p.status}</Badge>
+                    <Badge variant={getStatusVariant(p.status) as any}>
+                      {p.status}
+                    </Badge>
                   </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
@@ -164,9 +201,19 @@ export default function PrescriptionManagementPage() {
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => handlePause(p.id)}>
+                        <DropdownMenuItem
+                          onClick={() => handlePause(p.id)}
+                          disabled={p.status === "Completed"}
+                        >
                           <PauseCircle className="mr-2 h-4 w-4" />
                           {p.status === "Paused" ? "Resume" : "Pause"}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handleComplete(p.id)}
+                          disabled={p.status === "Completed"}
+                        >
+                          <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+                          Mark Completed
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           className="text-destructive"

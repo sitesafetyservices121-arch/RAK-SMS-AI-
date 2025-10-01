@@ -61,10 +61,10 @@ export default function OhsConsultantPage() {
 
   useEffect(() => {
     if (scrollAreaRef.current) {
-        scrollAreaRef.current.scrollTo({
-            top: scrollAreaRef.current.scrollHeight,
-            behavior: "smooth",
-        });
+      scrollAreaRef.current.scrollTo({
+        top: scrollAreaRef.current.scrollHeight,
+        behavior: "smooth",
+      });
     }
   }, [messages]);
 
@@ -81,8 +81,8 @@ export default function OhsConsultantPage() {
   const removeDocument = () => {
     setDocumentFile(null);
     setDocumentDataUri(null);
-    if(fileInputRef.current) fileInputRef.current.value = "";
-  }
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
@@ -90,30 +90,34 @@ export default function OhsConsultantPage() {
     setMessages((prev) => [...prev, userMessage]);
     form.reset();
 
-    const history = messages.map(m => ({ role: m.role, parts: [{text: m.content}] }));
+    const history = messages.map((m) => ({
+      role: m.role,
+      parts: [{ text: m.content }],
+    }));
 
-    const response = await askWilsonAction({ 
-        query: values.query, 
-        history,
-        documentDataUri: documentDataUri || undefined
+    const response = await askWilsonAction({
+      query: values.query,
+      history,
+      documentDataUri: documentDataUri || undefined,
     });
+
     setIsLoading(false);
     removeDocument();
 
     if (response.success && response.data) {
       const assistantMessage: Message = {
         role: "assistant",
-        content: response.data.answer,
+        content: (response.data as { answer: string }).answer,
       };
       setMessages((prev) => [...prev, assistantMessage]);
-    } else {
+    } else if (!response.success) {
       toast({
         variant: "destructive",
         title: "Error",
         description: response.error,
       });
       // remove the user message if the call fails
-      setMessages((prev) => prev.slice(0, prev.length - 1));
+      setMessages((prev) => prev.slice(0, -1));
     }
   }
 
@@ -122,18 +126,21 @@ export default function OhsConsultantPage() {
       <CardHeader>
         <CardTitle>Wilson - OHS Act Consultant</CardTitle>
         <CardDescription>
-          Your AI consultant for OHS, COID, and relevant South African acts. Attach a document for context-specific questions.
+          Your AI consultant for OHS, COID, and relevant South African acts.
+          Attach a document for context-specific questions.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-1 overflow-hidden">
         <ScrollArea className="h-full pr-4" ref={scrollAreaRef}>
           <div className="space-y-6">
             {messages.length === 0 && (
-                <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
-                    <WilsonLogo className="h-12 w-12 mb-4" />
-                    <p>Ask me anything about the OHS Act.</p>
-                    <p className="text-xs">You can also attach a document to ask questions about it.</p>
-                </div>
+              <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
+                <WilsonLogo className="h-12 w-12 mb-4" />
+                <p>Ask me anything about the OHS Act.</p>
+                <p className="text-xs">
+                  You can also attach a document to ask questions about it.
+                </p>
+              </div>
             )}
             {messages.map((message, index) => (
               <div
@@ -158,7 +165,9 @@ export default function OhsConsultantPage() {
                       : "bg-muted"
                   )}
                 >
-                  <pre className="whitespace-pre-wrap font-sans">{message.content}</pre>
+                  <pre className="whitespace-pre-wrap font-sans">
+                    {message.content}
+                  </pre>
                 </div>
                 {message.role === "user" && (
                   <Avatar className="h-8 w-8">
@@ -177,7 +186,7 @@ export default function OhsConsultantPage() {
                   </AvatarFallback>
                 </Avatar>
                 <div className="max-w-sm rounded-lg px-4 py-3 bg-muted">
-                    <ThinkingAnimation />
+                  <ThinkingAnimation />
                 </div>
               </div>
             )}
@@ -186,14 +195,19 @@ export default function OhsConsultantPage() {
       </CardContent>
       <CardFooter className="pt-4 border-t flex flex-col items-start gap-2">
         {documentFile && (
-            <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="pl-2">
-                    {documentFile.name}
-                    <Button variant="ghost" size="icon" className="h-5 w-5 ml-1" onClick={removeDocument}>
-                        <X className="h-3 w-3"/>
-                    </Button>
-                </Badge>
-            </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="pl-2">
+              {documentFile.name}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-5 w-5 ml-1"
+                onClick={removeDocument}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </Badge>
+          </div>
         )}
         <Form {...form}>
           <form

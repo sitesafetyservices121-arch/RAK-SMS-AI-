@@ -15,56 +15,87 @@ export type Document = {
   fileName: string;
 };
 
-export async function getDocumentsAction(): Promise<{ success: boolean; data?: Document[]; error?: string }> {
+export async function getDocumentsAction(): Promise<{
+  success: boolean;
+  data?: Document[];
+  error?: string;
+}> {
   try {
-    const snapshot = await db.collection("documents").orderBy("category").orderBy("section").orderBy("name").get();
+    // Fetch all documents without a complex sort order to avoid needing a composite index.
+    const snapshot = await db.collection("documents").get();
+
     if (snapshot.empty) {
       return { success: true, data: [] };
     }
 
-    const documents: Document[] = snapshot.docs.map(doc => {
+    let documents: Document[] = snapshot.docs.map((doc) => {
       const data = doc.data();
+
+      let lastUpdated: string;
+      if (data.lastUpdated?.toDate) {
+        lastUpdated = data.lastUpdated.toDate().toISOString().split("T")[0];
+      } else {
+        lastUpdated = new Date(data.lastUpdated).toISOString().split("T")[0];
+      }
+
       return {
         id: doc.id,
         name: data.name,
         category: data.category,
-        subCategory: data.section, // Map Firestore 'section' to 'subCategory'
+        subCategory: data.section, // Map Firestore 'section' → 'subCategory'
         version: data.version,
-        lastUpdated: new Date(data.lastUpdated).toISOString().split('T')[0],
+        lastUpdated,
         type: data.type,
         downloadURL: data.downloadURL,
         fileName: data.fileName,
-      }
+      };
+    });
+
+    // Perform sorting in the backend code instead of in the query.
+    documents.sort((a, b) => {
+      if (a.category < b.category) return -1;
+      if (a.category > b.category) return 1;
+      if (a.subCategory < b.subCategory) return -1;
+      if (a.subCategory > b.subCategory) return 1;
+      if (a.name < b.name) return -1;
+      if (a.name > b.name) return 1;
+      return 0;
     });
 
     return { success: true, data: documents };
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error("Get Documents Error:", e);
-    return { success: false, error: "Failed to fetch documents." };
+    const message = e instanceof Error ? e.message : "Failed to fetch documents.";
+    return { success: false, error: message };
   }
 }
 
-export async function getDocumentSectionsAction(): Promise<{ success: boolean; data?: { value: string; label: string }[]; error?: string }> {
-    try {
-        const snapshot = await db.collection('documents').get();
-        if (snapshot.empty) {
-            return { success: true, data: [] };
-        }
-        
-        const sections = new Set<string>();
-        snapshot.docs.forEach(doc => {
-            sections.add(doc.data().section);
-        });
-
-        const sectionOptions = Array.from(sections).map(s => ({
-            value: s.toLowerCase().replace(/ /g, '-'),
-            label: s
-        }));
-
-        return { success: true, data: sectionOptions };
-
-    } catch (e: any) {
-        console.error("Get Sections Error:", e);
-        return { success: false, error: 'Failed to fetch sections.'}
+export async function getDocumentSectionsAction(): Promise<{
+  success: boolean;
+  data?: { value: string; label: string }[];
+  error?: string;
+}> {
+  try {
+    const snapshot = await db.collection("documents").get();
+    if (snapshot.empty) {
+      return { success: true, data: [] };
     }
+
+    const sections = new Set<string>();
+    snapshot.docs.forEach((doc) => {
+      const section = doc.data().section;
+      if (section) sections.add(section);
+    });
+
+    const sectionOptions = Array.from(sections).map((s) => ({
+      value: s.toLowerCase().trim().replace(/\s+/g, "-"),
+      label: s,
+    }));
+
+    return { success: true, data: sectionOptions };
+  } catch (e: unknown) {
+    console.error("Get Sections Error:", e);
+    const message = e instanceof Error ? e.message : "Failed to fetch sections.";
+    return { success: false, error: message };
+  }
 }

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -24,10 +23,9 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-  CardFooter,
 } from "@/components/ui/card";
 import { analyzeLtirAction } from "./actions";
-import type { AnalyzeLtirTrendOutput } from "@/ai/flows/ai-ltir-trend-analysis";
+import { type AnalyzeLtirTrendOutput } from "./actions"; // safer import
 import LoadingDots from "@/components/ui/loading-dots";
 import { useToast } from "@/hooks/use-toast";
 import { CopyButton } from "@/components/copy-button";
@@ -75,7 +73,7 @@ export default function LtirAnalysisPage() {
     const response = await analyzeLtirAction(values);
     setIsLoading(false);
 
-    if (response.success && response.data) {
+    if (response.success) {
       setResult(response.data);
     } else {
       toast({
@@ -86,51 +84,60 @@ export default function LtirAnalysisPage() {
     }
   }
 
-  const fullTextResult = result ? `Calculated LTIR: ${calculatedLtir?.toFixed(2)}\n\nTrend Analysis:\n${result.trendAnalysis}\n\nImprovement Areas:\n${result.improvementAreas}\n\nRecommendations:\n${result.recommendations}` : "";
+  const fullTextResult =
+    result && calculatedLtir !== null
+      ? `Calculated LTIR: ${calculatedLtir.toFixed(
+          2
+        )}\n\nTrend Analysis:\n${result.trendAnalysis}\n\nImprovement Areas:\n${
+          result.improvementAreas
+        }\n\nRecommendations:\n${result.recommendations}`
+      : "";
 
   const handleDownloadReport = () => {
-    if (!calculatedLtir || !result) return;
+    if (calculatedLtir === null || !result) return;
+
     const doc = new jsPDF();
     doc.text("LTIR Analysis Report", 14, 15);
 
     (doc as any).autoTable({
-        startY: 25,
-        head: [['Metric', 'Value']],
-        body: [
-            ['Number of Lost Time Injuries', numberOfInjuries],
-            ['Total Hours Worked', totalHoursWorked.toLocaleString()],
-            ['Calculated LTIR', calculatedLtir.toFixed(2)],
-        ],
+      startY: 25,
+      head: [["Metric", "Value"]],
+      body: [
+        ["Number of Lost Time Injuries", numberOfInjuries],
+        ["Total Hours Worked", totalHoursWorked.toLocaleString()],
+        ["Calculated LTIR", calculatedLtir.toFixed(2)],
+      ],
     });
-    
+
     let finalY = (doc as any).autoTable.previous.finalY + 10;
-    
+
     const addSection = (title: string, content: string) => {
-        doc.setFontSize(12);
-        doc.text(title, 14, finalY);
-        finalY += 6;
-        doc.setFontSize(10);
-        const splitContent = doc.splitTextToSize(content, 180);
-        doc.text(splitContent, 14, finalY);
-        finalY += splitContent.length * 5 + 10;
-    }
-    
+      doc.setFontSize(12);
+      doc.text(title, 14, finalY);
+      finalY += 6;
+      doc.setFontSize(10);
+      const splitContent = doc.splitTextToSize(content, 180);
+      doc.text(splitContent, 14, finalY);
+      finalY += splitContent.length * 5 + 10;
+    };
+
     addSection("Trend Analysis", result.trendAnalysis);
     addSection("Improvement Areas", result.improvementAreas);
     addSection("Recommendations", result.recommendations);
-    
+
     doc.save("LTIR_Analysis_Report.pdf");
   };
 
   const handleSave = () => {
     toast({
       title: "Report Saved",
-      description: "The LTIR report has been saved to Generated Documents."
+      description: "The LTIR report has been saved to Generated Documents.",
     });
   };
 
   return (
     <div className="grid gap-6 lg:grid-cols-5">
+      {/* Input Card */}
       <Card className="lg:col-span-2">
         <CardHeader>
           <CardTitle>LTIR Calculator & Analysis</CardTitle>
@@ -142,46 +149,50 @@ export default function LtirAnalysisPage() {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
-                 <FormField
-                    control={form.control}
-                    name="numberOfInjuries"
-                    render={({ field }) => (
+                <FormField
+                  control={form.control}
+                  name="numberOfInjuries"
+                  render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Lost Time Injuries (LTI)</FormLabel>
-                        <FormControl>
-                            <Input type="number" {...field} />
-                        </FormControl>
-                        <FormMessage />
+                      <FormLabel>Lost Time Injuries (LTI)</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} />
+                      </FormControl>
+                      <FormMessage />
                     </FormItem>
-                    )}
+                  )}
                 />
-                 <FormField
-                    control={form.control}
-                    name="totalHoursWorked"
-                    render={({ field }) => (
+                <FormField
+                  control={form.control}
+                  name="totalHoursWorked"
+                  render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Total Hours Worked</FormLabel>
-                        <FormControl>
-                            <Input type="number" {...field} />
-                        </FormControl>
-                        <FormMessage />
+                      <FormLabel>Total Hours Worked</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} />
+                      </FormControl>
+                      <FormMessage />
                     </FormItem>
-                    )}
+                  )}
                 />
               </div>
 
-               <Card className="bg-muted/50 text-center">
-                    <CardHeader className="pb-2">
-                        <CardDescription>Calculated LTIR</CardDescription>
-                        <CardTitle className="text-4xl">
-                            {calculatedLtir !== null ? calculatedLtir.toFixed(2) : 'N/A'}
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-xs text-muted-foreground pb-4">
-                        (LTI &times; 200,000) / Hours Worked
-                    </CardContent>
-               </Card>
-              
+              {/* LTIR Result */}
+              <Card className="bg-muted/50 text-center">
+                <CardHeader className="pb-2">
+                  <CardDescription>Calculated LTIR</CardDescription>
+                  <CardTitle className="text-4xl">
+                    {calculatedLtir !== null
+                      ? calculatedLtir.toFixed(2)
+                      : "N/A"}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="text-xs text-muted-foreground pb-4">
+                  (LTI × 200,000) ÷ Hours Worked
+                </CardContent>
+              </Card>
+
+              {/* Context Input */}
               <FormField
                 control={form.control}
                 name="additionalContext"
@@ -199,6 +210,7 @@ export default function LtirAnalysisPage() {
                   </FormItem>
                 )}
               />
+
               <Button type="submit" disabled={isLoading} className="w-full">
                 {isLoading ? "Analyzing..." : "Generate AI Analysis"}
               </Button>
@@ -206,23 +218,33 @@ export default function LtirAnalysisPage() {
           </Form>
         </CardContent>
       </Card>
+
+      {/* Result Card */}
       <div className="lg:col-span-3">
         <Card className="min-h-[600px] sticky top-20">
-           <CardHeader className="flex flex-row items-center justify-between">
-             <div>
-                <CardTitle>Analysis Result</CardTitle>
-                <CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Analysis Result</CardTitle>
+              <CardDescription>
                 Review the AI-generated analysis below.
-                </CardDescription>
+              </CardDescription>
             </div>
-             <div className="flex gap-2">
-                {result && <CopyButton textToCopy={fullTextResult} />}
-                 {result && (
-                    <>
-                        <Button variant="secondary" size="sm" onClick={handleSave}><Save className="mr-2 h-4 w-4" /> Save</Button>
-                        <Button variant="outline" size="sm" onClick={handleDownloadReport}><Download className="mr-2 h-4 w-4" /> Download</Button>
-                    </>
-                 )}
+            <div className="flex gap-2">
+              {result && <CopyButton textToCopy={fullTextResult} />}
+              {result && (
+                <>
+                  <Button variant="secondary" size="sm" onClick={handleSave}>
+                    <Save className="mr-2 h-4 w-4" /> Save
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDownloadReport}
+                  >
+                    <Download className="mr-2 h-4 w-4" /> Download
+                  </Button>
+                </>
+              )}
             </div>
           </CardHeader>
           <CardContent>
@@ -231,21 +253,21 @@ export default function LtirAnalysisPage() {
               <div className="space-y-4">
                 <div>
                   <h3 className="font-semibold text-lg">Trend Analysis</h3>
-                  <pre className="mt-2 w-full whitespace-pre-wrap rounded-md bg-secondary p-4 font-sans text-sm text-secondary-foreground">
+                  <pre className="mt-2 whitespace-pre-wrap rounded-md bg-secondary p-4 font-sans text-sm text-secondary-foreground">
                     {result.trendAnalysis}
                   </pre>
                 </div>
                 <Separator />
                 <div>
                   <h3 className="font-semibold text-lg">Improvement Areas</h3>
-                  <pre className="mt-2 w-full whitespace-pre-wrap rounded-md bg-secondary p-4 font-sans text-sm text-secondary-foreground">
+                  <pre className="mt-2 whitespace-pre-wrap rounded-md bg-secondary p-4 font-sans text-sm text-secondary-foreground">
                     {result.improvementAreas}
                   </pre>
                 </div>
                 <Separator />
                 <div>
                   <h3 className="font-semibold text-lg">Recommendations</h3>
-                  <pre className="mt-2 w-full whitespace-pre-wrap rounded-md bg-secondary p-4 font-sans text-sm text-secondary-foreground">
+                  <pre className="mt-2 whitespace-pre-wrap rounded-md bg-secondary p-4 font-sans text-sm text-secondary-foreground">
                     {result.recommendations}
                   </pre>
                 </div>

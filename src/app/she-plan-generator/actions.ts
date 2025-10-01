@@ -1,20 +1,22 @@
 "use server";
 
-import {
-  generateShePlan,
-} from "@/ai/flows/ai-she-plan-from-prompt";
+import { generateShePlan, GenerateShePlanOutput } from "@/ai/flows/ai-she-plan-from-prompt";
 
 type GenerateShePlanInput = {
   projectDescription: string;
 };
 
-// The input type is now just the projectDescription string
-export async function generateShePlanAction(input: GenerateShePlanInput) {
+export async function generateShePlanAction(
+  input: GenerateShePlanInput
+): Promise<
+  | { success: true; data: GenerateShePlanOutput }
+  | { success: false; error: string }
+> {
   try {
     const output = await generateShePlan(input);
     return { success: true, data: output };
   } catch (e: any) {
-    console.error(e);
-    return { success: false, error: e.message };
+    console.error("SHE Plan generation error:", e);
+    return { success: false, error: e.message || "Failed to generate SHE Plan" };
   }
 }

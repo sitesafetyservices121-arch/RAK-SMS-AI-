@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -58,23 +57,20 @@ export default function TopUpPage() {
     setIsLoading(true);
 
     try {
-      // In a real app, user details would come from the current session
       const paymentData = {
         amount: values.amount.toFixed(2),
         item_name: values.itemName,
         email_address: "admin@rak-sms.co.za",
         name_first: "Admin",
         name_last: "User",
-        m_payment_id: `RAK-${Date.now()}`, // Unique payment ID
+        m_payment_id: `RAK-${Date.now()}`,
       };
 
       const response = await generatePayFastSignatureAction(paymentData);
 
       if (response.success && response.data) {
-        // Create and submit PayFast form
         const payfastForm = document.createElement("form");
         payfastForm.method = "POST";
-        // Use sandbox URL for testing, switch to production when ready
         payfastForm.action = "https://sandbox.payfast.co.za/eng/process";
         payfastForm.style.display = "none";
 
@@ -83,7 +79,6 @@ export default function TopUpPage() {
           ...response.data,
         };
 
-        // Add all data as hidden form fields
         Object.entries(allData).forEach(([key, value]) => {
           const input = document.createElement("input");
           input.type = "hidden";
@@ -143,7 +138,8 @@ export default function TopUpPage() {
                           className="pl-7"
                           placeholder="500.00"
                           disabled={isLoading}
-                          {...field}
+                          value={field.value?.toString() ?? ""}
+                          onChange={(e) => field.onChange(e.target.value)}
                         />
                       </div>
                     </FormControl>
