@@ -46,14 +46,26 @@ export default function DocumentsPage() {
     async function fetchDocuments() {
       try {
         const response = await fetch("/api/documents");
-        const result = await response.json();
-        if (result.success && result.data) {
-          setDocuments(result.data);
-        } else {
-          setError(result.error || "Failed to fetch documents.");
+        // Gracefully handle non-JSON responses
+        const text = await response.text();
+        if (!response.ok) {
+            throw new Error(`API Error: ${response.status} ${response.statusText} - ${text}`);
         }
+        
+        try {
+            const result = JSON.parse(text);
+            if (result.success && result.data) {
+              setDocuments(result.data);
+            } else {
+              setError(result.error || "Failed to fetch documents.");
+            }
+        } catch (jsonError) {
+            setError("Received an invalid response from the server.");
+            console.error("Not valid JSON:", text);
+        }
+
       } catch (err) {
-        setError("Unexpected error while fetching documents.");
+        setError(err instanceof Error ? err.message : "Unexpected error while fetching documents.");
         console.error(err);
       } finally {
         setLoading(false);

@@ -12,8 +12,9 @@ export async function GET(request: Request) {
     if (category) {
       query = query.where("category", "==", category);
     }
+    // Corrected to use the 'subCategory' field as stored in Firestore
     if (section) {
-      query = query.where("section", "==", section);
+      query = query.where("subCategory", "==", section);
     }
 
     const snapshot = await query.orderBy("name").get();
@@ -32,6 +33,7 @@ export async function GET(request: Request) {
     console.error("Get Documents API Error:", e);
     const message =
       e instanceof Error ? e.message : "Failed to fetch documents.";
+    // Ensure JSON is always returned, even on error
     return NextResponse.json(
       { success: false, error: message },
       { status: 500 }
