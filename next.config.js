@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true, // Recommended for highlighting potential problems
-  swcMinify: true,       // Faster, smaller builds with SWC compiler
 
   typescript: {
     // ❗ Better to keep strict in production; set to false only if CI/type-checking handled separately
