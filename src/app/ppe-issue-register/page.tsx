@@ -40,6 +40,7 @@ import { Download, PlusCircle, Save, ChevronDown, ChevronRight } from "lucide-re
 import {
   initialEmployees,
   ppeRegister as initialPpeRegister,
+  type PpeItem,
 } from "@/lib/employee-data";
 import { format, addMonths } from "date-fns";
 import jsPDF from "jspdf";
@@ -62,14 +63,14 @@ type PpeRegisterEntry = {
 };
 
 const ppeItems: PpeItem[] = [
-  { id: "ppe-hd-01", name: "Hard Hat", category: "Head Protection" },
-  { id: "ppe-hg-01", name: "Safety Gloves (Leather)", category: "Hand Protection" },
-  { id: "ppe-hg-02", name: "Safety Gloves (Chemical)", category: "Hand Protection" },
-  { id: "ppe-ft-01", name: "Safety Boots", category: "Foot Protection" },
-  { id: "ppe-ey-01", name: "Safety Goggles", category: "Eye Protection" },
-  { id: "ppe-ey-02", name: "Face Shield", category: "Eye Protection" },
-  { id: "ppe-bd-01", name: "Reflective Vest", category: "Body Protection" },
-  { id: "ppe-bd-02", name: "Harness", category: "Body Protection" },
+  { id: "ppe-hd-01", name: "Hard Hat", category: "Head" },
+  { id: "ppe-hg-01", name: "Safety Gloves (Leather)", category: "Hands" },
+  { id: "ppe-hg-02", name: "Safety Gloves (Chemical)", category: "Hands" },
+  { id: "ppe-ft-01", name: "Safety Boots", category: "Feet" },
+  { id: "ppe-ey-01", name: "Safety Goggles", category: "Eye" },
+  { id: "ppe-ey-02", name: "Face Shield", category: "Eye" },
+  { id: "ppe-bd-01", name: "Reflective Vest", category: "Body" },
+  { id: "ppe-bd-02", name: "Harness", category: "Body" },
 ];
 
 export default function PpeIssueRegisterPage() {
@@ -288,9 +289,8 @@ export default function PpeIssueRegisterPage() {
               const isExpanded = expandedEmployees.has(employeeId);
 
               return (
-                <>
+                <React.Fragment key={employeeId}>
                   <TableRow
-                    key={employeeId}
                     className="cursor-pointer"
                     onClick={() => toggleExpand(employeeId)}
                   >
@@ -342,7 +342,7 @@ export default function PpeIssueRegisterPage() {
                         </TableCell>
                       </TableRow>
                     ))}
-                </>
+                </React.Fragment>
               );
             })}
           </TableBody>

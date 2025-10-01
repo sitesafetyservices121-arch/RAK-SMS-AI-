@@ -92,7 +92,7 @@ export default function OhsConsultantPage() {
 
     const history = messages.map((m) => ({
       role: m.role,
-      parts: [{ text: m.content }],
+      content: m.content,
     }));
 
     const response = await askWilsonAction({

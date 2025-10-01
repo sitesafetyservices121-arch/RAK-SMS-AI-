@@ -120,7 +120,7 @@ export default function EmployeeTrainingTrackerPage() {
       status: formData.get("status") as "Completed" | "Expired" | "Scheduled",
       expiryDate: formData.get("expiryDate")
         ? format(new Date(formData.get("expiryDate") as string), "yyyy-MM-dd")
-        : "N/A",
+        : null,
     };
 
     setEmployees(
@@ -153,7 +153,7 @@ export default function EmployeeTrainingTrackerPage() {
             emp.idNumber,
             course.courseName,
             course.status,
-            course.expiryDate,
+            course.expiryDate ?? "N/A",
           ])
         : [
             [
@@ -289,7 +289,7 @@ export default function EmployeeTrainingTrackerPage() {
                         {course.status}
                       </Badge>
                     </TableCell>
-                    <TableCell>{course.expiryDate}</TableCell>
+                    <TableCell>{course.expiryDate ?? "N/A"}</TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>

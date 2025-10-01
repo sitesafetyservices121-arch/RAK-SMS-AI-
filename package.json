@@ -9,6 +9,7 @@
     "build": "NODE_ENV=production next build",
     "start": "next start",
     "lint": "next lint",
+    "type-check": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "postinstall": "patch-package",
     "test": "playwright test",

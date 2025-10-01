@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/form";
 import { Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { uploadDocumentAction } from "./actions";
 import { getDocumentSectionsAction } from "@/app/documents/actions";
 import LoadingDots from "@/components/ui/loading-dots";
@@ -68,6 +68,7 @@ export default function DocumentUploadPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [existingSections, setExistingSections] = useState<SectionOption[]>([]);
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     async function fetchSections() {
@@ -107,6 +108,9 @@ export default function DocumentUploadPage() {
         description: `${values.document.name} has been processed.`,
       });
       form.reset();
+      if(fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
 
       // Optimistically update sections list
       const newSectionValue = values.section.toLowerCase().replace(/ /g, "-");
@@ -200,14 +204,14 @@ export default function DocumentUploadPage() {
             <FormField
               control={form.control}
               name="document"
-              render={({ field: { onChange, ...rest } }) => (
+              render={({ field }) => (
                 <FormItem>
                   <FormLabel>Document File</FormLabel>
                   <FormControl>
                     <Input
                       type="file"
-                      {...rest} // passes name, ref, onBlur, disabled
-                      onChange={(e) => onChange(e.target.files?.[0])}
+                      ref={fileInputRef}
+                      onChange={(e) => field.onChange(e.target.files?.[0])}
                       accept=".doc,.docx,.pdf,.xls,.xlsx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                     />
                   </FormControl>

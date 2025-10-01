@@ -13,10 +13,8 @@ interface jsPDFWithAutoTable extends jsPDF {
     head: string[][];
     body: (string | number)[][];
   }) => jsPDF;
-  autoTable: {
-    previous: {
-      finalY: number;
-    };
+  lastAutoTable: {
+    finalY: number;
   };
 }
 
@@ -122,7 +120,7 @@ export default function LtirAnalysisPage() {
       ],
     });
 
-    let finalY = doc.autoTable.previous.finalY + 10;
+    let finalY = doc.lastAutoTable.finalY + 10;
 
     const addSection = (title: string, content: string) => {
       doc.setFontSize(12);
