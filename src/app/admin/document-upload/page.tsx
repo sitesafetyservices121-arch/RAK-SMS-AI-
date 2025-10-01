@@ -64,7 +64,7 @@ type UploadFormValues = z.infer<typeof uploadSchema>;
 
 export default function DocumentUploadPage() {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
 
   const form = useForm<UploadFormValues>({
@@ -78,6 +78,9 @@ export default function DocumentUploadPage() {
   });
 
   const onSubmit = async (values: UploadFormValues) => {
+    if (authLoading) {
+      return; // Do nothing while authentication is loading
+    }
     if (!user) {
       toast({
         variant: "destructive",
@@ -140,104 +143,106 @@ export default function DocumentUploadPage() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              {/* Category */}
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Category</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      disabled={loading}
-                    >
+              <fieldset disabled={authLoading}>
+                {/* Category */}
+                <FormField
+                  control={form.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Category</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        disabled={loading}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a category" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Safety">Safety</SelectItem>
+                          <SelectItem value="Quality">Quality</SelectItem>
+                          <SelectItem value="HR">HR</SelectItem>
+                          <SelectItem value="Environment">Environment</SelectItem>
+                          <SelectItem value="Toolbox Talks">Toolbox Talks</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Section */}
+                <FormField
+                  control={form.control}
+                  name="section"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Section</FormLabel>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a category" />
-                        </SelectTrigger>
+                        <Input
+                          placeholder="e.g., Risk Assessments"
+                          {...field}
+                          disabled={loading}
+                        />
                       </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Safety">Safety</SelectItem>
-                        <SelectItem value="Quality">Quality</SelectItem>
-                        <SelectItem value="HR">HR</SelectItem>
-                        <SelectItem value="Environment">Environment</SelectItem>
-                        <SelectItem value="Toolbox Talks">Toolbox Talks</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              {/* Section */}
-              <FormField
-                control={form.control}
-                name="section"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Section</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="e.g., Risk Assessments"
-                        {...field}
-                        disabled={loading}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                {/* Document Name */}
+                <FormField
+                  control={form.control}
+                  name="documentName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Document Name</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="e.g., Site Entry Risk Assessment"
+                          {...field}
+                          disabled={loading}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              {/* Document Name */}
-              <FormField
-                control={form.control}
-                name="documentName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Document Name</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="e.g., Site Entry Risk Assessment"
-                        {...field}
-                        disabled={loading}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                {/* File Input */}
+                <FormField
+                  control={form.control}
+                  name="document"
+                  render={({ field: { onChange, value, ...rest } }) => (
+                    <FormItem>
+                      <FormLabel>Document File</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="file"
+                          accept=".pdf,.doc,.docx,.xls,.xlsx"
+                          onChange={(e) => onChange(e.target.files)}
+                          disabled={loading}
+                          {...rest}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              {/* File Input */}
-              <FormField
-                control={form.control}
-                name="document"
-                render={({ field: { onChange, value, ...rest } }) => (
-                  <FormItem>
-                    <FormLabel>Document File</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="file"
-                        accept=".pdf,.doc,.docx,.xls,.xlsx"
-                        onChange={(e) => onChange(e.target.files)}
-                        disabled={loading}
-                        {...rest}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <Button type="submit" disabled={loading} className="flex gap-2">
-                {loading ? (
-                  <LoadingDots />
-                ) : (
-                  <>
-                    <Upload className="h-4 w-4" /> Upload Document
-                  </>
-                )}
-              </Button>
+                <Button type="submit" disabled={loading} className="flex gap-2">
+                  {loading ? (
+                    <LoadingDots />
+                  ) : (
+                    <>
+                      <Upload className="h-4 w-4" /> Upload Document
+                    </>
+                  )}
+                </Button>
+              </fieldset>
             </form>
           </Form>
         </CardContent>
