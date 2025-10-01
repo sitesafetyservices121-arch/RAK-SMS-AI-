@@ -24,8 +24,22 @@ import Link from "next/link";
 const inter = Inter({ subsets: ["latin"], variable: "--font-body" });
 
 export const metadata: Metadata = {
-  title: "RAK-SMS: AI Safety Manager",
-  description: "AI-powered Safety Management System",
+  title: "RAK-SMS: AI-Powered Safety Management System",
+  description: "RAK-SMS is an AI-powered Safety Management System designed to streamline OHS, generate SHE plans, perform HIRA, and manage safety documents for the South African construction and industrial sectors.",
+  keywords: ["Safety Management System", "OHS", "SHE Plan", "HIRA", "RAK-SMS", "AI Safety", "South Africa", "Construction Safety"],
+  authors: [{ name: 'RAK-SMS' }],
+  openGraph: {
+    title: "RAK-SMS: AI-Powered Safety Management System",
+    description: "Streamline your safety management with AI-driven tools for OHS, SHE plans, HIRA, and more.",
+    url: 'https://raksms.services',
+    siteName: 'RAK-SMS',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: "RAK-SMS: AI-Powered Safety Management System",
+    description: "AI-powered tools for comprehensive safety management in South Africa.",
+  },
 };
 
 export default function RootLayout({ children }: PropsWithChildren) {
