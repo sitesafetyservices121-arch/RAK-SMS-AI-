@@ -208,15 +208,15 @@ export default function DocumentUploadPage() {
             <FormField
               control={form.control}
               name="document"
-              render={({ field: { onChange, ...fieldProps } }) => (
+              render={({ field: { onChange, onBlur, name, ref } }) => (
                 <FormItem>
                   <FormLabel>Document File</FormLabel>
                   <FormControl>
                     <Input
-                      {...fieldProps}
                       type="file"
-                      value={undefined} 
-                      ref={fileInputRef}
+                      ref={ref}
+                      name={name}
+                      onBlur={onBlur}
                       onChange={(e) => onChange(e.target.files?.[0])}
                       accept=".doc,.docx,.pdf,.xls,.xlsx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                     />
