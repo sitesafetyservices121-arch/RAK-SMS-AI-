@@ -30,7 +30,8 @@ import {
 } from "@/components/ui/form";
 import { Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/use-auth";
 import LoadingDots from "@/components/ui/loading-dots";
 import { Combobox } from "@/components/ui/combobox";
 
@@ -61,13 +62,15 @@ const formSchema = z.object({
     ),
 });
 
+type DocumentUploadFormValues = z.infer<typeof formSchema>;
+
 type SectionOption = { value: string; label: string };
 
 export default function DocumentUploadPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [existingSections, setExistingSections] = useState<SectionOption[]>([]);
   const { toast } = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     async function fetchSections() {
@@ -80,16 +83,26 @@ export default function DocumentUploadPage() {
     fetchSections();
   }, []);
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<DocumentUploadFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       category: "",
       section: "",
       documentName: "",
+      document: undefined,
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>>) => {
+  const onSubmit = async (values: DocumentUploadFormValues) => {
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "Authentication Required",
+        description: "You must be logged in to upload documents.",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     const formData = new FormData();
@@ -98,8 +111,13 @@ export default function DocumentUploadPage() {
     formData.append("documentName", values.documentName);
     formData.append("document", values.document);
 
+    const token = await user.getIdToken();
+
     const response = await fetch("/api/document-upload", {
       method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
       body: formData,
     });
 
@@ -112,11 +130,7 @@ export default function DocumentUploadPage() {
         description: `${values.document.name} has been processed.`,
       });
       form.reset();
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-
-      // Optimistically update sections list
+      
       const newSectionValue = values.section.toLowerCase().replace(/ /g, "-");
       if (!existingSections.some((s) => s.value === newSectionValue)) {
         setExistingSections((prev) =>
@@ -208,23 +222,24 @@ export default function DocumentUploadPage() {
             <FormField
               control={form.control}
               name="document"
-              render={({ field: { onChange, onBlur, name, ref } }) => (
+              render={({ field: { onChange, ...fieldProps } }) => (
                 <FormItem>
                   <FormLabel>Document File</FormLabel>
                   <FormControl>
                     <Input
+                      {...fieldProps}
                       type="file"
-                      ref={ref}
-                      name={name}
-                      onBlur={onBlur}
-                      onChange={(e) => onChange(e.target.files?.[0])}
                       accept=".doc,.docx,.pdf,.xls,.xlsx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                      onChange={(event) => {
+                        onChange(event.target.files && event.target.files[0]);
+                      }}
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
 
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? (

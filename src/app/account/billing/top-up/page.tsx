@@ -25,6 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 import LoadingDots from "@/components/ui/loading-dots";
 import { generatePayFastSignatureAction } from "./actions";
 import { CreditCard } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 const formSchema = z.object({
   amount: z.coerce
@@ -44,6 +45,7 @@ type PayFastFormData = {
 export default function TopUpPage() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -54,15 +56,23 @@ export default function TopUpPage() {
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (!user || !user.email) {
+      toast({
+        variant: "destructive",
+        title: "Not Logged In",
+        description: "You must be logged in to make a payment.",
+      });
+      return;
+    }
     setIsLoading(true);
 
     try {
       const paymentData = {
         amount: values.amount.toFixed(2),
         item_name: values.itemName,
-        email_address: "admin@rak-sms.co.za",
-        name_first: "Admin",
-        name_last: "User",
+        email_address: user.email,
+        name_first: user.displayName?.split(" ")[0] || "User",
+        name_last: user.displayName?.split(" ").slice(1).join(" ") || "",
         m_payment_id: `RAK-${Date.now()}`,
       };
 
@@ -164,7 +174,7 @@ export default function TopUpPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" disabled={isLoading} className="w-full">
+              <Button type="submit" disabled={isLoading || !user} className="w-full">
                 {isLoading ? (
                   <>
                     <LoadingDots />

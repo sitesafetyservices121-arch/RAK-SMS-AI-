@@ -4,8 +4,8 @@ export type Document = {
   category: string;
   subCategory: string;
   version: string;
-  lastUpdated: string;
-  type: string;
+  lastUpdated: string; // Consider using Date if you’ll parse/compare
+  type: string;        // Could be "pdf" | "docx" | "xlsx" | etc.
   downloadURL: string;
   fileName: string;
 };

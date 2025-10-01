@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { getDb, getStorage } from "@/lib/firebase-admin";
+import { db, storage, auth as adminAuth } from "@/lib/firebase-admin";
+import type { NextRequest } from 'next/server';
 
 const MAX_FILE_SIZE_MB = 10;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
@@ -11,8 +12,14 @@ const ALLOWED_FILE_TYPES = [
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 ];
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    const token = request.headers.get("Authorization")?.split("Bearer ")[1];
+    if (!token) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+    await adminAuth.verifyIdToken(token);
+
     const formData = await request.formData();
     const category = formData.get("category") as string | null;
     const section = formData.get("section") as string | null;
@@ -45,7 +52,6 @@ export async function POST(request: Request) {
     const safeName = documentFile.name.replace(/[^\w.-]/g, "_");
 
     // 1. Upload to Firebase Storage
-    const storage = getStorage();
     const bucket = storage.bucket();
     const filePath = `documents/${category}/${section}/${Date.now()}-${safeName}`;
     const fileUpload = bucket.file(filePath);
@@ -62,13 +68,11 @@ export async function POST(request: Request) {
     const downloadURL = fileUpload.publicUrl();
 
     // 2. Save metadata to Firestore
-    const db = getDb();
-    const firestore = db;
-    const docRef = firestore.collection("documents").doc();
+    const docRef = db.collection("documents").doc();
     await docRef.set({
       name: documentName,
       category,
-      section,
+      subCategory: section, // Align with the frontend's grouping logic
       fileName: documentFile.name,
       storagePath: filePath,
       downloadURL,
@@ -84,6 +88,9 @@ export async function POST(request: Request) {
     );
   } catch (e: unknown) {
     console.error("Upload API Error:", e);
+    if ((e as Error).name === 'auth/id-token-expired' || (e as Error).name === 'auth/argument-error') {
+        return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.json(
       { success: false, error: "An unexpected error occurred on the server." },
       { status: 500 }

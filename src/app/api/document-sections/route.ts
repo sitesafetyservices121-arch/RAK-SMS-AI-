@@ -1,18 +1,17 @@
 import { NextResponse } from "next/server";
-import { getDb } from "@/lib/firebase-admin";
+import { db } from "@/lib/firebase-admin";
 
 export async function GET() {
   try {
-    const firestore = getDb();
-    const snapshot = await firestore.collection("documents").get();
+    const snapshot = await db.collection("documents").get();
     if (snapshot.empty) {
       return NextResponse.json({ success: true, data: [] });
     }
 
     const sections = new Set<string>();
     snapshot.docs.forEach((doc) => {
-      const section = doc.data().section;
-      if (section) sections.add(section);
+      const subCategory = doc.data().subCategory;
+      if (subCategory) sections.add(subCategory);
     });
 
     const sectionOptions = Array.from(sections).map((s) => ({

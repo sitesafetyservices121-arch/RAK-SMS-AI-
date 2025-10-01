@@ -12,17 +12,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Save } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function AccountSettingsPage() {
   const { toast } = useToast();
+  const { user } = useAuth();
 
-  // In a real app, you'd fetch user data here.
+  // In a real app, you would fetch more detailed user profile data here.
   const currentUser = {
-    firstName: "Admin",
-    surname: "User",
-    position: "System Administrator",
-    email: "admin@rak-sms.co.za",
-    phone: "+27 82 123 4567",
+    firstName: user?.displayName?.split(" ")[0] || "",
+    surname: user?.displayName?.split(" ").slice(1).join(" ") || "",
+    position: "System Administrator", // This would come from a profile store
+    email: user?.email || "",
+    phone: user?.phoneNumber || "+27 82 123 4567", // This would come from a profile store
   };
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -33,6 +36,36 @@ export default function AccountSettingsPage() {
       description: "Your account details have been updated.",
     });
   };
+
+  if (!user) {
+    return (
+      <Card className="max-w-2xl mx-auto">
+        <CardHeader>
+          <Skeleton className="h-8 w-1/2" />
+          <Skeleton className="h-4 w-3/4" />
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Skeleton className="h-4 w-1/4" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+            <div className="grid gap-2">
+              <Skeleton className="h-4 w-1/4" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          </div>
+          {[...Array(3)].map((_, i) => (
+            <div className="grid gap-2" key={i}>
+              <Skeleton className="h-4 w-1/4" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          ))}
+          <Skeleton className="h-10 w-full" />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="max-w-2xl mx-auto">
@@ -60,7 +93,7 @@ export default function AccountSettingsPage() {
           </div>
           <div className="grid gap-2">
             <Label htmlFor="email">Email Address</Label>
-            <Input id="email" type="email" defaultValue={currentUser.email} />
+            <Input id="email" type="email" defaultValue={currentUser.email} readOnly />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="phone">Phone Number</Label>

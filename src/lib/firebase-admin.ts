@@ -1,11 +1,13 @@
-import admin, {App} from 'firebase-admin';
-import {getApps, cert} from 'firebase-admin/app';
-import {getFirestore, Firestore} from 'firebase-admin/firestore';
-import {getStorage, Storage} from 'firebase-admin/storage';
+import admin, { App } from 'firebase-admin';
+import { getApps, cert } from 'firebase-admin/app';
+import { getFirestore, Firestore } from 'firebase-admin/firestore';
+import { getStorage, Storage } from 'firebase-admin/storage';
+import { getAuth, Auth } from 'firebase-admin/auth';
 
 let app: App;
 let db: Firestore;
 let storage: Storage;
+let auth: Auth;
 
 // This function initializes the Firebase Admin SDK.
 // It checks if an app is already initialized to prevent re-initialization.
@@ -27,10 +29,11 @@ function initializeFirebaseAdmin() {
 
   db = getFirestore(app);
   storage = getStorage(app);
+  auth = getAuth(app);
 }
 
 // Initialize on first import.
 initializeFirebaseAdmin();
 
 // Export the initialized instances directly.
-export {db, storage};
+export { db, storage, auth };
