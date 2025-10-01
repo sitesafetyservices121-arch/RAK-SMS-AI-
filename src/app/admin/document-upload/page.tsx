@@ -31,8 +31,6 @@ import {
 import { Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect, useRef } from "react";
-import { uploadDocumentAction } from "./actions";
-import { getDocumentSectionsAction } from "@/app/documents/actions";
 import LoadingDots from "@/components/ui/loading-dots";
 import { Combobox } from "@/components/ui/combobox";
 
@@ -73,9 +71,10 @@ export default function DocumentUploadPage() {
 
   useEffect(() => {
     async function fetchSections() {
-      const response = await getDocumentSectionsAction();
-      if (response.success && response.data) {
-        setExistingSections(response.data);
+      const response = await fetch("/api/document-sections");
+      const result = await response.json();
+      if (result.success && result.data) {
+        setExistingSections(result.data);
       }
     }
     fetchSections();
@@ -99,17 +98,21 @@ export default function DocumentUploadPage() {
     formData.append("documentName", values.documentName);
     formData.append("document", values.document);
 
-    const response = await uploadDocumentAction(formData);
+    const response = await fetch("/api/document-upload", {
+      method: "POST",
+      body: formData,
+    });
 
+    const result = await response.json();
     setIsLoading(false);
 
-    if (response.success) {
+    if (result.success) {
       toast({
         title: "Upload Successful",
         description: `${values.document.name} has been processed.`,
       });
       form.reset();
-      if(fileInputRef.current) {
+      if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
 
@@ -126,7 +129,7 @@ export default function DocumentUploadPage() {
       toast({
         variant: "destructive",
         title: "Upload Failed",
-        description: response.error,
+        description: result.error,
       });
     }
   };
@@ -205,7 +208,7 @@ export default function DocumentUploadPage() {
             <FormField
               control={form.control}
               name="document"
-              render={({ field: { value, onChange, ...fieldProps } }) => (
+              render={({ field: { onChange, ...fieldProps } }) => (
                 <FormItem>
                   <FormLabel>Document File</FormLabel>
                   <FormControl>

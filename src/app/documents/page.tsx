@@ -19,9 +19,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Download, File, FileText } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import { getDocumentsAction, type Document } from "./actions";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type { Document } from "@/types/documents";
 
 const DocumentIcon = ({ type }: { type?: string }) => {
   if (!type) return <File className="h-4 w-4 text-gray-400" />;
@@ -45,11 +45,12 @@ export default function DocumentsPage() {
   useEffect(() => {
     async function fetchDocuments() {
       try {
-        const response = await getDocumentsAction();
-        if (response.success && response.data) {
-          setDocuments(response.data);
+        const response = await fetch("/api/documents");
+        const result = await response.json();
+        if (result.success && result.data) {
+          setDocuments(result.data);
         } else {
-          setError(response.error || "Failed to fetch documents.");
+          setError(result.error || "Failed to fetch documents.");
         }
       } catch (err) {
         setError("Unexpected error while fetching documents.");

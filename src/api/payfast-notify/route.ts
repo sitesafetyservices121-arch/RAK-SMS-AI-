@@ -1,31 +1,9 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import crypto from "crypto";
-import { db } from "@/lib/firebase-admin";
-
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
-
-/**
- * Generate PayFast signature
- * PayFast docs: Concatenate 'key=value&' pairs in the order received, excluding signature itself.
- */
-const generateSignature = (rawBody: string, passphrase?: string): string => {
-  // Remove any existing signature param
-  let signatureString = rawBody.replace(/&?signature=[^&]*/i, "");
-
-  // Append passphrase if configured
-  if (passphrase) {
-    signatureString += `&passphrase=${encodeURIComponent(
-      passphrase.trim()
-    ).replace(/%20/g, "+")}`;
-  }
-
-  return crypto.createHash("md5").update(signatureString).digest("hex");
-};
-
 export async function POST(request: NextRequest) {
   try {
+    const { getDb } = await import("@/lib/firebase-admin");
     const bodyText = await request.text();
     if (!bodyText) {
       return new NextResponse("Empty request body", { status: 400 });
@@ -54,7 +32,7 @@ export async function POST(request: NextRequest) {
         const paymentId = pfDataObject.m_payment_id;
         const userEmail = pfDataObject.email_address;
 
-        const firestore = await db;
+        const firestore = getDb();
         await firestore.collection("payments").doc(paymentId).set({
           paymentId,
           userEmail,

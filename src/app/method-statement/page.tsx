@@ -27,7 +27,6 @@ import {
 } from "@/components/ui/card";
 import {
   generateMethodStatementAction,
-  type MethodStatementOutput,
 } from "./actions";
 import LoadingDots from "@/components/ui/loading-dots";
 import { useToast } from "@/hooks/use-toast";
@@ -55,9 +54,54 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
+type StructuredMethodStatement = {
+  introduction: string;
+  scopeOfWork: string;
+  hazardsAndRisks: string;
+  controlMeasures: string;
+  responsibilities: string;
+};
+
+function parseMethodStatement(text: string): StructuredMethodStatement {
+  const sections = {
+    introduction: "",
+    scopeOfWork: "",
+    hazardsAndRisks: "",
+    controlMeasures: "",
+    responsibilities: "",
+  };
+
+  const lines = text.split('\\n');
+  let currentSection: keyof typeof sections | null = null;
+
+  for (const line of lines) {
+    const trimmedLine = line.trim();
+    if (trimmedLine.startsWith("Introduction:")) {
+      currentSection = "introduction";
+      sections.introduction = trimmedLine.substring("Introduction:".length).trim();
+    } else if (trimmedLine.startsWith("Scope of Work:")) {
+      currentSection = "scopeOfWork";
+      sections.scopeOfWork = trimmedLine.substring("Scope of Work:".length).trim();
+    } else if (trimmedLine.startsWith("Hazards and Risks:")) {
+      currentSection = "hazardsAndRisks";
+      sections.hazardsAndRisks = trimmedLine.substring("Hazards and Risks:".length).trim();
+    } else if (trimmedLine.startsWith("Control Measures:")) {
+      currentSection = "controlMeasures";
+      sections.controlMeasures = trimmedLine.substring("Control Measures:".length).trim();
+    } else if (trimmedLine.startsWith("Responsibilities:")) {
+      currentSection = "responsibilities";
+      sections.responsibilities = trimmedLine.substring("Responsibilities:".length).trim();
+    } else if (currentSection) {
+      sections[currentSection] += '\\n' + trimmedLine;
+    }
+  }
+
+  return sections;
+}
+
 export default function MethodStatementPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<MethodStatementOutput | null>(null);
+  const [result, setResult] = useState<StructuredMethodStatement | null>(null);
   const [formValues, setFormValues] = useState<FormValues | null>(null);
   const [logoDataUri, setLogoDataUri] = useState<string | null>(null);
   const [pdfDataUri, setPdfDataUri] = useState<string | null>(null);
@@ -93,8 +137,10 @@ export default function MethodStatementPage() {
     setIsLoading(false);
 
     if (response.success) {
-      setResult(response.data);
-      generatePdf(response.data, values, logoDataUri, true);
+      // Parse the single string into the structured format the component expects
+      const parsedData = parseMethodStatement(response.data.methodStatement);
+      setResult(parsedData);
+      generatePdf(parsedData, values, logoDataUri, true);
       toast({
         title: "Success",
         description:
@@ -110,7 +156,7 @@ export default function MethodStatementPage() {
   }
 
   const generatePdf = (
-    data: MethodStatementOutput,
+    data: StructuredMethodStatement,
     values: FormValues,
     logo: string | null,
     setUri = false
@@ -338,13 +384,7 @@ export default function MethodStatementPage() {
             <div className="flex items-center gap-2">
               {result && (
                 <CopyButton
-                  textToCopy={[
-                    result.introduction,
-                    result.scopeOfWork,
-                    result.hazardsAndRisks,
-                    result.controlMeasures,
-                    result.responsibilities,
-                  ].join("\n\n")}
+                  textToCopy={Object.values(result).join("\n\n")}
                 />
               )}
               {result && (

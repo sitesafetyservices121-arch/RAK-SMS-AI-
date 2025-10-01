@@ -153,7 +153,7 @@ export default function EmployeeTrainingTrackerPage() {
             emp.idNumber,
             course.courseName,
             course.status,
-            course.expiryDate ?? "N/A",
+            course.expiryDate ? course.expiryDate : "N/A",
           ])
         : [
             [

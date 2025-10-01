@@ -1,62 +1,52 @@
 import admin from "firebase-admin";
-import { getApps, App } from "firebase-admin/app";
+import { getApps, App, cert } from "firebase-admin/app";
 import { getFirestore, Firestore } from "firebase-admin/firestore";
 import { getStorage, Storage } from "firebase-admin/storage";
 
-let app: App | undefined;
+let app: App;
+let db: Firestore;
+let storage: Storage;
 
-function initializeAdmin(): App {
-  if (app) {
-    return app;
-  }
-
-  const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
-
-  if (!serviceAccountKey) {
-    throw new Error(
-      "FIREBASE_SERVICE_ACCOUNT_KEY environment variable is not set."
-    );
-  }
-
-  try {
-    let serviceAccount;
-    try {
-      serviceAccount = JSON.parse(serviceAccountKey.replace(/\\n/g, "\n"));
-    } catch {
-      throw new Error(
-        "Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY. Ensure it is a valid JSON string."
-      );
+function initializeFirebaseAdmin() {
+  if (getApps().length > 0) {
+    app = getApps()[0];
+  } else {
+    if (!process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+      throw new Error("FIREBASE_SERVICE_ACCOUNT_KEY environment variable is not set.");
     }
-
-    if (!serviceAccount.project_id || !serviceAccount.private_key) {
-      throw new Error(
-        'Service account key is missing required fields like "project_id" or "private_key".'
-      );
-    }
-    
-    // Use the default app if already initialized
-    if(getApps().length > 0) {
-      app = getApps()[0];
-      return app;
-    }
-
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
     app = admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-      storageBucket: "studio-1886793043-bca30.appspot.com",
+      credential: cert(serviceAccount),
+      storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
     });
+  }
 
-    return app;
-  } catch (error) {
-    console.error("Firebase Admin initialization error:", error);
-    throw new Error(
-      "Could not initialize Firebase Admin SDK. Please check your service account credentials."
-    );
+  db = getFirestore(app);
+  storage = getStorage(app);
+}
+
+// Initialize on first import
+try {
+  initializeFirebaseAdmin();
+} catch (error) {
+  // In a build environment where env vars might be missing,
+  // we will defer initialization to the first API call.
+  console.log("Deferring Firebase Admin initialization.");
+}
+
+function ensureInitialized() {
+  if (!app) {
+    console.log("Lazily initializing Firebase Admin...");
+    initializeFirebaseAdmin();
   }
 }
 
-// Ensure the app is initialized before exporting services
-initializeAdmin();
+export const getDb = () => {
+  ensureInitialized();
+  return db;
+};
 
-// Export the initialized services directly
-export const db: Firestore = getFirestore();
-export const storage: Storage = getStorage();
+export const getStorage = () => {
+  ensureInitialized();
+  return storage;
+};

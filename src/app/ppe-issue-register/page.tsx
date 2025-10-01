@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -67,8 +67,8 @@ const ppeItems: PpeItem[] = [
   { id: "ppe-hg-01", name: "Safety Gloves (Leather)", category: "Hands" },
   { id: "ppe-hg-02", name: "Safety Gloves (Chemical)", category: "Hands" },
   { id: "ppe-ft-01", name: "Safety Boots", category: "Feet" },
-  { id: "ppe-ey-01", name: "Safety Goggles", category: "Eye" },
-  { id: "ppe-ey-02", name: "Face Shield", category: "Eye" },
+  { id: "ppe-ey-01", name: "Safety Goggles", category: "Other" },
+  { id: "ppe-ey-02", name: "Face Shield", category: "Other" },
   { id: "ppe-bd-01", name: "Reflective Vest", category: "Body" },
   { id: "ppe-bd-02", name: "Harness", category: "Body" },
 ];
