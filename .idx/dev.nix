@@ -1,10 +1,40 @@
 { pkgs }: {
-  channel = "stable-24.11";
+  channel = "stable-24.05";
 
   packages = [
     pkgs.nodejs_20
     pkgs.firebase-tools
     pkgs.zulu
+    # Playwright dependencies
+    pkgs.at-spi2-atk
+    pkgs.cairo
+    pkgs.cups
+    pkgs.dbus
+    pkgs.expat
+    pkgs.gdk-pixbuf
+    pkgs.glib
+    pkgs.gtk3
+    pkgs.libGL
+    pkgs.libX11
+    pkgs.libXScrnSaver
+    pkgs.libXcomposite
+    pkgs.libXcursor
+    pkgs.libXdamage
+    pkgs.libXext
+    pkgs.libXfixes
+    pkgs.libXi
+    pkgs.libXrandr
+    pkgs.libXrender
+    pkgs.libXtst
+    pkgs.libdrm
+    pkgs.libepoxy
+    pkgs.libxkbcommon
+    pkgs.mesa
+    pkgs.nss
+    pkgs.pango
+    pkgs.pipewire
+    pkgs.udev
+    pkgs.alsa-lib
   ];
 
   env = {
