@@ -1,11 +1,11 @@
 export type Document = {
-  id: string;
-  name: string;
-  category: string;
-  subCategory: string;
-  version: string;
-  lastUpdated: string; // Consider using Date if you’ll parse/compare
-  type: string;        // Could be "pdf" | "docx" | "xlsx" | etc.
-  downloadURL: string;
-  fileName: string;
+  readonly id: string;
+  readonly name: string;
+  readonly category: string;
+  readonly subCategory: string;
+  readonly version: string;
+  readonly lastUpdated: Date; // Enforce proper typing
+  readonly type: "pdf" | "docx" | "xlsx" | "txt" | "other";
+  readonly downloadURL: string;
+  readonly fileName: string;
 };

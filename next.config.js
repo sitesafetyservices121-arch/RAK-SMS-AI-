@@ -1,42 +1,41 @@
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true, // Recommended for highlighting potential problems
+  swcMinify: true,       // Faster, smaller builds with SWC compiler
 
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  /* config options here */
   typescript: {
-    ignoreBuildErrors: true,
+    // ❗ Better to keep strict in production; set to false only if CI/type-checking handled separately
+    ignoreBuildErrors: false,
   },
   eslint: {
-    ignoreDuringBuilds: true,
+    // ❗ Same here: disable only if linting is handled outside build
+    ignoreDuringBuilds: false,
   },
+
   images: {
     remotePatterns: [
       {
         protocol: "https",
         hostname: "placehold.co",
-        port: "",
         pathname: "/**",
       },
       {
         protocol: "https",
         hostname: "images.unsplash.com",
-        port: "",
         pathname: "/**",
       },
       {
         protocol: "https",
         hostname: "picsum.photos",
-        port: "",
         pathname: "/**",
       },
       {
         protocol: "https",
         hostname: "www.payfast.co.za",
-        port: "",
         pathname: "/**",
       },
     ],
   },
 };
 
-export default nextConfig;
+module.exports = nextConfig;

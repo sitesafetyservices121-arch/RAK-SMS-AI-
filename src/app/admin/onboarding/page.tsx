@@ -31,91 +31,107 @@ type Client = {
 
 // Initial mock data
 const initialClients: Client[] = [
-  { id: "CLIENT-001", name: "ConstructCo", contact: "info@constructco.com", status: "Active", userCount: 5 },
-  { id: "CLIENT-002", name: "BuildIt Right", contact: "contact@buildit.com", status: "Active", userCount: 1 },
-  { id: "CLIENT-003", name: "InfraWorks", contact: "projects@infraworks.co.za", status: "Pending", userCount: 12 },
+  {
+    id: "CLIENT-001",
+    name: "ConstructCo",
+    contact: "info@constructco.com",
+    status: "Active",
+    userCount: 5,
+  },
+  {
+    id: "CLIENT-002",
+    name: "BuildIt Right",
+    contact: "contact@builditright.com",
+    status: "Pending",
+    userCount: 3,
+  },
 ];
 
 export default function OnboardingPage() {
   const [clients, setClients] = useState<Client[]>(initialClients);
+  const [newClient, setNewClient] = useState({
+    name: "",
+    contact: "",
+    status: "Pending",
+    userCount: 0,
+  });
 
-  const handleAddClient = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleAddClient = () => {
+    if (!newClient.name || !newClient.contact) return;
 
-    const formData = new FormData(e.currentTarget);
-    const newClient: Client = {
-      id: (formData.get("clientId") as string) || `CLIENT-${clients.length + 1}`,
-      name: (formData.get("companyName") as string) || "Untitled",
-      contact: (formData.get("contactEmail") as string) || "unknown@example.com",
-      status: "Active",
-      userCount: Number(formData.get("userCount")) || 0,
+    const newEntry: Client = {
+      id: `CLIENT-${String(clients.length + 1).padStart(3, "0")}`,
+      ...newClient,
     };
 
-    // Update state
-    setClients((prev) => [...prev, newClient]);
-
-    // Reset form
-    e.currentTarget.reset();
+    setClients([...clients, newEntry]);
+    setNewClient({ name: "", contact: "", status: "Pending", userCount: 0 });
   };
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Onboard New Client</CardTitle>
+          <CardTitle>Client Onboarding</CardTitle>
           <CardDescription>
-            Add a new client company to the system.
+            Manage onboarding process for new clients.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <form className="space-y-4" onSubmit={handleAddClient}>
-            <div className="grid gap-2">
-              <Label htmlFor="companyName">Company Name</Label>
-              <Input id="companyName" name="companyName" placeholder="Enter company name" />
+        <CardContent className="space-y-6">
+          {/* Add New Client Form */}
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="space-y-2">
+              <Label htmlFor="name">Client Name</Label>
+              <Input
+                id="name"
+                placeholder="Enter client name"
+                value={newClient.name}
+                onChange={(e) =>
+                  setNewClient({ ...newClient, name: e.target.value })
+                }
+              />
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="contactEmail">Contact Email</Label>
-              <Input id="contactEmail" name="contactEmail" type="email" placeholder="Enter contact email" />
+            <div className="space-y-2">
+              <Label htmlFor="contact">Contact Email</Label>
+              <Input
+                id="contact"
+                type="email"
+                placeholder="client@example.com"
+                value={newClient.contact}
+                onChange={(e) =>
+                  setNewClient({ ...newClient, contact: e.target.value })
+                }
+              />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="clientId">Client ID</Label>
-                <Input id="clientId" name="clientId" placeholder="e.g., CLIENT-004" />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="userCount">Number of Users</Label>
-                <Input id="userCount" name="userCount" type="number" placeholder="e.g., 5" />
-              </div>
+            <div className="flex items-end">
+              <Button
+                onClick={handleAddClient}
+                className="w-full flex items-center gap-2"
+              >
+                <PlusCircle className="h-4 w-4" /> Add Client
+              </Button>
             </div>
-            <Button type="submit" className="w-full">
-              <PlusCircle className="mr-2 h-4 w-4" /> Add Client
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+          </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Existing Clients</CardTitle>
-          <CardDescription>A list of all client companies.</CardDescription>
-        </CardHeader>
-        <CardContent>
+          {/* Clients Table */}
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Client ID</TableHead>
-                <TableHead>Company Name</TableHead>
-                <TableHead>Users</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Contact</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>User Count</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {clients.map((client) => (
                 <TableRow key={client.id}>
-                  <TableCell className="font-medium">{client.id}</TableCell>
+                  <TableCell>{client.id}</TableCell>
                   <TableCell>{client.name}</TableCell>
-                  <TableCell>{client.userCount}</TableCell>
+                  <TableCell>{client.contact}</TableCell>
                   <TableCell>{client.status}</TableCell>
+                  <TableCell>{client.userCount}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

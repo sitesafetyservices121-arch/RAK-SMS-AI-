@@ -1,5 +1,5 @@
 import { genkit } from "genkit";
-import { googleAI } from "@genkit-ai/googleai";
+import { googleAI } from "@genkit-ai/google-genai";
 
 // Create the shared Genkit instance with Google AI plugin
 export const ai = genkit({

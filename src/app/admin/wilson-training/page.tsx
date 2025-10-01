@@ -14,161 +14,151 @@ import { Label } from "@/components/ui/label";
 import { UploadCloud, FileJson, FileText, LoaderCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { indexDocumentAction, IndexDocumentResponse } from "./actions";
+import {
+  indexDocumentAction,
+  IndexDocumentResponse,
+} from "./actions";
 
-// This would be fetched from a database in a real application.
+// Mock database (would be fetched in real app)
 const existingDocs: { name: string; type: string; size: string }[] = [];
 
 export default function WilsonTrainingPage() {
   const [files, setFiles] = useState<FileList | null>(null);
-  const [isIndexing, setIsIndexing] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [indexedDocs, setIndexedDocs] = useState(existingDocs);
   const { toast } = useToast();
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      setFiles(event.target.files);
-    }
-  };
-
-  const dataUriFromFile = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  };
-
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
+  const handleUpload = async () => {
     if (!files || files.length === 0) {
       toast({
+        title: "No file selected",
+        description: "Please choose a file to upload.",
         variant: "destructive",
-        title: "No Files Selected",
-        description: "Please select one or more files to upload.",
       });
       return;
     }
 
-    setIsIndexing(true);
-    let totalChunks = 0;
-    let filesIndexed = 0;
+    setUploading(true);
+    try {
+      for (const file of Array.from(files)) {
+        const reader = new FileReader();
 
-    for (const file of Array.from(files)) {
-      try {
-        const documentDataUri = await dataUriFromFile(file);
-        const response: IndexDocumentResponse = await indexDocumentAction({
-          documentDataUri,
-        });
+        reader.onloadend = async () => {
+          try {
+            const input = {
+              documentDataUri: reader.result as string,
+            };
 
-        if (response.success) {
-          totalChunks += response.data.chunksIndexed;
-          filesIndexed++;
-        } else {
-          throw new Error(response.error || "Unknown error during indexing");
-        }
-      } catch (error: unknown) {
-        const message =
-          error instanceof Error ? error.message : "Unknown error occurred";
-        toast({
-          variant: "destructive",
-          title: `Error Indexing ${file.name}`,
-          description: message,
-        });
+            const response: IndexDocumentResponse =
+              await indexDocumentAction(input);
+
+            if (response.success) {
+              setIndexedDocs((prev) => [
+                ...prev,
+                {
+                  name: file.name,
+                  type: file.type,
+                  size: `${(file.size / 1024).toFixed(2)} KB`,
+                },
+              ]);
+
+              toast({
+                title: "Document Indexed",
+                description: `${file.name} successfully indexed with ${response.data.chunksIndexed} chunks.`,
+              });
+            } else {
+              toast({
+                title: "Indexing Failed",
+                description: response.error,
+                variant: "destructive",
+              });
+            }
+          } catch (err) {
+            console.error(err);
+            toast({
+              title: "Unexpected Error",
+              description: "Something went wrong while indexing.",
+              variant: "destructive",
+            });
+          }
+        };
+
+        reader.readAsDataURL(file);
       }
+    } finally {
+      setUploading(false);
+      setFiles(null);
     }
-
-    setIsIndexing(false);
-
-    if (filesIndexed > 0) {
-      toast({
-        title: "Indexing Complete",
-        description: `${filesIndexed} document(s) indexed into ${totalChunks} chunks. Wilson's knowledge base is updated.`,
-      });
-    }
-
-    // Reset form
-    const fileInput = document.getElementById(
-      "file-upload"
-    ) as HTMLInputElement;
-    if (fileInput) fileInput.value = "";
-    setFiles(null);
   };
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>AI Reference Documents</CardTitle>
+          <CardTitle>Wilson Training</CardTitle>
           <CardDescription>
-            Upload PDF, JSON, or text files containing acts and regulations for
-            Wilson&apos;s permanent knowledge base. These will be stored in a
-            vector database.
+            Upload and index documents for training Wilson AI.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid gap-2">
-              <Label htmlFor="file-upload">
-                Reference Documents (PDF, JSON, Text, Markdown)
-              </Label>
-              <Input
-                id="file-upload"
-                type="file"
-                onChange={handleFileChange}
-                multiple
-                accept=".pdf,.json,.txt,.md"
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={isIndexing}>
-              {isIndexing ? (
-                <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+        <CardContent className="space-y-6">
+          {/* Upload Form */}
+          <div className="space-y-4">
+            <Label htmlFor="file">Upload Documents</Label>
+            <Input
+              id="file"
+              type="file"
+              multiple
+              onChange={(e) => setFiles(e.target.files)}
+            />
+            <Button
+              onClick={handleUpload}
+              disabled={uploading || !files}
+              className="flex items-center gap-2"
+            >
+              {uploading ? (
+                <>
+                  <LoaderCircle className="h-4 w-4 animate-spin" />
+                  Indexing...
+                </>
               ) : (
-                <UploadCloud className="mr-2 h-4 w-4" />
+                <>
+                  <UploadCloud className="h-4 w-4" />
+                  Upload & Index
+                </>
               )}
-              {isIndexing ? "Indexing..." : "Upload & Index"}
             </Button>
-          </form>
-        </CardContent>
-      </Card>
+          </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Current Knowledge Base</CardTitle>
-          <CardDescription>
-            List of documents Wilson currently references. (Note: In-memory
-            only)
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {existingDocs.length > 0 ? (
-            <ul className="space-y-3">
-              {existingDocs.map((doc) => (
-                <li
-                  key={doc.name}
-                  className="flex items-center justify-between rounded-md border p-3"
-                >
-                  <div className="flex items-center gap-3">
-                    {doc.type === "PDF" ? (
-                      <FileText className="h-5 w-5 text-red-500" />
-                    ) : doc.type === "JSON" ? (
-                      <FileJson className="h-5 w-5 text-blue-500" />
-                    ) : (
-                      <FileText className="h-5 w-5 text-gray-500" />
-                    )}
-                    <span className="font-medium">{doc.name}</span>
-                  </div>
-                  <Badge variant="outline">{doc.size}</Badge>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div className="flex h-20 items-center justify-center rounded-md border border-dashed">
-              <p className="text-sm text-muted-foreground">
-                Knowledge base is currently empty.
+          {/* Indexed Documents */}
+          <div>
+            <h3 className="text-sm font-medium mb-2">Indexed Documents</h3>
+            {indexedDocs.length === 0 ? (
+              <p className="text-muted-foreground text-sm">
+                No documents have been indexed yet.
               </p>
-            </div>
-          )}
+            ) : (
+              <ul className="space-y-2">
+                {indexedDocs.map((doc, i) => (
+                  <li
+                    key={`${doc.name}-${i}`}
+                    className="flex items-center justify-between border rounded-md p-2"
+                  >
+                    <div className="flex items-center gap-2">
+                      {doc.type.includes("json") ? (
+                        <FileJson className="h-4 w-4" />
+                      ) : (
+                        <FileText className="h-4 w-4" />
+                      )}
+                      <span>{doc.name}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary">{doc.size}</Badge>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>

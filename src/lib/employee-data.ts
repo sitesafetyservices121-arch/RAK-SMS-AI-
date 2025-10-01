@@ -1,3 +1,7 @@
+// ==============================
+// Employee & PPE Data Structures
+// ==============================
+
 export type Course = {
   courseName: string;
   status: "Completed" | "Expired" | "Scheduled";
@@ -27,7 +31,9 @@ export type PpeRegisterEntry = {
   signature: "Signed" | "Pending";
 };
 
-// --- Initial Data ---
+// ==============================
+// Initial Data
+// ==============================
 
 export const initialEmployees: Employee[] = [
   {
@@ -56,7 +62,11 @@ export const initialEmployees: Employee[] = [
     idNumber: "9003155111086",
     codeLicense: null,
     courses: [
-      { courseName: "HIRA", status: "Scheduled", expiryDate: null },
+      {
+        courseName: "HIRA",
+        status: "Scheduled",
+        expiryDate: null,
+      },
       {
         courseName: "Fire Fighting",
         status: "Expired",
@@ -118,24 +128,32 @@ export const ppeRegister: PpeRegisterEntry[] = [
   },
 ];
 
-// --- Helper Functions ---
+// ==============================
+// Helper Functions
+// ==============================
 
-// Get PPE issued to an employee
+/**
+ * Get PPE issued to a specific employee.
+ */
 export function getEmployeePpe(employeeId: string) {
   return ppeRegister
     .filter((entry) => entry.employeeId === employeeId)
     .map((entry) => ({
       ...entry,
-      item: ppeItems.find((i) => i.id === entry.ppeItemId),
+      item: ppeItems.find((i) => i.id === entry.ppeItemId) || null,
     }));
 }
 
-// Check if employee has any expired courses
+/**
+ * Check if an employee has any expired courses.
+ */
 export function hasExpiredCourses(employee: Employee) {
   return employee.courses.some((c) => c.status === "Expired");
 }
 
-// Get employee by ID with their PPE and courses
+/**
+ * Get a complete employee profile with PPE and course status.
+ */
 export function getEmployeeProfile(employeeId: string) {
   const employee = initialEmployees.find((e) => e.id === employeeId);
   if (!employee) return null;

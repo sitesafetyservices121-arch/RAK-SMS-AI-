@@ -107,7 +107,7 @@ export function AppNav() {
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
-          {/* Main menu items */}
+          {/* Main menu */}
           {menuItems.map((item) => (
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton
@@ -129,11 +129,7 @@ export function AppNav() {
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton
                   className="justify-between"
-                  tooltip={{
-                    children: "Management Tools",
-                    side: "right",
-                    align: "center",
-                  }}
+                  tooltip={{ children: "Management Tools", side: "right", align: "center" }}
                 >
                   <div className="flex items-center gap-2">
                     <Briefcase className="h-4 w-4" />
@@ -170,11 +166,7 @@ export function AppNav() {
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton
                   className="justify-between"
-                  tooltip={{
-                    children: "AI Tools",
-                    side: "right",
-                    align: "center",
-                  }}
+                  tooltip={{ children: "AI Tools", side: "right", align: "center" }}
                 >
                   <div className="flex items-center gap-2">
                     <Bot className="h-4 w-4" />
@@ -214,7 +206,6 @@ export function AppNav() {
                 tooltip={{ children: item.label, side: "right", align: "center" }}
               >
                 <Link href={item.href}>
-                  {/* WilsonLogo is a React component, so no className injection */}
                   <item.icon />
                   <span>{item.label}</span>
                 </Link>
@@ -228,11 +219,7 @@ export function AppNav() {
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton
                   className="justify-between"
-                  tooltip={{
-                    children: "My Account",
-                    side: "right",
-                    align: "center",
-                  }}
+                  tooltip={{ children: "My Account", side: "right", align: "center" }}
                 >
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4" />
@@ -269,11 +256,7 @@ export function AppNav() {
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton
                   className="justify-between"
-                  tooltip={{
-                    children: "Admin",
-                    side: "right",
-                    align: "center",
-                  }}
+                  tooltip={{ children: "Admin", side: "right", align: "center" }}
                 >
                   <div className="flex items-center gap-2">
                     <Shield className="h-4 w-4" />

@@ -2,14 +2,21 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
   // 🔐 Example: Authentication check
-  // if (!request.cookies.get("auth-token")) {
-  //   return NextResponse.redirect(new URL("/login", request.url));
+  // const token = request.cookies.get("auth-token");
+  // if (!token) {
+  //   const loginUrl = request.nextUrl.clone();
+  //   loginUrl.pathname = "/login";
+  //   return NextResponse.redirect(loginUrl);
   // }
 
-  // 🚫 Example: Block access to a specific path
-  // if (request.nextUrl.pathname.startsWith("/admin")) {
-  //   return NextResponse.redirect(new URL("/unauthorized", request.url));
+  // 🚫 Example: Block access to /admin
+  // if (pathname.startsWith("/admin")) {
+  //   const unauthorizedUrl = request.nextUrl.clone();
+  //   unauthorizedUrl.pathname = "/unauthorized";
+  //   return NextResponse.redirect(unauthorizedUrl);
   // }
 
   // ✅ Default: allow request to continue
@@ -17,7 +24,13 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Apply middleware to all routes EXCEPT api, _next assets, and favicon
+  /**
+   * Apply middleware to all routes EXCEPT:
+   * - /api (API routes)
+   * - /_next/static (Next.js static files)
+   * - /_next/image (Next.js image optimization)
+   * - /favicon.ico
+   */
   matcher: [
     "/((?!api|_next/static|_next/image|favicon.ico).*)",
   ],

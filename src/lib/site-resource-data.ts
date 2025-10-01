@@ -1,4 +1,7 @@
-// --- Employee Data ---
+// ==============================
+// Employee Data
+// ==============================
+
 export type Employee = {
   id: string;
   firstName: string;
@@ -13,23 +16,28 @@ export const initialEmployees: Employee[] = [
   { id: "EMP-004", firstName: "Sarah", surname: "Williams", idNumber: "9207185333089" },
 ];
 
+// ==============================
+// Vehicle Data
+// ==============================
 
-// --- Vehicle Data ---
 export type InspectionStatus = "Passed" | "Failed" | "Awaiting Inspection";
+
 export type Vehicle = {
   vehicle: string;
   status: InspectionStatus;
 };
 
 export const initialVehicles: Vehicle[] = [
-    { vehicle: "Bakkie 1", status: "Awaiting Inspection" },
-    { vehicle: "Truck 2", status: "Passed" },
-    { vehicle: "Van 3", status: "Failed" },
-    { vehicle: "Bakkie 4", status: "Passed" },
+  { vehicle: "Bakkie 1", status: "Awaiting Inspection" },
+  { vehicle: "Truck 2", status: "Passed" },
+  { vehicle: "Van 3", status: "Failed" },
+  { vehicle: "Bakkie 4", status: "Passed" },
 ];
 
+// ==============================
+// Site Data
+// ==============================
 
-// --- Site Data ---
 export type Site = {
   id: string;
   name: string;

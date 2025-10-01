@@ -1,28 +1,42 @@
-// Vehicle inspection related types
+// ==============================
+// Vehicle Inspection Data
+// ==============================
 
+/**
+ * Possible inspection statuses for vehicles.
+ */
 export type InspectionStatus = "Passed" | "Failed" | "Awaiting Inspection";
 
+/**
+ * Represents a specific damage report with position and description.
+ */
 export type DamageReport = {
-  x: number;
-  y: number;
-  description: string;
+  x: number; // X-coordinate (e.g., on vehicle diagram)
+  y: number; // Y-coordinate
+  description: string; // Description of the damage
 };
 
+/**
+ * Represents a vehicle inspection record.
+ */
 export type Inspection = {
   vehicle: string;
   numberPlate: string;
   driverName: string;
   driverSurname: string;
-  lastService: string;
-  nextService: string;
-  licenseDiscExpiry: string;
-  date: string;
+  lastService: string; // ISO date string
+  nextService: string; // ISO date string
+  licenseDiscExpiry: string; // ISO date string
+  date: string; // Inspection date (ISO)
   inspector: string;
   status: InspectionStatus;
   damages: DamageReport[];
 };
 
-// Mock data
+// ==============================
+// Mock Data
+// ==============================
+
 export const allInspections: Inspection[] = [
   {
     vehicle: "Bakkie 1",

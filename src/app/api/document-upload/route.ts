@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { db, storage, auth as adminAuth } from "@/lib/firebase-admin";
-import type { NextRequest } from 'next/server';
 
 const MAX_FILE_SIZE_MB = 10;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
@@ -16,8 +16,12 @@ export async function POST(request: NextRequest) {
   try {
     const token = request.headers.get("Authorization")?.split("Bearer ")[1];
     if (!token) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      );
     }
+
     await adminAuth.verifyIdToken(token);
 
     const formData = await request.formData();
@@ -36,14 +40,22 @@ export async function POST(request: NextRequest) {
 
     if (documentFile.size > MAX_FILE_SIZE_BYTES) {
       return NextResponse.json(
-        { success: false, error: `File is too large. Maximum size is ${MAX_FILE_SIZE_MB}MB.` },
+        {
+          success: false,
+          error: `File is too large. Maximum size is ${MAX_FILE_SIZE_MB}MB.`,
+        },
         { status: 400 }
       );
     }
 
-    if (!ALLOWED_FILE_TYPES.includes(documentFile.type)) {
+    const mimeType = documentFile.type || "application/octet-stream";
+    if (!ALLOWED_FILE_TYPES.includes(mimeType)) {
       return NextResponse.json(
-        { success: false, error: "Invalid file type. Only PDF, Word, and Excel documents are allowed." },
+        {
+          success: false,
+          error:
+            "Invalid file type. Only PDF, Word, and Excel documents are allowed.",
+        },
         { status: 400 }
       );
     }
@@ -56,12 +68,12 @@ export async function POST(request: NextRequest) {
     const filePath = `documents/${category}/${section}/${Date.now()}-${safeName}`;
     const fileUpload = bucket.file(filePath);
 
-    const buffer = Buffer.from(await documentFile.arrayBuffer());
+    // ✅ Use Node's Buffer to convert
+    const arrayBuffer = await documentFile.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
 
     await fileUpload.save(buffer, {
-      metadata: {
-        contentType: documentFile.type,
-      },
+      metadata: { contentType: mimeType },
     });
 
     await fileUpload.makePublic();
@@ -72,24 +84,30 @@ export async function POST(request: NextRequest) {
     await docRef.set({
       name: documentName,
       category,
-      subCategory: section, // Align with the frontend's grouping logic
+      subCategory: section,
       fileName: documentFile.name,
       storagePath: filePath,
       downloadURL,
-      type: documentFile.type,
+      type: mimeType,
       size: documentFile.size,
       lastUpdated: new Date().toISOString(),
       version: "1.0",
     });
 
     return NextResponse.json(
-      { success: true, data: { message: "File uploaded and indexed successfully." } },
+      {
+        success: true,
+        data: { message: "File uploaded and indexed successfully." },
+      },
       { status: 200 }
     );
-  } catch (e: unknown) {
+  } catch (e: any) {
     console.error("Upload API Error:", e);
-    if ((e as Error).name === 'auth/id-token-expired' || (e as Error).name === 'auth/argument-error') {
-        return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    if (e.code === "auth/id-token-expired" || e.code === "auth/argument-error") {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      );
     }
     return NextResponse.json(
       { success: false, error: "An unexpected error occurred on the server." },

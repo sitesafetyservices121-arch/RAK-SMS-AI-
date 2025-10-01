@@ -29,7 +29,7 @@ export function UserNav() {
         description: "You have been successfully signed out.",
       });
       router.push("/login");
-    } catch (error) {
+    } catch {
       toast({
         variant: "destructive",
         title: "Sign Out Failed",

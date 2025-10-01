@@ -1,4 +1,12 @@
-import data from "./placeholder-images.json";
+// ==============================
+// Placeholder Images Loader
+// ==============================
+
+import placeholderData from "./placeholder-images.json"; // <-- added semicolon
+
+// ==============================
+// Types
+// ==============================
 
 export type ImagePlaceholder = {
   id: string;
@@ -7,6 +15,15 @@ export type ImagePlaceholder = {
   imageHint: string;
 };
 
-// Ensure we always get an array and type-check the contents
-export const placeholderImages: ImagePlaceholder[] =
-  (data.placeholderImages as ImagePlaceholder[]) ?? [];
+// ==============================
+// Data
+// ==============================
+
+/**
+ * Strongly typed placeholder images loaded from JSON.
+ */
+export const placeholderImages: ImagePlaceholder[] = Array.isArray(
+  (placeholderData as any).placeholderImages
+)
+  ? ((placeholderData as any).placeholderImages as ImagePlaceholder[])
+  : [];
