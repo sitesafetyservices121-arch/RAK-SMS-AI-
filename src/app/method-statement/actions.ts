@@ -25,19 +25,17 @@ export async function generateMethodStatementAction(
   try {
     const rawOutput = await generateMethodStatement(input);
 
-    let defaultOutput: MethodStatementOutput;
-
     if (
       "methodStatement" in rawOutput &&
       typeof rawOutput.methodStatement === "string"
     ) {
-      defaultOutput = rawOutput;
+      const defaultOutput: MethodStatementOutput = rawOutput;
+      return { success: true, data: defaultOutput };
     } else {
       // Handle unexpected structure
       throw new Error("AI returned an unexpected data structure. Expected 'methodStatement' string.");
     }
-
-    return { success: true, data: defaultOutput };
+    
   } catch (e: unknown) {
     console.error("Method Statement Action Error:", e);
     const error = e instanceof Error ? e.message : "Failed to generate Method Statement";
