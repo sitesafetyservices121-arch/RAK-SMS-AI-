@@ -1,10 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { format } from "date-fns";
-
+import type { GenerateShePlanOutput } from "@/ai/flows/ai-she-plan-from-prompt";
 import {
   Card,
   CardContent,
@@ -12,30 +9,12 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { generateShePlanAction } from "./actions";
-import type { GenerateShePlanOutput } from "@/ai/flows/ai-she-plan-from-prompt";
 import LoadingDots from "@/components/ui/loading-dots";
-import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 
-const formSchema = z.object({
-  projectLocation: z.string().min(1),
-  scopeOfWork: z.string().min(1),
-  employeeCount: z.string().min(1),
-  hazards: z.string().min(1),
-  safetyPersonnel: z.string().min(1),
-  emergencyContacts: z.string().min(1),
-  projectDates: z.object({
-    from: z.date({ required_error: "A start date is required." }),
-    to: z.date({ required_error: "An end date is required." }),
-  }),
-  logo: z.instanceof(File).optional(),
-});
-
 export default function ShePlanGeneratorPage() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<GenerateShePlanOutput | null>(null);
-  const { toast } = useToast();
+  const [isLoading] = useState(false);
+  const [result] = useState<GenerateShePlanOutput | null>(null);
 
   const normalizeContent = (value: unknown): string => {
     if (Array.isArray(value)) return value.join("\n• ");

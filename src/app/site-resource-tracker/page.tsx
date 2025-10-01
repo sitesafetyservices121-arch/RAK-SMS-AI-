@@ -26,6 +26,12 @@ import {
 } from "@/lib/site-resource-data";
 
 interface jsPDFWithAutoTable extends jsPDF {
+  autoTable: (options: {
+    head: string[][];
+    body: (string | number)[][];
+    startY: number;
+    theme: string;
+  }) => jsPDF;
   lastAutoTable: {
     finalY: number;
   };

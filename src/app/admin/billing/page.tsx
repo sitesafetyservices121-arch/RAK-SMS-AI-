@@ -26,7 +26,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
-import Image from "next/image";
 
 // Mock data for client subscriptions
 const clientData = [
