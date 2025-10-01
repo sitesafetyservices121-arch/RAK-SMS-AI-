@@ -1,11 +1,9 @@
 {
   "compilerOptions": {
-    /* Language & Environment */
     "target": "ESNext",
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "jsx": "preserve",
 
-    /* Type Checking */
     "strict": true,
     "skipLibCheck": true,
     "noEmit": true,
@@ -15,27 +13,16 @@
     "allowJs": true,
     "resolveJsonModule": true,
 
-    /* Module System */
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
 
-    /* Path Aliases */
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     },
 
-    /* Type Declarations */
     "typeRoots": ["./types", "./node_modules/@types"],
-    "types": ["node", "next"],
-
-    /* Plugins */
-    "plugins": [{ "name": "next" }],
-
-    /* Optional Strictness (uncomment if you want max safety) */
-    // "noUnusedLocals": true,
-    // "noUnusedParameters": true,
-    // "noFallthroughCasesInSwitch": true
+    "types": ["node", "react"]
   },
   "include": [
     "next-env.d.ts",

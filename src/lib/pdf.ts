@@ -1,8 +1,8 @@
 // src/lib/pdf.ts
 'use server';
 
-import { db } from '@/lib/firebase-admin';
-import { auth } from '@/lib/firebase-admin';
+import * as admin from 'firebase-admin';
+import { db, auth } from '@/lib/firebase-admin';
 
 type PdfRequest = {
   template: 'default';
@@ -95,6 +95,3 @@ export async function generatePdfRequest(
     throw new Error('Failed to initiate PDF generation.');
   }
 }
-
-// Ensure admin is imported if not globally available
-import * as admin from 'firebase-admin';

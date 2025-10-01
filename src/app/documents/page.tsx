@@ -215,7 +215,7 @@ export default function DocumentsPage() {
                                     {doc.name}
                                   </TableCell>
                                   <TableCell>{doc.version}</TableCell>
-                                  <TableCell>{doc.lastUpdated}</TableCell>
+                                  <TableCell>{new Date(doc.lastUpdated).toLocaleDateString()}</TableCell>
                                   <TableCell className="text-right">
                                     <Button variant="ghost" size="icon" asChild>
                                       <a

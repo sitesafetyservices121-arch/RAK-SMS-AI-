@@ -1,7 +1,7 @@
 
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { db, storage, auth as adminAuth } from "@/lib/firebase-admin";
+import { headers } from "next/headers";
 
 const MAX_FILE_SIZE_MB = 10;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
@@ -15,13 +15,17 @@ const ALLOWED_FILE_TYPES = [
 
 export async function POST(request: NextRequest) {
   try {
-    const token = request.headers.get("Authorization")?.split("Bearer ")[1];
-    if (!token) {
+    const headersList = await headers();
+    const authHeader = headersList.get("authorization");
+    if (!authHeader) {
       return NextResponse.json(
-        { success: false, error: "Unauthorized" },
+        { success: false, error: "Unauthorized: Missing Authorization header" },
         { status: 401 }
       );
     }
+
+    const token = authHeader.split("Bearer ")[1];
+
 
     await adminAuth.verifyIdToken(token);
 
@@ -109,6 +113,7 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       );
     }
+    console.error("Full error object:", JSON.stringify(e, null, 2));
     return NextResponse.json(
       { success: false, error: "An unexpected error occurred on the server." },
       { status: 500 }

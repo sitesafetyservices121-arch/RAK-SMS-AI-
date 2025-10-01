@@ -60,7 +60,7 @@ export async function generateMethodStatementAction(
         "AI returned an unexpected data structure. Expected 'methodStatement' string."
       );
     }
-  } catch (e: unknown) => {
+  } catch (e: unknown) {
     console.error("Method Statement Action Error:", e);
     const error =
       e instanceof Error
