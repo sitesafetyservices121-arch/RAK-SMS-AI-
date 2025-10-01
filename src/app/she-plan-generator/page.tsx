@@ -27,6 +27,7 @@ import LoadingDots from "@/components/ui/loading-dots";
 import { useToast } from "@/hooks/use-toast";
 import { CopyButton } from "@/components/copy-button";
 import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/hooks/use-auth";
 
 const formSchema = z.object({
   projectDescription: z
@@ -40,6 +41,7 @@ export default function ShePlanGeneratorPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<GenerateShePlanOutput | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth(); // Get authenticated user
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -47,13 +49,26 @@ export default function ShePlanGeneratorPage() {
   });
 
   async function onSubmit(values: FormValues) {
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "Authentication Error",
+        description: "You must be logged in to generate a SHE plan.",
+      });
+      return;
+    }
+
     setIsLoading(true);
     setResult(null);
-    const response = await generateShePlanAction(values);
+    const response = await generateShePlanAction({ values, userId: user.uid });
     setIsLoading(false);
 
     if (response.success) {
       setResult(response.data);
+      toast({
+        title: "SHE Plan Generated",
+        description: `PDF is being created and will appear in 'Generated Documents'. Path: ${response.storagePath}`,
+      });
     } else {
       toast({
         variant: "destructive",
@@ -104,7 +119,11 @@ export default function ShePlanGeneratorPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" disabled={isLoading} className="w-full">
+              <Button
+                type="submit"
+                disabled={isLoading || !user}
+                className="w-full"
+              >
                 {isLoading ? "Generating..." : "Generate SHE Plan"}
               </Button>
             </form>
@@ -114,9 +133,11 @@ export default function ShePlanGeneratorPage() {
       <div className="lg:col-span-3">
         <Card className="min-h-[600px] sticky top-20">
           <CardHeader className="flex flex-row items-center justify-between">
-             <div>
+            <div>
               <CardTitle>Generated SHE Plan</CardTitle>
-              <CardDescription>Review the AI-generated plan below.</CardDescription>
+              <CardDescription>
+                Review the AI-generated plan below.
+              </CardDescription>
             </div>
             {result && <CopyButton textToCopy={fullTextResult} />}
           </CardHeader>
@@ -139,9 +160,11 @@ export default function ShePlanGeneratorPage() {
                 ))}
               </div>
             )}
-             {!isLoading && !result && (
+            {!isLoading && !result && (
               <div className="flex h-64 items-center justify-center rounded-md border border-dashed">
-                <p className="text-muted-foreground">Your generated plan will appear here.</p>
+                <p className="text-muted-foreground">
+                  Your generated plan will appear here.
+                </p>
               </div>
             )}
           </CardContent>

@@ -25,6 +25,7 @@ import { generateHiraAction } from "./actions";
 import LoadingDots from "@/components/ui/loading-dots";
 import { useToast } from "@/hooks/use-toast";
 import { CopyButton } from "@/components/copy-button";
+import { useAuth } from "@/hooks/use-auth";
 
 const formSchema = z.object({
   projectDetails: z.string().min(20, "Please provide more project details."),
@@ -38,6 +39,7 @@ export default function HiraGeneratorPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<HiraResult | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth(); // Get authenticated user
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -48,13 +50,25 @@ export default function HiraGeneratorPage() {
   });
 
   async function onSubmit(values: FormValues) {
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "Authentication Error",
+        description: "You must be logged in to generate a HIRA.",
+      });
+      return;
+    }
     setIsLoading(true);
     setResult(null);
-    const response = await generateHiraAction(values);
+    const response = await generateHiraAction({ values, userId: user.uid });
     setIsLoading(false);
 
     if (response.success) {
       setResult(response.data as HiraResult);
+      toast({
+        title: "HIRA Controls Generated",
+        description: `PDF is being created and will appear in 'Generated Documents'. Path: ${response.storagePath}`,
+      });
     } else {
       toast({
         variant: "destructive",
@@ -110,7 +124,11 @@ export default function HiraGeneratorPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" disabled={isLoading} className="w-full">
+              <Button
+                type="submit"
+                disabled={isLoading || !user}
+                className="w-full"
+              >
                 {isLoading ? "Generating..." : "Generate Control Measures"}
               </Button>
             </form>

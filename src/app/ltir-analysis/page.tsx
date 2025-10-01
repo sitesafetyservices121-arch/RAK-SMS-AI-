@@ -35,14 +35,15 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { analyzeLtirAction } from "./actions";
-import { type AnalyzeLtirTrendOutput } from "./actions"; // safer import
+import { analyzeLtirAction, saveLtirReportAction } from "./actions";
+import { type AnalyzeLtirTrendOutput } from "./actions";
 import LoadingDots from "@/components/ui/loading-dots";
 import { useToast } from "@/hooks/use-toast";
 import { CopyButton } from "@/components/copy-button";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Download, Save } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 const formSchema = z.object({
   numberOfInjuries: z.coerce.number().min(0, "Cannot be negative."),
@@ -54,9 +55,11 @@ type FormValues = z.infer<typeof formSchema>;
 
 export default function LtirAnalysisPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [result, setResult] = useState<AnalyzeLtirTrendOutput | null>(null);
   const [calculatedLtir, setCalculatedLtir] = useState<number | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -139,11 +142,37 @@ export default function LtirAnalysisPage() {
     doc.save("LTIR_Analysis_Report.pdf");
   };
 
-  const handleSave = () => {
-    toast({
-      title: "Report Saved",
-      description: "The LTIR report has been saved to Generated Documents.",
+  const handleSave = async () => {
+    if (!user || !result || calculatedLtir === null) {
+      toast({
+        variant: "destructive",
+        title: "Cannot Save",
+        description: "User not logged in or no report generated.",
+      });
+      return;
+    }
+    setIsSaving(true);
+    const response = await saveLtirReportAction({
+      userId: user.uid,
+      calculatedLtir,
+      formValues: form.getValues(),
+      analysisResult: result,
     });
+    setIsSaving(false);
+
+    if (response.success) {
+      toast({
+        title: "Report Saved",
+        description:
+          "The LTIR report has been saved and will appear in Generated Documents.",
+      });
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Save Failed",
+        description: response.error,
+      });
+    }
   };
 
   return (
@@ -244,8 +273,14 @@ export default function LtirAnalysisPage() {
               {result && <CopyButton textToCopy={fullTextResult} />}
               {result && (
                 <>
-                  <Button variant="secondary" size="sm" onClick={handleSave}>
-                    <Save className="mr-2 h-4 w-4" /> Save
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleSave}
+                    disabled={isSaving || !user}
+                  >
+                    <Save className="mr-2 h-4 w-4" />
+                    {isSaving ? "Saving..." : "Save"}
                   </Button>
                   <Button
                     variant="outline"

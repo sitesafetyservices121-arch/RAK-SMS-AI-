@@ -1,18 +1,10 @@
 "use server";
 
-import {
-  generateSafeWorkProcedure,
-} from "@/ai/flows/ai-safe-work-procedure-generator";
+import { generateSafeWorkProcedure } from "@/ai/flows/ai-safe-work-procedure-generator";
+import { generatePdfRequest } from "@/lib/pdf";
 
-// ✅ Structured output type
 export type SafeWorkProcedureOutput = {
-  title: string;
-  purpose: string;
-  scope: string;
-  responsibilities: string;
-  procedureSteps: string[];
-  ppeRequirements: string[];
-  emergencyProcedures: string;
+  procedure: string;
 };
 
 type GenerateSafeWorkProcedureInput = {
@@ -20,84 +12,47 @@ type GenerateSafeWorkProcedureInput = {
   taskDescription: string;
 };
 
-// Possible shapes returned by AI
-type RawProcedureUnstructured = { procedure: string };
-type RawProcedureStructured = {
-  title?: string;
-  purpose?: string;
-  scope?: string;
-  responsibilities?: string;
-  procedureSteps?: string[];
-  steps?: string[];
-  ppeRequirements?: string[];
-  emergencyProcedures?: string;
+// We need the user's ID for the PDF generation
+type ActionInput = {
+  values: GenerateSafeWorkProcedureInput;
+  userId: string;
 };
 
-type RawProcedureOutput = RawProcedureUnstructured | RawProcedureStructured;
-
-// 🔍 Type guard: check if rawOutput is unstructured
-function isUnstructured(
-  output: RawProcedureOutput
-): output is RawProcedureUnstructured {
-  return "procedure" in output && typeof output.procedure === "string";
-}
-
 export async function generateSwpAction(
-  input: GenerateSafeWorkProcedureInput
+  input: ActionInput
 ): Promise<
-  | { success: true; data: SafeWorkProcedureOutput }
+  | { success: true; data: SafeWorkProcedureOutput; storagePath: string }
   | { success: false; error: string }
 > {
   try {
-    const rawOutput: RawProcedureOutput = await generateSafeWorkProcedure(input);
+    const rawOutput = await generateSafeWorkProcedure(input.values);
 
-    let normalized: SafeWorkProcedureOutput;
+    // Format the markdown into basic HTML for the PDF
+    const htmlContent = rawOutput.procedure
+      .replace(/## (.*?)\n/g, "<h2>$1</h2>")
+      .replace(/(\* |- ) (.*?)\n/g, "<li>$2</li>")
+      .replace(/(\r\n|\n|\r)/gm, "<br>");
 
-    if (isUnstructured(rawOutput)) {
-      // 📝 Fallback: AI returned a single big string → parse into sections
-      const text = rawOutput.procedure;
-      const sections = text.split(/##\s+/g);
+    // Create the PDF request
+    const fileName = `SWP-${input.values.clientName.replace(
+      /\s+/g,
+      "_"
+    )}-${new Date().toISOString()}.pdf`;
+    const { storagePath } = await generatePdfRequest(
+      input.userId,
+      "safe-work-procedure",
+      fileName,
+      `<h1>Safe Work Procedure</h1>${htmlContent}`,
+      { ...input.values }
+    );
 
-      const findSection = (title: string): string => {
-        const match = sections.find((s) =>
-          s.toLowerCase().startsWith(title.toLowerCase())
-        );
-        if (!match) return "";
-        return match.replace(new RegExp(`^${title}`, "i"), "").trim();
-      };
-
-      normalized = {
-        title: findSection("Title") || input.taskDescription,
-        purpose: findSection("Purpose"),
-        scope: findSection("Scope"),
-        responsibilities: findSection("Responsibilities"),
-        procedureSteps: findSection("Procedure Steps")
-          .split(/\n+/)
-          .filter(Boolean),
-        ppeRequirements: findSection("PPE Requirements")
-          .split(/\n+/)
-          .filter(Boolean),
-        emergencyProcedures: findSection("Emergency Procedures"),
-      };
-    } else {
-      // ✅ Structured response from AI (explicit cast here avoids `never`)
-      const structured = rawOutput as RawProcedureStructured;
-
-      normalized = {
-        title: structured.title ?? input.taskDescription,
-        purpose: structured.purpose ?? "",
-        scope: structured.scope ?? "",
-        responsibilities: structured.responsibilities ?? "",
-        procedureSteps: structured.procedureSteps ?? structured.steps ?? [],
-        ppeRequirements: structured.ppeRequirements ?? [],
-        emergencyProcedures: structured.emergencyProcedures ?? "",
-      };
-    }
-
-    return { success: true, data: normalized };
+    return { success: true, data: rawOutput, storagePath };
   } catch (e: unknown) {
     console.error("Safe Work Procedure Action Error:", e);
-    const error = e instanceof Error ? e.message : "Failed to generate Safe Work Procedure";
+    const error =
+      e instanceof Error
+        ? e.message
+        : "Failed to generate Safe Work Procedure";
     return {
       success: false,
       error,
