@@ -89,7 +89,7 @@ export default function DocumentUploadPage() {
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>>) => {
     setIsLoading(true);
 
     const formData = new FormData();
@@ -215,6 +215,7 @@ export default function DocumentUploadPage() {
                     <Input
                       {...fieldProps}
                       type="file"
+                      value={undefined} 
                       ref={fileInputRef}
                       onChange={(e) => onChange(e.target.files?.[0])}
                       accept=".doc,.docx,.pdf,.xls,.xlsx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -241,4 +242,3 @@ export default function DocumentUploadPage() {
     </Card>
   );
 }
-
