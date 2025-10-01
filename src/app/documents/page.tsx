@@ -165,9 +165,7 @@ export default function DocumentsPage() {
       <CardContent>
         <div className="space-y-8">
           {categoryOrder.map((category) => {
-            const subCategories = groupedDocs[category];
-            if (!subCategories) return null;
-
+            const subCategories = groupedDocs[category] || {};
             const subCategoryKeys =
               category === "Safety"
                 ? safetySubCategoryOrder.filter((key) => subCategories[key])
@@ -176,7 +174,8 @@ export default function DocumentsPage() {
             return (
               <div key={category}>
                 <h2 className="text-2xl font-bold tracking-tight">{category}</h2>
-                {subCategoryKeys.length > 0 ? (
+                 <Separator className="my-2" />
+                {Object.keys(subCategories).length > 0 ? (
                   subCategoryKeys.map((subCategory) => {
                     const docs = subCategories[subCategory];
                     if (!docs) return null;
@@ -225,20 +224,13 @@ export default function DocumentsPage() {
                     );
                   })
                 ) : (
-                  <p className="text-muted-foreground mt-2">
-                    No documents found under this category.
+                  <p className="text-muted-foreground mt-2 text-sm italic">
+                    No documents found in this category.
                   </p>
                 )}
               </div>
             );
           })}
-          {Object.keys(groupedDocs).length === 0 && (
-            <div className="flex h-40 items-center justify-center rounded-md border border-dashed">
-              <p className="text-muted-foreground">
-                No documents found in the library.
-              </p>
-            </div>
-          )}
         </div>
       </CardContent>
     </Card>
