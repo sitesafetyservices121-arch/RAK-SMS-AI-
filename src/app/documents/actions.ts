@@ -21,8 +21,9 @@ export async function getDocumentsAction(): Promise<{
   error?: string;
 }> {
   try {
+    const firestore = await db;
     // Fetch all documents without a complex sort order to avoid needing a composite index.
-    const snapshot = await db.collection("documents").get();
+    const snapshot = await firestore.collection("documents").get();
 
     if (snapshot.empty) {
       return { success: true, data: [] };
@@ -76,7 +77,8 @@ export async function getDocumentSectionsAction(): Promise<{
   error?: string;
 }> {
   try {
-    const snapshot = await db.collection("documents").get();
+    const firestore = await db;
+    const snapshot = await firestore.collection("documents").get();
     if (snapshot.empty) {
       return { success: true, data: [] };
     }

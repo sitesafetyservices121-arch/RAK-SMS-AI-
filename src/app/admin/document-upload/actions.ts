@@ -14,7 +14,7 @@ export async function uploadDocumentAction(formData: FormData) {
     }
 
     // 1. Upload to Firebase Storage
-    const bucket = storage.bucket(); // ✅ now a Bucket
+    const bucket = await storage.bucket(); // ✅ now a Bucket
     const filePath = `documents/${category}/${section}/${Date.now()}-${documentFile.name}`;
     const fileUpload = bucket.file(filePath);
 
@@ -30,7 +30,8 @@ export async function uploadDocumentAction(formData: FormData) {
     const downloadURL = fileUpload.publicUrl();
 
     // 2. Save metadata to Firestore
-    const docRef = db.collection("documents").doc();
+    const firestore = await db;
+    const docRef = firestore.collection("documents").doc();
     await docRef.set({
       id: docRef.id,
       name: documentName,
