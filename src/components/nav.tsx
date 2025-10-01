@@ -30,6 +30,7 @@ import {
   MessageSquare,
   List,
   FolderKanban,
+  UploadCloud,
 } from "lucide-react";
 
 import {
@@ -90,6 +91,7 @@ const adminTools = [
   { href: "/admin/prescription-management", label: "Prescription Mgt", icon: ClipboardCheck },
   { href: "/admin/billing", label: "Billing", icon: CreditCard },
   { href: "/admin/document-upload", label: "Document Upload", icon: Library },
+  { href: "/admin/bulk-import", label: "Bulk Import", icon: UploadCloud },
   { href: "/admin/create-news", label: "Create News", icon: FilePlus },
   { href: "/admin/wilson-training", label: "AI Training", icon: BrainCircuit },
   { href: "/admin/model-inspector", label: "Model Inspector", icon: List },
