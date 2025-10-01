@@ -7,6 +7,7 @@ const TEST_FILE_PDF = "e2e/fixtures/test-document.pdf";
 const TEST_FILE_TXT = "e2e/fixtures/test-document.txt";
 const LARGE_FILE_NAME = "e2e/fixtures/large-file.pdf";
 const LARGE_FILE_SIZE_MB = 11;
+const MAX_FILE_SIZE_MB = 10; // This constant was missing
 
 // Create a dummy large file for testing the size validation
 const createLargeFile = () => {
@@ -87,5 +88,3 @@ test.describe("Admin Document Upload with Validation", () => {
     await expect(successToast).toBeVisible();
   });
 });
-
-    
