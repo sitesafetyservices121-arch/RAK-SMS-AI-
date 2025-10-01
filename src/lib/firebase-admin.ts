@@ -36,7 +36,7 @@ async function initializeAdmin() {
 
     const app = admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
-      storageBucket: `${serviceAccount.project_id}.appspot.com`,
+      storageBucket: "studio-1886793043-bca30.appspot.com",
     });
     
     // Check and create bucket if it doesn't exist
