@@ -59,11 +59,21 @@ export default function SdsManagementPage() {
 
     const formData = new FormData(e.currentTarget);
     const productName = formData.get("productName") as string;
+    const supplier = formData.get("supplier") as string;
     const file = formData.get("sdsFile") as File;
 
-    // Simulate upload
+    // Simulate upload and state update
     setTimeout(() => {
-      if (productName && file && file.size > 0) {
+      if (productName && supplier && file && file.size > 0) {
+        const newDoc: SdsDocument = {
+          id: `sds-${Date.now()}`,
+          productName,
+          supplier,
+          revisionDate: new Date().toISOString().split("T")[0],
+          fileUrl: URL.createObjectURL(file), // Create a temporary URL for the new file
+        };
+        setSdsDocuments((prev) => [newDoc, ...prev]);
+
         toast({
           title: "Upload Successful",
           description: `SDS for ${productName} has been uploaded.`,

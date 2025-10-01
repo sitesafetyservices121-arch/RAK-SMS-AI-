@@ -18,9 +18,7 @@ import { Separator } from "@/components/ui/separator";
 import { User, Car, MapPin, Save, Download } from "lucide-react";
 import {
   initialEmployees,
-  Employee,
   initialVehicles,
-  Vehicle,
   Site,
   initialSites,
 } from "@/lib/site-resource-data";
@@ -39,7 +37,7 @@ interface jsPDFWithAutoTable extends jsPDF {
 
 export default function SiteResourceTrackerPage() {
   const { toast } = useToast();
-  const [sites, setSites] = useState<Site[]>(initialSites);
+  const [sites] = useState<Site[]>(initialSites);
   const [employeeAssignments, setEmployeeAssignments] = useState<
     Record<string, string>
   >({});
