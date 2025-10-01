@@ -30,7 +30,9 @@ import {
   CreditCard,
   MessageSquare,
   List,
+  FlaskConical,
 } from "lucide-react";
+
 import {
   Sidebar,
   SidebarHeader,
@@ -39,13 +41,13 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
-import { AppLogo } from "@/components/app-logo";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import React from "react";
+
+import { AppLogo } from "@/components/app-logo";
 import { WilsonLogo } from "@/components/wilson-logo";
 
 const menuItems = [
@@ -63,6 +65,7 @@ const managementTools = [
   { href: "/vehicle-inspection-tracker", label: "Vehicle Inspection", icon: Car },
   { href: "/ppe-issue-register", label: "PPE Issue Register", icon: Shirt },
   { href: "/toolbox-talks", label: "Toolbox Talks", icon: MessageSquare },
+  { href: "/sds-management", label: "SDS Management", icon: FlaskConical },
 ];
 
 const aiTools = [
@@ -96,9 +99,8 @@ const adminTools = [
 
 export function AppNav() {
   const pathname = usePathname();
-  const isActive = (path: string) => pathname === path;
-  const isSectionActive = (items: { href: string }[]) =>
-    items.some((item) => isActive(item.href));
+  const isActive = (path: string) =>
+    pathname === path || pathname.startsWith(path + "/");
 
   return (
     <Sidebar>
@@ -107,7 +109,7 @@ export function AppNav() {
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
-          {/* Top-level items */}
+          {/* Main menu items */}
           {menuItems.map((item) => (
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton
@@ -116,7 +118,7 @@ export function AppNav() {
                 tooltip={{ children: item.label, side: "right", align: "center" }}
               >
                 <Link href={item.href}>
-                  <item.icon />
+                  <item.icon className="h-4 w-4" />
                   <span>{item.label}</span>
                 </Link>
               </SidebarMenuButton>
@@ -124,16 +126,19 @@ export function AppNav() {
           ))}
 
           {/* Management Tools */}
-          <Collapsible asChild defaultOpen={isSectionActive(managementTools)}>
+          <Collapsible asChild>
             <SidebarMenuItem>
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton
                   className="justify-between"
-                  tooltip={{ children: "Management Tools", side: "right", align: "center" }}
-                  aria-expanded={isSectionActive(managementTools)}
+                  tooltip={{
+                    children: "Management Tools",
+                    side: "right",
+                    align: "center",
+                  }}
                 >
                   <div className="flex items-center gap-2">
-                    <Briefcase />
+                    <Briefcase className="h-4 w-4" />
                     <span>Management Tools</span>
                   </div>
                   <ChevronDown className="h-4 w-4 transition-transform [&[data-state=open]]:rotate-180" />
@@ -150,7 +155,7 @@ export function AppNav() {
                         tooltip={{ children: item.label, side: "right", align: "center" }}
                       >
                         <Link href={item.href}>
-                          <item.icon />
+                          <item.icon className="h-4 w-4" />
                           <span>{item.label}</span>
                         </Link>
                       </SidebarMenuButton>
@@ -162,16 +167,19 @@ export function AppNav() {
           </Collapsible>
 
           {/* AI Tools */}
-          <Collapsible asChild defaultOpen={isSectionActive(aiTools)}>
+          <Collapsible asChild>
             <SidebarMenuItem>
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton
                   className="justify-between"
-                  tooltip={{ children: "AI Tools", side: "right", align: "center" }}
-                  aria-expanded={isSectionActive(aiTools)}
+                  tooltip={{
+                    children: "AI Tools",
+                    side: "right",
+                    align: "center",
+                  }}
                 >
                   <div className="flex items-center gap-2">
-                    <Bot />
+                    <Bot className="h-4 w-4" />
                     <span>AI Tools</span>
                   </div>
                   <ChevronDown className="h-4 w-4 transition-transform [&[data-state=open]]:rotate-180" />
@@ -188,7 +196,7 @@ export function AppNav() {
                         tooltip={{ children: item.label, side: "right", align: "center" }}
                       >
                         <Link href={item.href}>
-                          <item.icon />
+                          <item.icon className="h-4 w-4" />
                           <span>{item.label}</span>
                         </Link>
                       </SidebarMenuButton>
@@ -208,6 +216,7 @@ export function AppNav() {
                 tooltip={{ children: item.label, side: "right", align: "center" }}
               >
                 <Link href={item.href}>
+                  {/* WilsonLogo is a React component, so no className injection */}
                   <item.icon />
                   <span>{item.label}</span>
                 </Link>
@@ -216,16 +225,19 @@ export function AppNav() {
           ))}
 
           {/* My Account */}
-          <Collapsible asChild defaultOpen={isSectionActive(accountItems)}>
+          <Collapsible asChild>
             <SidebarMenuItem>
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton
                   className="justify-between"
-                  tooltip={{ children: "My Account", side: "right", align: "center" }}
-                  aria-expanded={isSectionActive(accountItems)}
+                  tooltip={{
+                    children: "My Account",
+                    side: "right",
+                    align: "center",
+                  }}
                 >
                   <div className="flex items-center gap-2">
-                    <User />
+                    <User className="h-4 w-4" />
                     <span>My Account</span>
                   </div>
                   <ChevronDown className="h-4 w-4 transition-transform [&[data-state=open]]:rotate-180" />
@@ -242,7 +254,7 @@ export function AppNav() {
                         tooltip={{ children: item.label, side: "right", align: "center" }}
                       >
                         <Link href={item.href}>
-                          <item.icon />
+                          <item.icon className="h-4 w-4" />
                           <span>{item.label}</span>
                         </Link>
                       </SidebarMenuButton>
@@ -254,16 +266,19 @@ export function AppNav() {
           </Collapsible>
 
           {/* Admin */}
-          <Collapsible asChild defaultOpen={isSectionActive(adminTools)}>
+          <Collapsible asChild>
             <SidebarMenuItem>
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton
                   className="justify-between"
-                  tooltip={{ children: "Admin", side: "right", align: "center" }}
-                  aria-expanded={isSectionActive(adminTools)}
+                  tooltip={{
+                    children: "Admin",
+                    side: "right",
+                    align: "center",
+                  }}
                 >
                   <div className="flex items-center gap-2">
-                    <Shield />
+                    <Shield className="h-4 w-4" />
                     <span>Admin</span>
                   </div>
                   <ChevronDown className="h-4 w-4 transition-transform [&[data-state=open]]:rotate-180" />
@@ -280,7 +295,7 @@ export function AppNav() {
                         tooltip={{ children: item.label, side: "right", align: "center" }}
                       >
                         <Link href={item.href}>
-                          <item.icon />
+                          <item.icon className="h-4 w-4" />
                           <span>{item.label}</span>
                         </Link>
                       </SidebarMenuButton>
