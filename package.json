@@ -12,7 +12,8 @@
     "type-check": "tsc --noEmit",
     "postinstall": "patch-package",
     "test": "playwright test",
-    "test:api": "bash e2e/api-login.sh"
+    "test:api": "bash e2e/api-login.sh",
+    "seed:storeroom": "dotenv -e .env.local tsx scripts/seed-storeroom.ts"
   },
   "dependencies": {
     "@genkit-ai/google-genai": "1.20.0",
@@ -43,6 +44,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
     "date-fns": "^3.6.0",
+    "dotenv": "^17.2.3",
     "embla-carousel-react": "^8.1.5",
     "firebase": "^12.3.0",
     "firebase-admin": "^12.1.1",

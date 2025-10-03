@@ -78,10 +78,20 @@ export default function TopUpPage() {
 
       const response = await generatePayFastSignatureAction(paymentData);
 
+      if (!process.env.NEXT_PUBLIC_PAYFAST_URL) {
+        toast({
+          variant: "destructive",
+          title: "Configuration Error",
+          description: "PayFast URL is not configured. Please contact support.",
+        });
+        setIsLoading(false);
+        return;
+      }
+
       if (response.success && response.data) {
         const payfastForm = document.createElement("form");
         payfastForm.method = "POST";
-        payfastForm.action = "https://sandbox.payfast.co.za/eng/process";
+        payfastForm.action = process.env.NEXT_PUBLIC_PAYFAST_URL;
         payfastForm.style.display = "none";
 
         const allData: PayFastFormData = {

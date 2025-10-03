@@ -1,8 +1,9 @@
 export const firebaseConfig = {
-  "projectId": "rak-sms-ai-original-8604-15199",
-  "appId": "1:155016620289:web:3747314d0f5bdc2bae9300",
-  "apiKey": "AIzaSyDWUALoi9wbHXpk5THJ5xEwUTKEE5RtYKE",
-  "authDomain": "rak-sms-ai-original-8604-15199.firebaseapp.com",
-  "measurementId": "",
-  "messagingSenderId": "155016620289"
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
 };
