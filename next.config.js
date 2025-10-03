@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: "export", // ✅ replaces next export
   reactStrictMode: true, // Recommended for highlighting potential problems
   experimental: {
     serverActions: {
