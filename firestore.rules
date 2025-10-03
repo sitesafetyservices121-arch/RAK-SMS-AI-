@@ -1,0 +1,152 @@
+/**
+ * @fileoverview Firestore Security Rules for the application.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a combination of public read access for some collections (e.g., `/documents`, `/ohs_consultations`) and strict user-ownership for data stored under `/users/{userId}`.  Write access to public collections is restricted to authenticated users and relies on an ownership field within the document. User-owned data can only be created, read, updated, or deleted by the user to whom it belongs.
+ *
+ * Data Structure:
+ * - `/documents/{documentId}`: Publicly readable collection of safety documents.  Writes are restricted to authenticated users who own the document (based on an `ownerId` field).
+ * - `/users/{userId}/she_plans/{shePlanId}`: SHE plans specific to a user. Only the user can access these.
+ * - `/users/{userId}/hiras/{hiraId}`: HIRAs specific to a user. Only the user can access these.
+ * - `/users/{userId}/safe_work_procedures/{safeWorkProcedureId}`: Safe Work Procedures specific to a user. Only the user can access these.
+ * - `/users/{userId}/method_statements/{methodStatementId}`: Method Statements specific to a user. Only the user can access these.
+ * - `/users/{userId}/ltir_analyses/{ltirAnalysisId}`: LTIR Analyses specific to a user. Only the user can access these.
+ * - `/ohs_consultations/{ohsConsultationId}`: Publicly readable collection of OHS consultation data. Writes are restricted to authenticated users who own the document (based on an `ownerId` field).
+ *
+ * Key Security Decisions:
+ * - Public read access for `/documents` and `/ohs_consultations` allows for open access to safety information.
+ * - Strict user-ownership for data under `/users/{userId}` ensures privacy and control over user-generated content.
+ * - Listing of documents in user-specific subcollections is allowed only for the owner.
+ *
+ * Denormalization for Authorization:
+ * The `/documents` and `/ohs_consultations` collections MUST contain an `ownerId` or `authorId` field to enable write access controls.
+ *
+ * Structural Segregation:
+ * User-specific data is stored in private subcollections under `/users/{userId}` to ensure that list operations do not expose private data to other users. Public data is stored in top-level collections.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Allows public read access to documents, but restricts writes to owners.
+     * @path /documents/{documentId}
+     * @allow (get, list): Any user can read the document.
+     * @allow (create): Only the authenticated user who is the owner can create. The `ownerId` field must match `request.auth.uid`.
+     * @allow (update, delete): Only the authenticated user who is the owner of the existing document can modify/delete it.
+     * @deny (create): An unauthenticated user attempts to create a document.
+     * @deny (update, delete): A user attempts to modify/delete a document they don't own.
+     * @principle Allows open access to documents for reading, enforces document ownership for writes.
+     */
+    match /documents/{documentId} {
+      allow get, list: if true;
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid; // CRITICAL: Assuming `ownerId` field exists in the Document schema.
+      allow update, delete: if isSignedIn() && isExistingOwner(resource.data.ownerId); // CRITICAL: Assuming `ownerId` field exists in the Document schema.
+      // TODO: Add owner validation once the schema is updated with an ownership field.
+    }
+
+    /**
+     * @description Allows a user to manage their own SHE plans.
+     * @path /users/{userId}/she_plans/{shePlanId}
+     * @allow (get, list): The user with ID {userId} can read their own SHE plans.
+     * @allow (create, update, delete): The user with ID {userId} can create, update, and delete their own SHE plans.
+     * @deny (get, list, create, update, delete): Any other user attempts to access this data.
+     * @principle Restricts access to a user's own data tree.
+     */
+    match /users/{userId}/she_plans/{shePlanId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) && resource != null;
+      allow delete: if isOwner(userId) && resource != null;
+    }
+
+    /**
+     * @description Allows a user to manage their own HIRAs.
+     * @path /users/{userId}/hiras/{hiraId}
+     * @allow (get, list): The user with ID {userId} can read their own HIRAs.
+     * @allow (create, update, delete): The user with ID {userId} can create, update, and delete their own HIRAs.
+     * @deny (get, list, create, update, delete): Any other user attempts to access this data.
+     * @principle Restricts access to a user's own data tree.
+     */
+    match /users/{userId}/hiras/{hiraId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) && resource != null;
+      allow delete: if isOwner(userId) && resource != null;
+    }
+
+    /**
+     * @description Allows a user to manage their own Safe Work Procedures.
+     * @path /users/{userId}/safe_work_procedures/{safeWorkProcedureId}
+     * @allow (get, list): The user with ID {userId} can read their own Safe Work Procedures.
+     * @allow (create, update, delete): The user with ID {userId} can create, update, and delete their own Safe Work Procedures.
+     * @deny (get, list, create, update, delete): Any other user attempts to access this data.
+     * @principle Restricts access to a user's own data tree.
+     */
+    match /users/{userId}/safe_work_procedures/{safeWorkProcedureId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) && resource != null;
+      allow delete: if isOwner(userId) && resource != null;
+    }
+
+    /**
+     * @description Allows a user to manage their own Method Statements.
+     * @path /users/{userId}/method_statements/{methodStatementId}
+     * @allow (get, list): The user with ID {userId} can read their own Method Statements.
+     * @allow (create, update, delete): The user with ID {userId} can create, update, and delete their own Method Statements.
+     * @deny (get, list, create, update, delete): Any other user attempts to access this data.
+     * @principle Restricts access to a user's own data tree.
+     */
+    match /users/{userId}/method_statements/{methodStatementId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) && resource != null;
+      allow delete: if isOwner(userId) && resource != null;
+    }
+
+    /**
+     * @description Allows a user to manage their own LTIR Analyses.
+     * @path /users/{userId}/ltir_analyses/{ltirAnalysisId}
+     * @allow (get, list): The user with ID {userId} can read their own LTIR Analyses.
+     * @allow (create, update, delete): The user with ID {userId} can create, update, and delete their own LTIR Analyses.
+     * @deny (get, list, create, update, delete): Any other user attempts to access this data.
+     * @principle Restricts access to a user's own data tree.
+     */
+    match /users/{userId}/ltir_analyses/{ltirAnalysisId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) && resource != null;
+      allow delete: if isOwner(userId) && resource != null;
+    }
+
+     /**
+     * @description Allows public read access to OHS consultation data, but restricts writes to owners.
+     * @path /ohs_consultations/{ohsConsultationId}
+     * @allow (get, list): Any user can read the OHS consultation data.
+     * @allow (create): Only the authenticated user who is the owner can create. The `ownerId` field must match `request.auth.uid`.
+     * @allow (update, delete): Only the authenticated user who is the owner of the existing consultation data can modify/delete it.
+     * @deny (create): An unauthenticated user attempts to create consultation data.
+     * @deny (update, delete): A user attempts to modify/delete consultation data they don't own.
+     */
+    match /ohs_consultations/{ohsConsultationId} {
+      allow get, list: if true;
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid; // CRITICAL: Assuming `ownerId` field exists in the OhsConsultation schema.
+      allow update, delete: if isSignedIn() && isExistingOwner(resource.data.ownerId); // CRITICAL: Assuming `ownerId` field exists in the OhsConsultation schema.
+      // TODO: Add owner validation once the schema is updated with an ownership field.
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+  }
+}
