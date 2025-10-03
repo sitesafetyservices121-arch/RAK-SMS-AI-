@@ -3,9 +3,9 @@ const nextConfig = {
   output: "export", // ✅ replaces next export
   reactStrictMode: true, // Recommended for highlighting potential problems
   experimental: {
-    serverActions: {
-      allowedOrigins: ["*.google.com"],
-    },
+    // serverActions: {
+    //   allowedOrigins: ["*.google.com"],
+    // },
   },
   // Add allowedDevOrigins to address cross-origin warnings in development
   allowedDevOrigins: ["*.google.com"],
