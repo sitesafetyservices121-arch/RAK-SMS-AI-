@@ -3,6 +3,8 @@ import type {NextRequest} from 'next/server';
 import crypto from 'crypto';
 import {db} from '@/lib/firebase-admin';
 
+export const dynamic = "force-static"; // Ensures this API route is compatible with static export
+
 // Helper function to generate a PayFast signature from the request body.
 const generateSignature = (
   requestBody: string,
