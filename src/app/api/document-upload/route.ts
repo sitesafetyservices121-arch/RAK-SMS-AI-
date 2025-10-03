@@ -3,6 +3,8 @@ import { NextResponse, NextRequest } from "next/server";
 import { db, storage, auth as adminAuth } from "@/lib/firebase-admin";
 import { headers } from "next/headers";
 
+export const dynamic = "force-static"; // Ensures this API route is compatible with static export
+
 const MAX_FILE_SIZE_MB = 10;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 const ALLOWED_FILE_TYPES = [
