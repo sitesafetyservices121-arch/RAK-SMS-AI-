@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/firebase-admin";
 
+export const dynamic = "force-static"; // Ensures this API route is compatible with static export
+
 export async function GET() {
   try {
     const snapshot = await db.collection("documents").get();
