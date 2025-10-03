@@ -41,6 +41,10 @@ function initializeFirebaseAdmin(): void {
     throw new Error("FIREBASE_STORAGE_BUCKET environment variable is not set.");
   }
 
+  // TEMPORARY DEBUG LOG: REMOVE BEFORE PRODUCTION
+  console.log("DEBUG: FIREBASE_PRIVATE_KEY (raw):", process.env.FIREBASE_PRIVATE_KEY);
+  console.log("DEBUG: FIREBASE_PRIVATE_KEY (parsed):", process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"));
+
   try {
     // Initialize Firebase Admin app
     app = admin.initializeApp({
