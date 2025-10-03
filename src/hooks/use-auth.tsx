@@ -9,13 +9,17 @@ import {
   UserCredential,
   sendPasswordResetEmail,
   updateProfile,
+  createUserWithEmailAndPassword,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase-client";
+import { setDoc, doc } from "firebase/firestore";
+import { db } from "@/lib/firebase-client";
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<UserCredential>;
+  signUp: (email: string, password: string, displayName: string) => Promise<UserCredential>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updateUserProfile: (displayName: string, photoURL?: string) => Promise<void>;
@@ -40,9 +44,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       return userCredential;
     } catch (error: any) {
-      // Transform Firebase errors into user-friendly messages
       let message = "Failed to sign in";
-      
       switch (error.code) {
         case "auth/invalid-email":
           message = "Invalid email address";
@@ -65,10 +67,43 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         default:
           message = error.message || "An error occurred during sign in";
       }
-      
       throw new Error(message);
     }
   };
+
+  const signUp = async (email: string, password: string, displayName: string): Promise<UserCredential> => {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      await updateProfile(user, { displayName });
+      
+      // Also create a user profile document in Firestore
+      await setDoc(doc(db, "users", user.uid), {
+        displayName: displayName,
+        email: user.email,
+      });
+
+      setUser({ ...user, displayName }); // Update local state
+      return userCredential;
+    } catch (error: any) {
+      let message = "Failed to sign up";
+      switch (error.code) {
+        case "auth/email-already-in-use":
+          message = "This email address is already in use.";
+          break;
+        case "auth/invalid-email":
+          message = "Please enter a valid email address.";
+          break;
+        case "auth/weak-password":
+          message = "The password is too weak.";
+          break;
+        default:
+          message = error.message || "An unknown error occurred during sign up.";
+      }
+      throw new Error(message);
+    }
+  };
+
 
   const signOut = async (): Promise<void> => {
     try {
@@ -100,17 +135,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const updateUserProfile = async (displayName: string, photoURL?: string): Promise<void> => {
-    if (!user) {
+    if (!auth.currentUser) {
       throw new Error("No user is currently signed in");
     }
 
     try {
-      await updateProfile(user, {
+      await updateProfile(auth.currentUser, {
         displayName,
         ...(photoURL && { photoURL }),
       });
       // Trigger a refresh of the user object
-      await user.reload();
+      await auth.currentUser.reload();
       setUser(auth.currentUser);
     } catch (error: any) {
       throw new Error(error.message || "Failed to update profile");
@@ -124,6 +159,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     signOut,
     resetPassword,
     updateUserProfile,
+    signUp,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

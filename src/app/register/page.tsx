@@ -26,42 +26,43 @@ import {
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import LoadingDots from "@/components/ui/loading-dots";
-import { LogIn, Eye, EyeOff } from "lucide-react";
+import { UserPlus, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { AppLogo } from "@/components/app-logo";
 
 const formSchema = z.object({
   email: z.string().email("Please enter a valid email address."),
-  password: z.string().min(1, "Password is required."),
+  password: z.string().min(6, "Password must be at least 6 characters."),
+  displayName: z.string().min(1, "Display name is required."),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const { toast } = useToast();
-  const { signIn } = useAuth();
+  const { signUp } = useAuth();
   const router = useRouter();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { email: "", password: "" },
+    defaultValues: { email: "", password: "", displayName: "" },
   });
 
   async function onSubmit(values: FormValues) {
     setIsLoading(true);
     try {
-      await signIn(values.email, values.password);
+      await signUp(values.email, values.password, values.displayName);
       toast({
-        title: "Login Successful",
-        description: "Welcome back!",
+        title: "Registration Successful",
+        description: "Welcome!",
       });
       router.push("/dashboard");
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Login Failed",
+        title: "Registration Failed",
         description: error.message || "An unknown error occurred.",
       });
     } finally {
@@ -76,14 +77,31 @@ export default function LoginPage() {
           <div className="mx-auto mb-4">
             <AppLogo />
           </div>
-          <CardTitle>Welcome Back</CardTitle>
+          <CardTitle>Create an Account</CardTitle>
           <CardDescription>
-            Sign in to access your Safety Management System.
+            Join to access the Safety Management System.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+               <FormField
+                control={form.control}
+                name="displayName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Full Name</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="e.g. John Doe"
+                        {...field}
+                        disabled={isLoading}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="email"
@@ -108,22 +126,13 @@ export default function LoginPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <div className="flex items-center justify-between">
-                      <FormLabel>Password</FormLabel>
-                      <Link
-                        href="/forgot-password"
-                        className="text-xs text-muted-foreground hover:text-primary transition-colors"
-                        tabIndex={-1}
-                      >
-                        Forgot password?
-                      </Link>
-                    </div>
+                     <FormLabel>Password</FormLabel>
                     <FormControl>
                       <div className="relative">
                         <Input
                           type={showPassword ? "text" : "password"}
                           placeholder="••••••••"
-                          autoComplete="current-password"
+                          autoComplete="new-password"
                           {...field}
                           disabled={isLoading}
                           className="pr-10"
@@ -152,21 +161,21 @@ export default function LoginPage() {
                   <LoadingDots />
                 ) : (
                   <>
-                    <LogIn className="mr-2 h-4 w-4" /> Sign In
+                    <UserPlus className="mr-2 h-4 w-4" /> Sign Up
                   </>
                 )}
               </Button>
             </form>
           </Form>
         </CardContent>
-        <CardFooter className="flex flex-col space-y-4">
-          <div className="text-sm text-muted-foreground text-center">
-            Don&apos;t have an account?{" "}
+        <CardFooter>
+          <div className="text-sm text-muted-foreground text-center w-full">
+            Already have an account?{" "}
             <Link
-              href="/register"
+              href="/login"
               className="text-primary hover:underline font-medium"
             >
-              Sign up
+              Sign in
             </Link>
           </div>
         </CardFooter>
