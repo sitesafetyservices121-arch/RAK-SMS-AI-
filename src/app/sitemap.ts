@@ -1,5 +1,7 @@
 import { MetadataRoute } from 'next';
 
+export const revalidate = false; // Ensures the sitemap is compatible with static export
+
 const staticRoutes = [
   '',
   '/dashboard',
