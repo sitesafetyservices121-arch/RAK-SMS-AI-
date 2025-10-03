@@ -4,7 +4,7 @@ import {
   generateShePlan,
   GenerateShePlanOutput,
 } from "@/ai/flows/ai-she-plan-from-prompt";
-import { generatePdfRequest } from "@/lib/pdf";
+// import { generatePdfRequest } from "@/lib/pdf";
 import { auth } from "@/lib/firebase-admin"; // Assuming you have this
 
 type GenerateShePlanInput = {
@@ -43,16 +43,16 @@ export async function generateShePlanAction(
     `;
 
     // 3. Create the PDF request
-    const fileName = `SHE-Plan-${new Date().toISOString()}.pdf`;
-    const { storagePath } = await generatePdfRequest(
-      input.userId,
-      "she-plan",
-      fileName,
-      htmlContent,
-      { projectDescription: input.values.projectDescription }
-    );
+    // const fileName = `SHE-Plan-${new Date().toISOString()}.pdf`;
+    // const { storagePath } = await generatePdfRequest(
+    //   input.userId,
+    //   "she-plan",
+    //   fileName,
+    //   htmlContent,
+    //   { projectDescription: input.values.projectDescription }
+    // );
 
-    return { success: true, data: output, storagePath };
+    return { success: true, data: output, storagePath: "" }; // Modified to return empty storagePath
   } catch (e: unknown) {
     console.error("SHE Plan generation error:", e);
     const error =

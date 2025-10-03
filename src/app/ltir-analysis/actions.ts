@@ -1,7 +1,7 @@
 "use server";
 
 import { analyzeLtirTrend } from "@/ai/flows/ai-ltir-trend-analysis";
-import { generatePdfRequest } from "@/lib/pdf";
+// import { generatePdfRequest } from "@/lib/pdf";
 
 export type AnalyzeLtirTrendInput = {
   numberOfInjuries: number;
@@ -66,11 +66,11 @@ export async function saveLtirReportAction(
       <p>${analysisResult.recommendations}</p>
     `;
 
-    const fileName = `LTIR-Analysis-${new Date().toISOString()}.pdf`;
-    await generatePdfRequest(userId, "ltir-analysis", fileName, htmlContent, {
-      ...formValues,
-      calculatedLtir,
-    });
+    // const fileName = `LTIR-Analysis-${new Date().toISOString()}.pdf`;
+    // await generatePdfRequest(userId, "ltir-analysis", fileName, htmlContent, {
+    //   ...formValues,
+    //   calculatedLtir,
+    // });
 
     return { success: true };
   } catch (e: unknown) {

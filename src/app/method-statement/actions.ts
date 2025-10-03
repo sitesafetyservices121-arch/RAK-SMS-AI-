@@ -1,7 +1,7 @@
 "use server";
 
 import { generateMethodStatement } from "@/ai/flows/ai-method-statement-generator";
-import { generatePdfRequest } from "@/lib/pdf";
+// import { generatePdfRequest } from "@/lib/pdf";
 
 export type MethodStatementOutput = {
   methodStatement: string;
@@ -42,19 +42,19 @@ export async function generateMethodStatementAction(
         .replace(/(\r\n|\n|\r)/gm, "<br>");
 
       // Create the PDF request
-      const fileName = `Method-Statement-${input.values.clientName.replace(
-        /\s+/g,
-        "_"
-      )}-${new Date().toISOString()}.pdf`;
-      const { storagePath } = await generatePdfRequest(
-        input.userId,
-        "method-statement",
-        fileName,
-        `<h1>Method Statement</h1>${htmlContent}`,
-        { ...input.values }
-      );
+      // const fileName = `Method-Statement-${input.values.clientName.replace(
+      //   /\s+/g,
+      //   "_"
+      // )}-${new Date().toISOString()}.pdf`;
+      // const { storagePath } = await generatePdfRequest(
+      //   input.userId,
+      //   "method-statement",
+      //   fileName,
+      //   `<h1>Method Statement</h1>${htmlContent}`,
+      //   { ...input.values }
+      // );
 
-      return { success: true, data: defaultOutput, storagePath };
+      return { success: true, data: defaultOutput, storagePath: "" }; // Modified to return empty storagePath
     } else {
       throw new Error(
         "AI returned an unexpected data structure. Expected 'methodStatement' string."

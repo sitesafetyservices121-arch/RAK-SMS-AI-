@@ -1,7 +1,7 @@
 "use server";
 
 import { generateSafeWorkProcedure } from "@/ai/flows/ai-safe-work-procedure-generator";
-import { generatePdfRequest } from "@/lib/pdf";
+// import { generatePdfRequest } from "@/lib/pdf";
 
 export type SafeWorkProcedureOutput = {
   procedure: string;
@@ -34,19 +34,19 @@ export async function generateSwpAction(
       .replace(/(\r\n|\n|\r)/gm, "<br>");
 
     // Create the PDF request
-    const fileName = `SWP-${input.values.clientName.replace(
-      /\s+/g,
-      "_"
-    )}-${new Date().toISOString()}.pdf`;
-    const { storagePath } = await generatePdfRequest(
-      input.userId,
-      "safe-work-procedure",
-      fileName,
-      `<h1>Safe Work Procedure</h1>${htmlContent}`,
-      { ...input.values }
-    );
+    // const fileName = `SWP-${input.values.clientName.replace(
+    //   /\s+/g,
+    //   "_"
+    // )}-${new Date().toISOString()}.pdf`;
+    // const { storagePath } = await generatePdfRequest(
+    //   input.userId,
+    //   "safe-work-procedure",
+    //   fileName,
+    //   `<h1>Safe Work Procedure</h1>${htmlContent}`,
+    //   { ...input.values }
+    // );
 
-    return { success: true, data: rawOutput, storagePath };
+    return { success: true, data: rawOutput, storagePath: "" }; // Modified to return empty storagePath
   } catch (e: unknown) {
     console.error("Safe Work Procedure Action Error:", e);
     const error =
