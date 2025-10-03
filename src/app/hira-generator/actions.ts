@@ -1,7 +1,7 @@
 "use server";
 
 import { generateHira } from "@/ai/flows/ai-hira-generator";
-import { generatePdfRequest } from "@/lib/pdf";
+// import { generatePdfRequest } from "@/lib/pdf";
 
 export type HiraInput = {
   projectDetails: string;
@@ -38,16 +38,16 @@ export async function generateHiraAction(
     `;
 
     // 3. Create the PDF request
-    const fileName = `HIRA-Report-${new Date().toISOString()}.pdf`;
-    const { storagePath } = await generatePdfRequest(
-      input.userId,
-      "hira",
-      fileName,
-      htmlContent,
-      { ...input.values }
-    );
+    // const fileName = `HIRA-Report-${new Date().toISOString()}.pdf`;
+    // const { storagePath } = await generatePdfRequest(
+    //   input.userId,
+    //   "hira",
+    //   fileName,
+    //   htmlContent,
+    //   { ...input.values }
+    // );
 
-    return { success: true, data: output, storagePath };
+    return { success: true, data: output, storagePath: "" }; // Modified to return empty storagePath
   } catch (e: unknown) {
     console.error("generateHiraAction error:", e);
     const message = e instanceof Error ? e.message : "Unknown error occurred";
