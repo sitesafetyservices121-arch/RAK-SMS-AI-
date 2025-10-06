@@ -19,6 +19,7 @@ const nextConfig = {
     // Allows Next.js dev server access from Firebase Studio
     allowedDevOrigins: [
       "*.cluster-fbfjltn375c6wqxlhoehbz44sk.cloudworkstations.dev",
+      "9000-firebase-studio-1759140212143.cluster-fbfjltn375c6wqxlhoehbz44sk.cloudworkstations.dev",
     ],
   },
 
