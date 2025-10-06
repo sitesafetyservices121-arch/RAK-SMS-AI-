@@ -1,5 +1,5 @@
 
-const path = require("path");
+import { resolve } from "path";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -71,7 +71,7 @@ const nextConfig = {
     }
 
     // Set up path alias
-    config.resolve.alias["@"] = path.resolve(__dirname, "src");
+    config.resolve.alias["@"] = resolve(__dirname, "src");
 
     // Add WebAssembly async support
     config.module.rules.push({
@@ -95,4 +95,4 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+export default nextConfig;
