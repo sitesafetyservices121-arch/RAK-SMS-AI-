@@ -34,46 +34,61 @@ import { useAuth } from "@/hooks/use-auth";
 import LoadingDots from "@/components/ui/loading-dots";
 import { Progress } from "@/components/ui/progress";
 
-
 const MAX_FILE_SIZE_MB = 10;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
-const ALLOWED_FILE_TYPES = [
+const BASE_ALLOWED_FILE_TYPES = [
   "application/pdf",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   "application/vnd.ms-excel",
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 ];
+const WORD_FILE_TYPES = [
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+];
 
-const uploadSchema = z.object({
-  category: z.string().min(1, "Category is required"),
-  section: z.string().min(3, "Section must be at least 3 characters"),
-  documentName: z
-    .string()
-    .min(3, "Document name must be at least 3 characters"),
-  document: z
-    .any()
-    .refine((files) => files?.length === 1, "A file must be selected.")
-    .refine(
-      (files) => files?.[0]?.size <= MAX_FILE_SIZE_BYTES,
-      `File size must be less than ${MAX_FILE_SIZE_MB}MB.`
-    )
-    .refine(
-      (files) => ALLOWED_FILE_TYPES.includes(files?.[0]?.type),
-      "Invalid file type. Only PDF, Word, or Excel files are allowed."
-    ),
-});
+const createUploadSchema = (allowedFileTypes: string[]) =>
+  z.object({
+    category: z.string().min(1, "Category is required"),
+    section: z.string().min(3, "Section must be at least 3 characters"),
+    documentName: z
+      .string()
+      .min(3, "Document name must be at least 3 characters"),
+    document: z
+      .any()
+      .refine((files) => files?.length === 1, "A file must be selected.")
+      .refine(
+        (files) => files?.[0]?.size <= MAX_FILE_SIZE_BYTES,
+        `File size must be less than ${MAX_FILE_SIZE_MB}MB.`
+      )
+      .refine(
+        (files) => allowedFileTypes.includes(files?.[0]?.type),
+        "Invalid file type. Only supported document formats are allowed."
+      ),
+  });
 
-type UploadFormValues = z.infer<typeof uploadSchema>;
+type UploadFormValues = z.infer<ReturnType<typeof createUploadSchema>>;
 
 export default function DocumentUploadPage() {
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  
+
   // Mock data, as we removed the backend data fetching
-  const allDocs: any[] = [];
+  const allDocs: any[] = useMemo(() => [], []);
+
+  const allowedFileTypes = useMemo(() => {
+    const types = [...BASE_ALLOWED_FILE_TYPES];
+    if (user?.role === "admin") {
+      types.push(...WORD_FILE_TYPES);
+    }
+    return types;
+  }, [user?.role]);
+
+  const uploadSchema = useMemo(
+    () => createUploadSchema(allowedFileTypes),
+    [allowedFileTypes]
+  );
 
   const form = useForm<UploadFormValues>({
     resolver: zodResolver(uploadSchema),
@@ -241,7 +256,7 @@ export default function DocumentUploadPage() {
                       <FormControl>
                         <Input
                           type="file"
-                          accept={ALLOWED_FILE_TYPES.join(",")}
+                          accept={allowedFileTypes.join(",")}
                           onChange={(e) => field.onChange(e.target.files)}
                         />
                       </FormControl>

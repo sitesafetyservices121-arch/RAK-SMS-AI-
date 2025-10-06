@@ -1,7 +1,15 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useEffect,
+  useMemo,
+  useCallback,
+} from "react";
 import { useRouter } from "next/navigation";
 
 type UserRole = "user" | "admin" | "consultant";
@@ -14,13 +22,46 @@ export interface MockUser {
   photoURL?: string;
 }
 
+type LoginCredentials = {
+  email: string;
+  password: string;
+};
+
 interface AuthContextType {
   user: MockUser | null;
   loading: boolean;
-  loginAsAdmin: () => void;
-  loginAsClient: () => void;
+  login: (credentials: LoginCredentials) => Promise<MockUser>;
   signOut: () => void;
 }
+
+type InternalUser = MockUser & { password: string };
+
+const HARDCODED_USERS: InternalUser[] = [
+  {
+    uid: "admin-user",
+    email: "ruan@sitesafety.services",
+    displayName: "Ruan Admin",
+    role: "admin",
+    password: "Admin@123",
+    photoURL: `https://i.pravatar.cc/150?u=admin`,
+  },
+  {
+    uid: "client-user",
+    email: "client@example.com",
+    displayName: "Client User",
+    role: "user",
+    password: "Client@123",
+    photoURL: `https://i.pravatar.cc/150?u=client`,
+  },
+  {
+    uid: "consultant-user",
+    email: "consultant@example.com",
+    displayName: "Wilson Consultant",
+    role: "consultant",
+    password: "Consult@123",
+    photoURL: `https://i.pravatar.cc/150?u=consultant`,
+  },
+];
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -34,7 +75,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const storedUser = localStorage.getItem("user");
       if (storedUser) {
-        setUser(JSON.parse(storedUser));
+        const parsedUser = JSON.parse(storedUser) as MockUser;
+        if (parsedUser?.email && parsedUser?.role) {
+          setUser(parsedUser);
+        }
       }
     } catch (error) {
       console.error("Failed to parse user from localStorage", error);
@@ -43,49 +87,45 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setLoading(false);
   }, []);
 
-  const loginAsAdmin = () => {
+  const login = useCallback(async ({ email, password }: LoginCredentials) => {
     setLoading(true);
-    const adminUser: MockUser = {
-      uid: "admin-user",
-      email: "ruan@sitesafety.services",
-      displayName: "Ruan Admin",
-      role: "admin",
-      photoURL: `https://i.pravatar.cc/150?u=admin`,
-    };
-    localStorage.setItem("user", JSON.stringify(adminUser));
-    setUser(adminUser);
-    setLoading(false);
-    router.push("/admin");
-  };
 
-  const loginAsClient = () => {
-    setLoading(true);
-    const clientUser: MockUser = {
-      uid: "client-user",
-      email: "client@example.com",
-      displayName: "Client User",
-      role: "user",
-      photoURL: `https://i.pravatar.cc/150?u=client`,
-    };
-    localStorage.setItem("user", JSON.stringify(clientUser));
-    setUser(clientUser);
-    setLoading(false);
-    router.push("/dashboard");
-  };
+    try {
+      const normalisedEmail = email.trim().toLowerCase();
+      const matchingUser = HARDCODED_USERS.find(
+        (account) => account.email.toLowerCase() === normalisedEmail
+      );
 
-  const signOut = () => {
+      if (!matchingUser || matchingUser.password !== password) {
+        throw new Error("Invalid email or password. Please try again.");
+      }
+
+      const { password: _password, ...rest } = matchingUser;
+      const safeUser: MockUser = rest;
+      localStorage.setItem("user", JSON.stringify(safeUser));
+      setUser(safeUser);
+
+      return safeUser;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const signOut = useCallback(() => {
     localStorage.removeItem("user");
     setUser(null);
     router.push("/login");
-  };
+  }, [router]);
 
-  const value: AuthContextType = {
-    user,
-    loading,
-    loginAsAdmin,
-    loginAsClient,
-    signOut,
-  };
+  const value: AuthContextType = useMemo(
+    () => ({
+      user,
+      loading,
+      login,
+      signOut,
+    }),
+    [user, loading, login, signOut]
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

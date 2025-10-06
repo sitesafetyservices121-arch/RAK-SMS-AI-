@@ -53,7 +53,9 @@ export function DocumentList({ category }: { category: string }) {
       <div className="text-center p-10 text-muted-foreground">
         <FileText className="h-12 w-12 mx-auto mb-4" />
         <p className="font-semibold">No Documents Found</p>
-        <p className="text-sm">There are no documents in the '{category}' category.</p>
+        <p className="text-sm">
+          There are no documents in the &lsquo;{category}&rsquo; category.
+        </p>
       </div>
     );
   }
@@ -68,7 +70,7 @@ export function DocumentList({ category }: { category: string }) {
     >
       {Object.entries(groupedBySection).map(([section, sectionDocs]) => {
         const groupedBySubSection = sectionDocs.reduce((acc, doc) => {
-          const subSection = doc.subSection || 'General';
+          const subSection = doc.subSection || "General";
           (acc[subSection] = acc[subSection] || []).push(doc);
           return acc;
         }, {} as Record<string, Document[]>);
