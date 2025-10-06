@@ -29,7 +29,8 @@ import {
 } from "@/components/ui/form";
 import { UploadCloud } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import LoadingDots from "@/components/ui/loading-dots";
 import { Progress } from "@/components/ui/progress";
@@ -54,14 +55,18 @@ const createUploadSchema = (allowedFileTypes: string[]) =>
       .string()
       .min(3, "Document name must be at least 3 characters"),
     document: z
-      .any()
-      .refine((files) => files?.length === 1, "A file must be selected.")
+      .custom<FileList>((files) => files instanceof FileList, {
+        message: "A file must be selected.",
+      })
+      .refine((files) => files.length === 1, "A file must be selected.")
       .refine(
-        (files) => files?.[0]?.size <= MAX_FILE_SIZE_BYTES,
+        (files) => files.item(0)?.size ?? 0 <= MAX_FILE_SIZE_BYTES,
         `File size must be less than ${MAX_FILE_SIZE_MB}MB.`
       )
       .refine(
-        (files) => allowedFileTypes.includes(files?.[0]?.type),
+        (files) =>
+          !!files.item(0) &&
+          allowedFileTypes.includes(files.item(0)?.type ?? ""),
         "Invalid file type. Only supported document formats are allowed."
       ),
   });
@@ -70,20 +75,38 @@ type UploadFormValues = z.infer<ReturnType<typeof createUploadSchema>>;
 
 export default function DocumentUploadPage() {
   const { toast } = useToast();
+  const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+
+  const isAdmin = user?.role === "admin";
 
   // Mock data, as we removed the backend data fetching
   const allDocs: any[] = useMemo(() => [], []);
 
   const allowedFileTypes = useMemo(() => {
     const types = [...BASE_ALLOWED_FILE_TYPES];
-    if (user?.role === "admin") {
+    if (isAdmin) {
       types.push(...WORD_FILE_TYPES);
     }
     return types;
-  }, [user?.role]);
+  }, [isAdmin]);
+
+  useEffect(() => {
+    if (authLoading) {
+      return;
+    }
+
+    if (!user) {
+      router.replace("/login");
+      return;
+    }
+
+    if (!isAdmin) {
+      router.replace("/dashboard");
+    }
+  }, [authLoading, isAdmin, router, user]);
 
   const uploadSchema = useMemo(
     () => createUploadSchema(allowedFileTypes),
@@ -117,11 +140,23 @@ export default function DocumentUploadPage() {
     setIsUploading(true);
     setUploadProgress(0);
 
+    const file = values.document.item(0);
+
+    if (!file) {
+      toast({
+        variant: "destructive",
+        title: "No file attached",
+        description: "Please choose a document to upload before submitting.",
+      });
+      setIsUploading(false);
+      return;
+    }
+
     const formData = new FormData();
     formData.append("category", values.category);
     formData.append("section", values.section);
     formData.append("documentName", values.documentName);
-    formData.append("document", values.document[0]);
+    formData.append("document", file);
 
     try {
       // Simulate progress for a better UX, but the actual upload will happen in fetch
@@ -129,9 +164,9 @@ export default function DocumentUploadPage() {
         setUploadProgress((prev) => (prev < 90 ? prev + 10 : 90));
       }, 500);
 
-      const response = await fetch('/api/document-upload', {
-          method: 'POST',
-          body: formData,
+      const response = await fetch("/api/document-upload", {
+        method: "POST",
+        body: formData,
       });
 
       clearInterval(progressInterval);
@@ -145,21 +180,35 @@ export default function DocumentUploadPage() {
 
       toast({
         title: "Upload Successful",
-        description: `${values.document[0].name} has been processed.`,
+        description: `${file.name} has been processed.`,
       });
       form.reset();
 
     } catch (error: any) {
-        toast({
-            variant: "destructive",
-            title: "Upload Failed",
-            description: error.message || "An unknown error occurred during upload.",
-        });
+      toast({
+        variant: "destructive",
+        title: "Upload Failed",
+        description:
+          error?.message || "An unknown error occurred during upload.",
+      });
     } finally {
-        setIsUploading(false);
-        setUploadProgress(0);
+      setIsUploading(false);
+      setUploadProgress(0);
     }
   };
+
+  if (authLoading || !user) {
+    return (
+      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 text-muted-foreground">
+        <LoadingDots />
+        <p>Verifying your administrator permissions…</p>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return null;
+  }
 
   return (
     <div className="space-y-6">
@@ -167,8 +216,9 @@ export default function DocumentUploadPage() {
         <CardHeader>
           <CardTitle>Upload Document</CardTitle>
           <CardDescription>
-            Upload files with category and section for management. Word, Excel,
-            and PDF formats are accepted.
+            Upload files with category and section for management. Excel and PDF
+            formats are available, and Microsoft Word uploads are reserved for
+            administrators.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -257,7 +307,11 @@ export default function DocumentUploadPage() {
                         <Input
                           type="file"
                           accept={allowedFileTypes.join(",")}
-                          onChange={(e) => field.onChange(e.target.files)}
+                          onChange={(event) =>
+                            field.onChange(
+                              event.target.files ?? new DataTransfer().files
+                            )
+                          }
                         />
                       </FormControl>
                       <FormMessage />
