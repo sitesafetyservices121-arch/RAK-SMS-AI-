@@ -39,22 +39,12 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { PlusCircle, Search, Edit } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-type ItemCategory = "PPE" | "Consumable" | "Tool" | "Equipment";
-type ItemCondition = "Good" | "Needs Repair" | "Awaiting Discard";
-type ItemStatus = "In Use" | "In Storeroom" | "Out for Repair" | "Discarded";
-
-export type StockItem = {
-  id: string;
-  name: string;
-  category: ItemCategory;
-  prefix?: string;
-  quantity: number;
-  location: string;
-  expiryDate?: string;
-  condition?: ItemCondition;
-  status?: ItemStatus;
-};
+import type {
+  StockItem,
+  ItemCategory,
+  ItemCondition,
+  ItemStatus,
+} from "@/types/storeroom";
 
 // API Helpers (replace with GenKit/Gemini backend calls)
 async function fetchStock(): Promise<StockItem[]> {
@@ -64,7 +54,7 @@ async function fetchStock(): Promise<StockItem[]> {
 }
 
 async function addStockItem(item: StockItem) {
-  await fetch("/api/stock/add", {
+  await fetch("/api/stock", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(item),

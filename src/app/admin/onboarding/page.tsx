@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -19,53 +20,101 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusCircle } from "lucide-react";
-import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import type { BillingAccount } from "@/types/billing";
 
-type Client = {
-  id: string;
-  name: string;
-  contact: string;
-  status: string;
+async function fetchClients(): Promise<BillingAccount[]> {
+  const res = await fetch("/api/billing/accounts");
+  if (!res.ok) throw new Error("Failed to load clients");
+  const payload = await res.json();
+  return payload.data ?? [];
+}
+
+async function createClient(payload: {
+  companyName: string;
+  primaryContact: string;
   userCount: number;
-};
-
-// Initial mock data
-const initialClients: Client[] = [
-  {
-    id: "CLIENT-001",
-    name: "ConstructCo",
-    contact: "info@constructco.com",
-    status: "Active",
-    userCount: 5,
-  },
-  {
-    id: "CLIENT-002",
-    name: "BuildIt Right",
-    contact: "contact@builditright.com",
-    status: "Pending",
-    userCount: 3,
-  },
-];
+}): Promise<BillingAccount> {
+  const res = await fetch("/api/billing/accounts", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      companyName: payload.companyName,
+      primaryContact: payload.primaryContact,
+      userCount: payload.userCount,
+      status: "Pending",
+      subscriptionPlan: "Starter",
+      balanceDue: 0,
+    }),
+  });
+  if (!res.ok) throw new Error("Failed to create client");
+  const data = await res.json();
+  return data.data as BillingAccount;
+}
 
 export default function OnboardingPage() {
-  const [clients, setClients] = useState<Client[]>(initialClients);
+  const [clients, setClients] = useState<BillingAccount[]>([]);
   const [newClient, setNewClient] = useState({
     name: "",
     contact: "",
-    status: "Pending",
     userCount: 0,
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
-  const handleAddClient = () => {
-    if (!newClient.name || !newClient.contact) return;
+  useEffect(() => {
+    (async () => {
+      try {
+        setLoading(true);
+        const data = await fetchClients();
+        setClients(data);
+      } catch (error) {
+        console.error(error);
+        toast({
+          variant: "destructive",
+          title: "Unable to load clients",
+          description: "Could not fetch onboarding data.",
+        });
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [toast]);
 
-    const newEntry: Client = {
-      id: `CLIENT-${String(clients.length + 1).padStart(3, "0")}`,
-      ...newClient,
-    };
+  const handleAddClient = async () => {
+    if (!newClient.name || !newClient.contact) {
+      toast({
+        variant: "destructive",
+        title: "Missing information",
+        description: "Please provide a name and contact email.",
+      });
+      return;
+    }
 
-    setClients([...clients, newEntry]);
-    setNewClient({ name: "", contact: "", status: "Pending", userCount: 0 });
+    try {
+      setIsSubmitting(true);
+      const created = await createClient({
+        companyName: newClient.name,
+        primaryContact: newClient.contact,
+        userCount: newClient.userCount,
+      });
+      setClients((prev) => [created, ...prev]);
+      setNewClient({ name: "", contact: "", userCount: 0 });
+      toast({
+        title: "Client added",
+        description: `${created.companyName} is ready for onboarding.`,
+      });
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: "destructive",
+        title: "Failed to add client",
+        description: "We could not create the onboarding record.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -89,6 +138,7 @@ export default function OnboardingPage() {
                 onChange={(e) =>
                   setNewClient({ ...newClient, name: e.target.value })
                 }
+                disabled={isSubmitting}
               />
             </div>
             <div className="space-y-2">
@@ -101,12 +151,30 @@ export default function OnboardingPage() {
                 onChange={(e) =>
                   setNewClient({ ...newClient, contact: e.target.value })
                 }
+                disabled={isSubmitting}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="userCount">User Count</Label>
+              <Input
+                id="userCount"
+                type="number"
+                min={0}
+                value={newClient.userCount}
+                onChange={(e) =>
+                  setNewClient({
+                    ...newClient,
+                    userCount: Number.parseInt(e.target.value, 10) || 0,
+                  })
+                }
+                disabled={isSubmitting}
               />
             </div>
             <div className="flex items-end">
               <Button
                 onClick={handleAddClient}
                 className="w-full flex items-center gap-2"
+                disabled={isSubmitting}
               >
                 <PlusCircle className="h-4 w-4" /> Add Client
               </Button>
@@ -125,15 +193,30 @@ export default function OnboardingPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {clients.map((client) => (
-                <TableRow key={client.id}>
-                  <TableCell>{client.id}</TableCell>
-                  <TableCell>{client.name}</TableCell>
-                  <TableCell>{client.contact}</TableCell>
-                  <TableCell>{client.status}</TableCell>
-                  <TableCell>{client.userCount}</TableCell>
+              {loading && (
+                <TableRow>
+                  <TableCell colSpan={5} className="h-24 text-center">
+                    Loading clients…
+                  </TableCell>
                 </TableRow>
-              ))}
+              )}
+              {!loading &&
+                clients.map((client) => (
+                  <TableRow key={client.id}>
+                    <TableCell>{client.id}</TableCell>
+                    <TableCell>{client.companyName}</TableCell>
+                    <TableCell>{client.primaryContact}</TableCell>
+                    <TableCell>{client.status}</TableCell>
+                    <TableCell>{client.userCount}</TableCell>
+                  </TableRow>
+                ))}
+              {!loading && clients.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} className="h-24 text-center">
+                    No clients onboarded yet.
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>
