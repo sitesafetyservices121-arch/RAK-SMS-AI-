@@ -10,7 +10,7 @@ import crypto from "crypto";
  * @param passphrase The PayFast passphrase.
  * @returns The MD5 signature string.
  */
-export function generateSignature(
+export async function generateSignature(
   data: Record<string, string>,
   passphrase?: string
 ): string {

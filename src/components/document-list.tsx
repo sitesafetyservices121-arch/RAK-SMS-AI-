@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { useMemo, useState } from "react";
 import {
@@ -53,7 +53,7 @@ export function DocumentList({ category }: { category: string }) {
       <div className="text-center p-10 text-muted-foreground">
         <FileText className="h-12 w-12 mx-auto mb-4" />
         <p className="font-semibold">No Documents Found</p>
-        <p className="text-sm">There are no documents in the '{category}' category.</p>
+        <p className="text-sm">There are no documents in the &apos;{category}&apos; category.</p>
       </div>
     );
   }

@@ -1,44 +1,12 @@
-{ pkgs }: {
-  channel = "stable-24.11";
-
+{ pkgs, ... }: {
+  # Which nixpkgs channel to use.
+  channel = "stable-23.11"; # or "unstable"
+  # Use https://search.nixos.org/packages to find packages
   packages = [
     pkgs.nodejs_20
-    pkgs.firebase-tools
-    pkgs.zulu
   ];
-
-  env = {
-    NODE_ENV = "development";
-    FIREBASE_PROJECT = "rak-sms";
-  };
-
-  services.firebase.emulators = {
-    detect = true;
-    projectId = "rak-sms";
-    services = ["auth" "firestore" "storage"];
-  };
-
-  idx = {
-    extensions = [
-      "bradlc.vscode-tailwindcss"
-      "dbaeumer.vscode-eslint"
-      "esbenp.prettier-vscode"
-    ];
-    workspace = {
-      onCreate = {
-        default.openFiles = [
-          "src/app/page.tsx"
-        ];
-      };
-    };
-    previews = {
-      enable = true;
-      previews = {
-        web = {
-          command = ["npm" "run" "dev" "--" "--port" "$PORT" "--hostname" "0.0.0.0"];
-          manager = "web";
-        };
-      };
-    };
-  };
+  # Sets environment variables in the workspace
+  env = {};
+  # Search for the extensions you want on https://open-vsx.org/ and use "publisher.id"
+  idx.extensions = [];
 }

@@ -73,7 +73,7 @@ export default function DocumentUploadPage() {
   const [uploadProgress, setUploadProgress] = useState(0);
   
   // Mock data, as we removed the backend data fetching
-  const allDocs: any[] = [];
+  const allDocs = useMemo(() => [], []);
 
   const form = useForm<UploadFormValues>({
     resolver: zodResolver(uploadSchema),
@@ -92,8 +92,8 @@ export default function DocumentUploadPage() {
   const sections = useMemo(() => {
     const uniqueSections = new Set(
       allDocs
-        .filter((doc) => doc.category === category)
-        .map((doc) => doc.section)
+        .filter((doc: any) => doc.category === category)
+        .map((doc: any) => doc.section)
     );
     return Array.from(uniqueSections);
   }, [allDocs, category]);

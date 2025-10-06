@@ -9,6 +9,10 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: false,
   },
+  experimental: {
+    // This is the new addition to address the cross-origin warning
+    allowedDevOrigins: ["*.cloudworkstations.dev"],
+  },
   serverExternalPackages: ['firebase-admin'],
   images: {
     remotePatterns: [
