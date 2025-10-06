@@ -4,8 +4,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import jsPDF from "jspdf";
-import { format } from "date-fns";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -30,15 +28,7 @@ import LoadingDots from "@/components/ui/loading-dots";
 import { useToast } from "@/hooks/use-toast";
 import { CopyButton } from "@/components/copy-button";
 import { Input } from "@/components/ui/input";
-import { Download, Eye, Save } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { Download } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
 const formSchema = z.object({
@@ -59,9 +49,10 @@ type MethodStatementOutput = {
 export default function MethodStatementPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<MethodStatementOutput | null>(null);
-  const [formValues, setFormValues] = useState<FormValues | null>(null);
   const [logoDataUri, setLogoDataUri] = useState<string | null>(null);
-  const [pdfDataUri, setPdfDataUri] = useState<string | null>(null);
+  const [generatedDocument, setGeneratedDocument] = useState<
+    { fileName: string; downloadUrl: string; storagePath: string } | null
+  >(null);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -96,22 +87,27 @@ export default function MethodStatementPage() {
     }
     setIsLoading(true);
     setResult(null);
-    setPdfDataUri(null);
-    setFormValues(values);
-
+    setGeneratedDocument(null);
     const response = await generateMethodStatementAction({
       values,
       userId: user.uid,
+      companyId: user.companyId,
+      companyName: user.companyName,
+      logoDataUri: logoDataUri || undefined,
     });
     setIsLoading(false);
 
     if (response.success) {
       const data = response.data as MethodStatementOutput;
       setResult(data);
-      generatePdf(data, values, logoDataUri, true);
+      setGeneratedDocument({
+        fileName: response.fileName,
+        downloadUrl: response.downloadUrl,
+        storagePath: response.storagePath,
+      });
       toast({
         title: "Success",
-        description: "Method Statement generated. You can now preview or download it.",
+        description: `Method Statement generated and stored at ${response.storagePath}.`,
       });
       return;
     }
@@ -124,34 +120,6 @@ export default function MethodStatementPage() {
       description: errorMessage,
     });
   }
-
-  const generatePdf = (
-    data: MethodStatementOutput,
-    values: FormValues,
-    logo: string | null,
-    setUri = false
-  ) => {
-    const doc = new jsPDF();
-    // ... PDF generation logic remains the same
-    if (setUri) {
-      setPdfDataUri(doc.output("datauristring"));
-    } else {
-      doc.save(`Method-Statement-${values.clientName.replace(/ /g, "_")}.pdf`);
-    }
-  };
-
-  const handleDownloadPdf = () => {
-    if (!result || !formValues) return;
-    generatePdf(result, formValues, logoDataUri);
-  };
-
-  const handleSave = () => {
-    toast({
-      title: "Document Saved",
-      description:
-        "The Method Statement has been saved to the 'Generated Documents' library.",
-    });
-  };
 
   return (
     <div className="grid gap-6 lg:grid-cols-5">
@@ -280,46 +248,17 @@ export default function MethodStatementPage() {
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
-              {result && (
-                <CopyButton textToCopy={result.methodStatement} />
-              )}
-              {result && (
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <Eye className="mr-2 h-4 w-4" />
-                      Preview
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-4xl h-[90vh]">
-                    <DialogHeader>
-                      <DialogTitle>Method Statement Preview</DialogTitle>
-                    </DialogHeader>
-                    <div className="h-full">
-                      {pdfDataUri && (
-                        <iframe
-                          src={pdfDataUri}
-                          width="100%"
-                          height="100%"
-                          title="Method Statement Preview"
-                        />
-                      )}
-                    </div>
-                    <DialogFooter>
-                      <Button onClick={handleSave}>
-                        <Save className="mr-2 h-4 w-4" />
-                        Save to Generated Docs
-                      </Button>
-                      <Button
-                        onClick={handleDownloadPdf}
-                        variant="outline"
-                      >
-                        <Download className="mr-2 h-4 w-4" />
-                        Download PDF
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
+              {result && <CopyButton textToCopy={result.methodStatement} />}
+              {generatedDocument && (
+                <Button asChild variant="outline" size="sm">
+                  <a
+                    href={generatedDocument.downloadUrl}
+                    download={generatedDocument.fileName}
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Download Word Document
+                  </a>
+                </Button>
               )}
             </div>
           </CardHeader>

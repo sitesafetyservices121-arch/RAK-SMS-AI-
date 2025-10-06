@@ -4,19 +4,6 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import jsPDF from "jspdf";
-import "jspdf-autotable";
-
-interface jsPDFWithAutoTable extends jsPDF {
-  autoTable: (options: {
-    startY: number;
-    head: string[][];
-    body: (string | number)[][];
-  }) => jsPDF;
-  lastAutoTable: {
-    finalY: number;
-  };
-}
 
 import { Button } from "@/components/ui/button";
 import {
@@ -35,14 +22,14 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { analyzeLtirAction, saveLtirReportAction } from "./actions";
+import { analyzeLtirAction } from "./actions";
 import { type AnalyzeLtirTrendInput, type AnalyzeLtirTrendOutput } from "@/types/ltir-analysis";
 import LoadingDots from "@/components/ui/loading-dots";
 import { useToast } from "@/hooks/use-toast";
 import { CopyButton } from "@/components/copy-button";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
-import { Download, Save } from "lucide-react";
+import { Download } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
 const formSchema = z.object({
@@ -55,9 +42,12 @@ type FormValues = z.infer<typeof formSchema>;
 
 export default function LtirAnalysisPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   const [result, setResult] = useState<AnalyzeLtirTrendOutput | null>(null);
   const [calculatedLtir, setCalculatedLtir] = useState<number | null>(null);
+  const [logoDataUri, setLogoDataUri] = useState<string | null>(null);
+  const [generatedDocument, setGeneratedDocument] = useState<
+    { fileName: string; downloadUrl: string; storagePath: string } | null
+  >(null);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -82,13 +72,33 @@ export default function LtirAnalysisPage() {
   }, [numberOfInjuries, totalHoursWorked]);
 
   async function onSubmit(values: FormValues) {
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "Authentication Required",
+        description: "Please sign in to generate an LTIR analysis report.",
+      });
+      return;
+    }
     setIsLoading(true);
     setResult(null);
-    const response = await analyzeLtirAction(values as AnalyzeLtirTrendInput);
+    setGeneratedDocument(null);
+    const response = await analyzeLtirAction({
+      values: values as AnalyzeLtirTrendInput,
+      userId: user.uid,
+      companyId: user.companyId,
+      companyName: user.companyName,
+      logoDataUri: logoDataUri || undefined,
+    });
     setIsLoading(false);
 
     if (response.success) {
       setResult(response.data);
+      setGeneratedDocument({
+        fileName: response.fileName,
+        downloadUrl: response.downloadUrl,
+        storagePath: response.storagePath,
+      });
     } else {
       if (!response.success) {
         toast({
@@ -108,74 +118,6 @@ export default function LtirAnalysisPage() {
           result.improvementAreas
         }\n\nRecommendations:\n${result.recommendations}`
       : "";
-
-  const handleDownloadReport = () => {
-    if (calculatedLtir === null || !result) return;
-
-    const doc = new jsPDF() as jsPDFWithAutoTable;
-    doc.text("LTIR Analysis Report", 14, 15);
-
-    doc.autoTable({
-      startY: 25,
-      head: [["Metric", "Value"]],
-      body: [
-        ["Number of Lost Time Injuries", numberOfInjuries],
-        ["Total Hours Worked", totalHoursWorked.toLocaleString()],
-        ["Calculated LTIR", calculatedLtir.toFixed(2)],
-      ],
-    });
-
-    let finalY = doc.lastAutoTable.finalY + 10;
-
-    const addSection = (title: string, content: string) => {
-      doc.setFontSize(12);
-      doc.text(title, 14, finalY);
-      finalY += 6;
-      doc.setFontSize(10);
-      const splitContent = doc.splitTextToSize(content, 180);
-      doc.text(splitContent, 14, finalY);
-      finalY += splitContent.length * 5 + 10;
-    };
-
-    addSection("Trend Analysis", result.trendAnalysis);
-    addSection("Improvement Areas", result.improvementAreas);
-    addSection("Recommendations", result.recommendations);
-
-    doc.save("LTIR_Analysis_Report.pdf");
-  };
-
-  const handleSave = async () => {
-    if (!user || !result || calculatedLtir === null) {
-      toast({
-        variant: "destructive",
-        title: "Cannot Save",
-        description: "User not logged in or no report generated.",
-      });
-      return;
-    }
-    setIsSaving(true);
-    const response = await saveLtirReportAction({
-      userId: user.uid,
-      calculatedLtir,
-      formValues: form.getValues() as AnalyzeLtirTrendInput,
-      analysisResult: result,
-    });
-    setIsSaving(false);
-
-    if (response.success) {
-      toast({
-        title: "Report Saved",
-        description:
-          "The LTIR report has been saved and will appear in Generated Documents.",
-      });
-    } else {
-      toast({
-        variant: "destructive",
-        title: "Save Failed",
-        description: (response as { success: false; error: string }).error,
-      });
-    }
-  };
 
   return (
     <div className="grid gap-6 lg:grid-cols-5">
@@ -252,6 +194,28 @@ export default function LtirAnalysisPage() {
                   </FormItem>
                 )}
               />
+              <div className="space-y-2">
+                <FormLabel htmlFor="logo-upload">Company Logo (Optional)</FormLabel>
+                <Input
+                  id="logo-upload"
+                  type="file"
+                  accept="image/png, image/jpeg"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = (e) =>
+                        setLogoDataUri(e.target?.result as string);
+                      reader.readAsDataURL(file);
+                    } else {
+                      setLogoDataUri(null);
+                    }
+                  }}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Add a logo to brand the generated Word analysis report.
+                </p>
+              </div>
 
               <Button type="submit" disabled={isLoading} className="w-full">
                 {isLoading ? "Analyzing..." : "Generate AI Analysis"}
@@ -273,25 +237,16 @@ export default function LtirAnalysisPage() {
             </div>
             <div className="flex gap-2">
               {result && <CopyButton textToCopy={fullTextResult} />}
-              {result && (
-                <>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={handleSave}
-                    disabled={isSaving || !user}
+              {generatedDocument && (
+                <Button asChild variant="outline" size="sm">
+                  <a
+                    href={generatedDocument.downloadUrl}
+                    download={generatedDocument.fileName}
                   >
-                    <Save className="mr-2 h-4 w-4" />
-                    {isSaving ? "Saving..." : "Save"}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleDownloadReport}
-                  >
-                    <Download className="mr-2 h-4 w-4" /> Download
-                  </Button>
-                </>
+                    <Download className="mr-2 h-4 w-4" />
+                    Download Word Document
+                  </a>
+                </Button>
               )}
             </div>
           </CardHeader>

@@ -1,16 +1,39 @@
 "use server";
 
 import { analyzeLtirTrend } from "@/ai/flows/ai-ltir-trend-analysis";
-// import { generatePdfRequest } from "@/lib/pdf";
 
 import { ActionResponse } from "@/types/action-response";
 import { AnalyzeLtirTrendInput, AnalyzeLtirTrendOutput, SaveLtirReportInput } from "@/types/ltir-analysis";
+import {
+  decodeDataUri,
+  generateWordDocument,
+} from "@/lib/word";
+import type { WordSection } from "@/lib/word";
+import { saveGeneratedDocumentMetadata } from "@/lib/generated-documents";
+import { ensureActionCompanyScope } from "@/lib/company-context";
+
+type AnalyzeActionInput = {
+  values: AnalyzeLtirTrendInput;
+  userId: string;
+  companyId: string;
+  companyName: string;
+  logoDataUri?: string;
+};
 
 export async function analyzeLtirAction(
-  input: AnalyzeLtirTrendInput
+  input: AnalyzeActionInput
 ): Promise<ActionResponse<AnalyzeLtirTrendOutput>> {
   try {
-    const output = await analyzeLtirTrend(input);
+    const { userId, companyId, companyName } = ensureActionCompanyScope(
+      {
+        userId: input.userId,
+        companyId: input.companyId,
+        companyName: input.companyName,
+      },
+      "LTIR analysis action"
+    );
+
+    const output = await analyzeLtirTrend(input.values);
     const data: AnalyzeLtirTrendOutput = {
       trendAnalysis: output.trendAnalysis || "No trend analysis provided.",
       improvementAreas: output.improvementAreas || "No improvement areas identified.",
@@ -18,7 +41,82 @@ export async function analyzeLtirAction(
       ltir: output.ltir,
       interpretation: output.interpretation,
     };
-    return { success: true, data: data, storagePath: "" };
+
+    const overviewSection: WordSection = {
+      title: "LTIR Inputs",
+      paragraphs: [
+        { text: `Lost Time Injuries: ${input.values.numberOfInjuries}` },
+        { text: `Total Hours Worked: ${input.values.totalHoursWorked.toLocaleString()}` },
+        {
+          text: `Calculated LTIR: ${
+            data.ltir !== undefined ? data.ltir.toFixed(2) : "Not provided"
+          }`,
+        },
+        {
+          text: `Additional Context: ${input.values.additionalContext || "None provided"}`,
+        },
+      ],
+    };
+
+    const sections: WordSection[] = [
+      overviewSection,
+      {
+        title: "Trend Analysis",
+        paragraphs: [{ text: data.trendAnalysis }],
+      },
+      {
+        title: "Improvement Areas",
+        paragraphs: [{ text: data.improvementAreas }],
+      },
+      {
+        title: "Recommendations",
+        paragraphs: [{ text: data.recommendations }],
+      },
+    ];
+
+    if (data.interpretation) {
+      sections.push({
+        title: "Interpretation",
+        paragraphs: [{ text: data.interpretation }],
+      });
+    }
+
+    const logo = decodeDataUri(input.logoDataUri);
+    const sanitizedCompany = companyName
+      .replace(/[^a-z0-9]+/gi, "-")
+      .replace(/^-+|-+$/g, "")
+      .toUpperCase() || "COMPANY";
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const fileName = `LTIR-Analysis-${sanitizedCompany}-${timestamp}.docx`;
+
+    const { downloadUrl } = generateWordDocument({
+      title: "Lost Time Injury Rate Analysis",
+      companyName,
+      generatedBy: companyName,
+      isoStandard: "ISO 45001",
+      sections,
+      logo,
+    });
+
+    const storagePath = `word/generated/${companyId}/${userId}/${fileName}`;
+
+    await saveGeneratedDocumentMetadata({
+      userId,
+      companyId,
+      companyName,
+      documentType: "ltir-analysis",
+      fileName,
+      storagePath,
+      downloadUrl,
+    });
+
+    return {
+      success: true,
+      data,
+      storagePath,
+      fileName,
+      downloadUrl,
+    };
   } catch (e: unknown) {
     console.error(e);
     const error = e instanceof Error ? e.message : "An unknown error occurred.";

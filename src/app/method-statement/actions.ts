@@ -6,45 +6,87 @@ import {
   MethodStatementOutput,
   GenerateMethodStatementInput,
 } from "@/types/method-statement";
+import {
+  decodeDataUri,
+  generateWordDocument,
+  convertMarkdownToSections,
+} from "@/lib/word";
+import { saveGeneratedDocumentMetadata } from "@/lib/generated-documents";
+import { ensureActionCompanyScope } from "@/lib/company-context";
 
 // We need the user's ID for the PDF generation
 type ActionInput = {
   values: GenerateMethodStatementInput;
   userId: string;
+  companyId: string;
+  companyName: string;
+  logoDataUri?: string;
 };
 
 export async function generateMethodStatementAction(
   input: ActionInput
 ): Promise<ActionResponse<MethodStatementOutput>> {
   try {
+    const { userId, companyId, companyName } = ensureActionCompanyScope(
+      {
+        userId: input.userId,
+        companyId: input.companyId,
+        companyName: input.companyName,
+      },
+      "Method Statement action"
+    );
+
     const rawOutput = await generateMethodStatement(input.values);
 
     if (
       "methodStatement" in rawOutput &&
       typeof rawOutput.methodStatement === "string"
     ) {
-      // The PDF generation logic has been commented out to simplify and focus on the core AI functionality.
-      // In a real application, you would uncomment this to save the output.
-      /*
-      const htmlContent = rawOutput.methodStatement
-        .replace(/## (.*?)\n/g, "<h2>$1</h2>")
-        .replace(/\* (.*?)\n/g, "<li>$1</li>")
-        .replace(/(\r\n|\n|\r)/gm, "<br>");
+      const sections = convertMarkdownToSections(rawOutput.methodStatement);
+      const projectSection = {
+        title: "Project Summary",
+        paragraphs: [
+          { text: `Client: ${input.values.clientName}` },
+          { text: `Site Location: ${input.values.siteLocation}` },
+          { text: `Known Hazards & Risks: ${input.values.hazardsAndRisks}` },
+        ],
+      };
 
-      const fileName = `Method-Statement-${input.values.clientName.replace(
-        /\s+/g,
-        "_"
-      )}-${new Date().toISOString()}.pdf`;
-      const { storagePath } = await generatePdfRequest(
-        input.userId,
-        "method-statement",
+      const logo = decodeDataUri(input.logoDataUri);
+      const sanitizedClient = input.values.clientName
+        .replace(/[^a-z0-9]+/gi, "-")
+        .replace(/^-+|-+$/g, "")
+        .toUpperCase() || "CLIENT";
+      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+      const fileName = `Method-Statement-${sanitizedClient}-${timestamp}.docx`;
+      const { downloadUrl } = generateWordDocument({
+        title: `Method Statement - ${input.values.clientName}`,
+        companyName,
+        clientName: input.values.clientName,
+        generatedBy: companyName,
+        isoStandard: "ISO 9001 & ISO 45001",
+        sections: [projectSection, ...sections],
+        logo,
+      });
+
+      const storagePath = `word/generated/${companyId}/${userId}/${fileName}`;
+      await saveGeneratedDocumentMetadata({
+        userId,
+        companyId,
+        companyName,
+        documentType: "method-statement",
         fileName,
-        `<h1>Method Statement</h1>${htmlContent}`,
-        { ...input.values }
-      );
-      */
+        storagePath,
+        downloadUrl,
+      });
 
-      return { success: true, data: rawOutput, storagePath: "" };
+      return {
+        success: true,
+        data: rawOutput,
+        storagePath,
+        fileName,
+        downloadUrl,
+      };
     } else {
       throw new Error(
         "AI returned an unexpected data structure. Expected 'methodStatement' string."

@@ -6,47 +6,90 @@ import {
 } from "@/ai/flows/ai-she-plan-from-prompt";
 import { ActionResponse } from "@/types/action-response";
 import { ShePlanOutput, GenerateShePlanInput } from "@/types/she-plan";
+import {
+  decodeDataUri,
+  generateWordDocument,
+} from "@/lib/word";
+import type { WordSection } from "@/lib/word";
+import { saveGeneratedDocumentMetadata } from "@/lib/generated-documents";
+import { ensureActionCompanyScope } from "@/lib/company-context";
 
-// We need the user's ID for the PDF generation
 type ActionInput = {
   values: GenerateShePlanInput;
   userId: string;
+  companyId: string;
+  companyName: string;
+  logoDataUri?: string;
 };
 
 export async function generateShePlanAction(
   input: ActionInput
 ): Promise<ActionResponse<ShePlanOutput>> {
   try {
-    // 1. Generate the content from the AI
+    const { userId, companyId, companyName } = ensureActionCompanyScope(
+      {
+        userId: input.userId,
+        companyId: input.companyId,
+        companyName: input.companyName,
+      },
+      "SHE Plan generation action"
+    );
+
     const output = await generateShePlan(input.values);
 
-    // PDF generation is commented out for simplicity
-    /*
-    const htmlContent = `
-      <h1>SHE Plan for Project</h1>
-      <p><strong>Project Description:</strong> ${input.values.projectDescription}</p>
-      <hr />
-      ${Object.entries(output)
-        .map(([key, value]) => {
-          const title = key
-            .replace(/([A-Z])/g, " $1")
-            .replace(/^./, (str) => str.toUpperCase());
-          return `<h2>${title}</h2><p>${value}</p>`;
-        })
-        .join("")}
-    `;
-    
-    const fileName = `SHE-Plan-${new Date().toISOString()}.pdf`;
-    const { storagePath } = await generatePdfRequest(
-      input.userId,
-      "she-plan",
-      fileName,
-      htmlContent,
-      { projectDescription: input.values.projectDescription }
+    const sections: WordSection[] = Object.entries(output).map(
+      ([key, value]) => ({
+        title: key
+          .replace(/([A-Z])/g, " $1")
+          .replace(/^./, (str) => str.toUpperCase()),
+        paragraphs: value
+          .split(/\n+/)
+          .filter(Boolean)
+          .map((text) => ({ text })),
+      })
     );
-    */
-    
-    return { success: true, data: output, storagePath: "" };
+
+    const overviewSection: WordSection = {
+      title: "Project Overview",
+      paragraphs: [{ text: input.values.projectDescription }],
+    };
+
+    const logo = decodeDataUri(input.logoDataUri);
+    const sanitizedCompany = companyName
+      .replace(/[^a-z0-9]+/gi, "-")
+      .replace(/^-+|-+$/g, "")
+      .toUpperCase() || "COMPANY";
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const fileName = `SHE-Plan-${sanitizedCompany}-${timestamp}.docx`;
+
+    const { downloadUrl } = generateWordDocument({
+      title: "Safety, Health & Environment Plan",
+      companyName,
+      generatedBy: companyName,
+      isoStandard: "ISO 45001 & ISO 14001",
+      sections: [overviewSection, ...sections],
+      logo,
+    });
+
+    const storagePath = `word/generated/${companyId}/${userId}/${fileName}`;
+
+    await saveGeneratedDocumentMetadata({
+      userId,
+      companyId,
+      companyName,
+      documentType: "she-plan",
+      fileName,
+      storagePath,
+      downloadUrl,
+    });
+
+    return {
+      success: true,
+      data: output,
+      storagePath,
+      fileName,
+      downloadUrl,
+    };
   } catch (e: unknown) {
     console.error("SHE Plan generation error:", e);
     const error =

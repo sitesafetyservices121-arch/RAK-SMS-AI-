@@ -12,6 +12,8 @@ export interface MockUser {
   displayName: string;
   role: UserRole;
   photoURL?: string;
+  companyId: string;
+  companyName: string;
 }
 
 interface AuthContextType {
@@ -34,7 +36,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const storedUser = localStorage.getItem("user");
       if (storedUser) {
-        setUser(JSON.parse(storedUser));
+        const parsed: MockUser = JSON.parse(storedUser);
+        if (!parsed.companyId || !parsed.companyName) {
+          parsed.companyId = parsed.role === "admin" ? "SITE_SAFETY" : "CLIENT_ALPHA";
+          parsed.companyName = parsed.role === "admin" ? "Site Safety Services" : "Client Alpha Construction";
+          localStorage.setItem("user", JSON.stringify(parsed));
+        }
+        setUser(parsed);
       }
     } catch (error) {
       console.error("Failed to parse user from localStorage", error);
@@ -51,6 +59,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       displayName: "Ruan Admin",
       role: "admin",
       photoURL: `https://i.pravatar.cc/150?u=admin`,
+      companyId: "SITE_SAFETY",
+      companyName: "Site Safety Services",
     };
     localStorage.setItem("user", JSON.stringify(adminUser));
     setUser(adminUser);
@@ -66,6 +76,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       displayName: "Client User",
       role: "user",
       photoURL: `https://i.pravatar.cc/150?u=client`,
+      companyId: "CLIENT_ALPHA",
+      companyName: "Client Alpha Construction",
     };
     localStorage.setItem("user", JSON.stringify(clientUser));
     setUser(clientUser);
