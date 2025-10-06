@@ -4,20 +4,27 @@ const path = require("path");
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+
   typescript: {
+    // Ensures TypeScript build errors block the build (change to true to ignore)
     ignoreBuildErrors: false,
   },
+
   eslint: {
+    // Ensures ESLint errors block builds (set true to skip during build)
     ignoreDuringBuilds: false,
   },
+
   experimental: {
-    // This is required to allow the Next.js dev server to accept requests
-    // from the Firebase Studio development environment.
+    // Allows Next.js dev server access from Firebase Studio
     allowedDevOrigins: [
       "*.cluster-fbfjltn375c6wqxlhoehbz44sk.cloudworkstations.dev",
     ],
   },
+
+  // Ensures Firebase Admin is treated as external during server build
   serverExternalPackages: ["firebase-admin"],
+
   images: {
     remotePatterns: [
       {
@@ -45,7 +52,6 @@ const nextConfig = {
         hostname: "www.payfast.co.za",
         pathname: "/**",
       },
-
       {
         protocol: "https",
         hostname: "raksms.services",
@@ -53,24 +59,37 @@ const nextConfig = {
       },
     ],
   },
+
   webpack: (config, { isServer }) => {
+    // Prevent firebase-admin from being bundled on the client
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
         "firebase-admin": false,
       };
     }
+
+    // Set up path alias
     config.resolve.alias["@"] = path.resolve(__dirname, "src");
+
+    // Add WebAssembly async support
     config.module.rules.push({
       test: /\.wasm$/,
       type: "webassembly/async",
     });
-    config.experiments = { ...config.experiments, asyncWebAssembly: true };
+
+    config.experiments = {
+      ...config.experiments,
+      asyncWebAssembly: true,
+    };
+
+    // Add Node.js polyfills for browser builds
     config.resolve.fallback = {
       ...config.resolve.fallback,
       process: require.resolve("process/browser"),
       stream: require.resolve("stream-browserify"),
     };
+
     return config;
   },
 };
