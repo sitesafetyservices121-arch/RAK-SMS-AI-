@@ -13,7 +13,7 @@ const nextConfig = {
     // This is the new addition to address the cross-origin warning
     allowedDevOrigins: ["*.cloudworkstations.dev"],
   },
-  serverExternalPackages: ['firebase-admin'],
+  serverExternalPackages: ["firebase-admin"],
   images: {
     remotePatterns: [
       {
@@ -46,7 +46,7 @@ const nextConfig = {
         protocol: "https",
         hostname: "raksms.services",
         pathname: "/**",
-      }
+      },
     ],
   },
   webpack: (config, { isServer }) => {
@@ -64,8 +64,8 @@ const nextConfig = {
     config.experiments = { ...config.experiments, asyncWebAssembly: true };
     config.resolve.fallback = {
       ...config.resolve.fallback,
-      "process": require.resolve("process/browser"),
-      "stream": require.resolve("stream-browserify"),
+      process: require.resolve("process/browser"),
+      stream: require.resolve("stream-browserify"),
     };
     return config;
   },
