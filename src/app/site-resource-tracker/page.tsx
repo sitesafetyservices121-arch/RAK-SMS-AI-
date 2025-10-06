@@ -17,46 +17,26 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { User, Car, MapPin, Save, Download } from "lucide-react";
+import type { Employee, Vehicle, Site } from "@/types/core-data";
+import type { SiteAssignments } from "@/lib/site-assignment-service";
 
-// Types
-export type Employee = {
-  id: string;
-  firstName: string;
-  surname: string;
-  idNumber: string;
-};
-
-export type Vehicle = {
-  vehicle: string;
-  status: string;
-};
-
-export type Site = {
-  id: string;
-  name: string;
-  location: string;
-};
-
-interface Assignments {
-  employees: Record<string, string>;
-  vehicles: Record<string, string>;
-}
-
-// API Helpers (adjust endpoints to your GenKit/Gemini backend)
+// API Helpers
 async function fetchSiteResources(): Promise<{
   sites: Site[];
   employees: Employee[];
   vehicles: Vehicle[];
-  assignments: Assignments;
+  assignments: SiteAssignments;
 }> {
-  const res = await fetch("/api/resources");
+  const res = await fetch("/api/site-resources");
   if (!res.ok) throw new Error("Failed to load resources");
-  return res.json();
+  const payload = await res.json();
+  return payload.data;
 }
 
 async function assignEmployee(employeeId: string, siteId: string) {
   await fetch("/api/assign/employee", {
     method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ employeeId, siteId }),
   });
 }
@@ -64,6 +44,7 @@ async function assignEmployee(employeeId: string, siteId: string) {
 async function assignVehicle(vehicleId: string, siteId: string) {
   await fetch("/api/assign/vehicle", {
     method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ vehicleId, siteId }),
   });
 }
@@ -71,6 +52,7 @@ async function assignVehicle(vehicleId: string, siteId: string) {
 async function saveReportToBackend(reportId: string) {
   await fetch("/api/report/save", {
     method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ reportId }),
   });
 }
@@ -140,9 +122,10 @@ export default function SiteResourceTrackerPage() {
       const employeesOnSite = employees.filter(
         (emp) => employeeAssignments[emp.id] === site.id
       );
-      const vehiclesOnSite = vehicles.filter(
-        (v) => vehicleAssignments[v.vehicle] === site.id
-      );
+      const vehiclesOnSite = vehicles.filter((v) => {
+        const key = String(v.id ?? v.vehicle);
+        return vehicleAssignments[key] === site.id;
+      });
 
       if (employeesOnSite.length > 0) {
         autoTable(doc, {
@@ -241,20 +224,23 @@ export default function SiteResourceTrackerPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 max-h-[300px] overflow-y-auto">
-            {vehicles.map((vehicle) => (
-              <Card
-                key={vehicle.vehicle}
-                className="p-3 flex items-center justify-between"
-              >
-                <div className="flex items-center gap-3">
-                  <Car className="h-5 w-5 text-primary" />
-                  <p className="font-semibold">{vehicle.vehicle}</p>
-                </div>
-                {vehicleAssignments[vehicle.vehicle] && (
-                  <Badge variant="secondary">Assigned</Badge>
-                )}
-              </Card>
-            ))}
+            {vehicles.map((vehicle) => {
+              const vehicleKey = String(vehicle.id ?? vehicle.vehicle);
+              return (
+                <Card
+                  key={vehicleKey}
+                  className="p-3 flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-3">
+                    <Car className="h-5 w-5 text-primary" />
+                    <p className="font-semibold">{vehicle.vehicle}</p>
+                  </div>
+                  {vehicleAssignments[vehicleKey] && (
+                    <Badge variant="secondary">Assigned</Badge>
+                  )}
+                </Card>
+              );
+            })}
           </CardContent>
         </Card>
       </div>
@@ -311,17 +297,24 @@ export default function SiteResourceTrackerPage() {
                     </p>
                     <div className="space-y-2">
                       {vehicles
-                        .filter((v) => vehicleAssignments[v.vehicle] === site.id)
-                        .map((v) => (
-                          <div
-                            key={v.vehicle}
-                            className="text-sm text-muted-foreground p-2 border rounded-md"
-                          >
-                            {v.vehicle}
-                          </div>
-                        ))}
+                        .filter(
+                          (v) =>
+                            vehicleAssignments[String(v.id ?? v.vehicle)] === site.id
+                        )
+                        .map((v) => {
+                          const vehicleKey = String(v.id ?? v.vehicle);
+                          return (
+                            <div
+                              key={vehicleKey}
+                              className="text-sm text-muted-foreground p-2 border rounded-md"
+                            >
+                              {v.vehicle}
+                            </div>
+                          );
+                        })}
                       {vehicles.filter(
-                        (v) => vehicleAssignments[v.vehicle] === site.id
+                        (v) =>
+                          vehicleAssignments[String(v.id ?? v.vehicle)] === site.id
                       ).length === 0 && (
                         <p className="text-xs text-muted-foreground italic">
                           No vehicles assigned.
@@ -347,17 +340,23 @@ export default function SiteResourceTrackerPage() {
                       </Button>
                     ))}
                   {vehicles
-                    .filter((v) => vehicleAssignments[v.vehicle] !== site.id)
-                    .map((v) => (
-                      <Button
-                        key={`assign-veh-${v.vehicle}`}
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleAssignVehicle(v.vehicle, site.id)}
-                      >
-                        <Car className="mr-2 h-4 w-4" /> {v.vehicle}
-                      </Button>
-                    ))}
+                    .filter(
+                      (v) =>
+                        vehicleAssignments[String(v.id ?? v.vehicle)] !== site.id
+                    )
+                    .map((v) => {
+                      const vehicleKey = String(v.id ?? v.vehicle);
+                      return (
+                        <Button
+                          key={`assign-veh-${vehicleKey}`}
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleAssignVehicle(vehicleKey, site.id)}
+                        >
+                          <Car className="mr-2 h-4 w-4" /> {v.vehicle}
+                        </Button>
+                      );
+                    })}
                 </CardFooter>
               </Card>
             ))}

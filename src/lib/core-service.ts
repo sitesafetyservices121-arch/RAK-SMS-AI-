@@ -2,7 +2,12 @@
 'use server';
 
 import { db } from "@/lib/firebase-admin";
-import type { Employee, Vehicle, Site, InspectionStatus } from "@/mocks/core-data";
+import type {
+  Employee,
+  Vehicle,
+  Site,
+  InspectionStatus,
+} from "@/types/core-data";
 
 // Firestore document types
 export type EmployeeDoc = Employee & { id: string };

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Card,
   CardContent,
@@ -37,11 +37,8 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Download, PlusCircle, Save, ChevronDown, ChevronRight } from "lucide-react";
-import {
-  initialEmployees,
-  ppeRegister as initialPpeRegister,
-  type PpeItem,
-} from "@/lib/employee-service";
+import type { Employee } from "@/types/core-data";
+import type { PpeItem, PpeRegisterEntry } from "@/types/ppe";
 import { format, addMonths } from "date-fns";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
@@ -54,39 +51,82 @@ interface jsPDFWithAutoTable extends jsPDF {
   }) => jsPDF;
 }
 
-type PpeRegisterEntry = {
-  employeeId: string;
-  ppeItemId: string;
-  dateIssued: string;
-  validUntil: string;
-  signature: "Signed" | "Pending";
-};
+async function fetchEmployees(): Promise<Employee[]> {
+  const res = await fetch("/api/employees");
+  if (!res.ok) throw new Error("Failed to load employees");
+  const data = await res.json();
+  return data.data ?? [];
+}
 
-const ppeItems: PpeItem[] = [
-  { id: "ppe-hd-01", name: "Hard Hat", category: "Head" },
-  { id: "ppe-hg-01", name: "Safety Gloves (Leather)", category: "Hands" },
-  { id: "ppe-hg-02", name: "Safety Gloves (Chemical)", category: "Hands" },
-  { id: "ppe-ft-01", name: "Safety Boots", category: "Feet" },
-  { id: "ppe-ey-01", name: "Safety Goggles", category: "Other" },
-  { id: "ppe-ey-02", name: "Face Shield", category: "Other" },
-  { id: "ppe-bd-01", name: "Reflective Vest", category: "Body" },
-  { id: "ppe-bd-02", name: "Harness", category: "Body" },
-];
+async function fetchPpeItems(): Promise<PpeItem[]> {
+  const res = await fetch("/api/ppe/items");
+  if (!res.ok) throw new Error("Failed to load PPE catalogue");
+  const data = await res.json();
+  return data.data ?? [];
+}
+
+async function fetchRegister(): Promise<PpeRegisterEntry[]> {
+  const res = await fetch("/api/ppe/register");
+  if (!res.ok) throw new Error("Failed to load register entries");
+  const data = await res.json();
+  return data.data ?? [];
+}
+
+async function createRegisterEntry(entry: PpeRegisterEntry) {
+  const res = await fetch("/api/ppe/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(entry),
+  });
+  if (!res.ok) throw new Error("Failed to save register entry");
+  const data = await res.json();
+  return data.data as PpeRegisterEntry;
+}
 
 export default function PpeIssueRegisterPage() {
-  const [register, setRegister] = useState<PpeRegisterEntry[]>(initialPpeRegister);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [ppeItems, setPpeItems] = useState<PpeItem[]>([]);
+  const [register, setRegister] = useState<PpeRegisterEntry[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isIssueOpen, setIsIssueOpen] = useState(false);
   const [expandedEmployees, setExpandedEmployees] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
+  useEffect(() => {
+    (async () => {
+      try {
+        setLoading(true);
+        const [employeeData, itemData, registerData] = await Promise.all([
+          fetchEmployees(),
+          fetchPpeItems(),
+          fetchRegister(),
+        ]);
+        setEmployees(employeeData);
+        setPpeItems(itemData);
+        setRegister(registerData);
+      } catch (error) {
+        console.error(error);
+        toast({
+          variant: "destructive",
+          title: "Unable to load register",
+          description: "We could not load employees or PPE data.",
+        });
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [toast]);
+
   const employeeMap = useMemo(
     () =>
-      new Map(initialEmployees.map((e) => [String(e.id), `${e.firstName} ${e.surname}`])),
-    []
+      new Map(
+        employees.map((e) => [String(e.id), `${e.firstName} ${e.surname}`])
+      ),
+    [employees]
   );
   const ppeItemMap = useMemo(
     () => new Map(ppeItems.map((item) => [item.id, item.name])),
-    []
+    [ppeItems]
   );
 
   const groupedByEmployee = useMemo(() => {
@@ -117,7 +157,7 @@ export default function PpeIssueRegisterPage() {
     });
   };
 
-  const handleIssuePpe = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleIssuePpe = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const employeeId = String(formData.get("employeeId"));
@@ -155,20 +195,30 @@ export default function PpeIssueRegisterPage() {
       signature: "Signed",
     };
 
-    setRegister((prev) =>
-      [...prev, newEntry].sort(
-        (a, b) =>
-          new Date(b.dateIssued).getTime() - new Date(a.dateIssued).getTime()
-      )
-    );
+    try {
+      const saved = await createRegisterEntry(newEntry);
+      setRegister((prev) =>
+        [saved, ...prev].sort(
+          (a, b) =>
+            new Date(b.dateIssued).getTime() - new Date(a.dateIssued).getTime()
+        )
+      );
 
-    toast({
-      title: "PPE Issued",
-      description: `${ppeItemMap.get(ppeItemId)} issued to ${employeeMap.get(
-        employeeId
-      )}.`,
-    });
-    setIsIssueOpen(false);
+      toast({
+        title: "PPE Issued",
+        description: `${ppeItemMap.get(ppeItemId)} issued to ${employeeMap.get(
+          employeeId
+        )}.`,
+      });
+      setIsIssueOpen(false);
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: "destructive",
+        title: "Failed to save entry",
+        description: "We could not store this issue record.",
+      });
+    }
   };
 
   const handleDownloadReport = () => {
@@ -201,6 +251,10 @@ export default function PpeIssueRegisterPage() {
     });
   };
 
+  if (loading) {
+    return <p className="p-6">Loading PPE register…</p>;
+  }
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -228,7 +282,7 @@ export default function PpeIssueRegisterPage() {
                     <SelectValue placeholder="Select an employee" />
                   </SelectTrigger>
                   <SelectContent>
-                    {initialEmployees.map((emp) => (
+                    {employees.map((emp) => (
                       <SelectItem key={String(emp.id)} value={String(emp.id)}>
                         {emp.firstName} {emp.surname}
                       </SelectItem>
