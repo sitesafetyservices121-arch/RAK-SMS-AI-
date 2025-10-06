@@ -15,6 +15,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import {
   Card,
   CardContent,
@@ -28,6 +29,7 @@ import { useToast } from "@/hooks/use-toast";
 import { CopyButton } from "@/components/copy-button";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/use-auth";
+import { Download } from "lucide-react";
 
 const formSchema = z.object({
   projectDescription: z
@@ -40,6 +42,10 @@ type FormValues = z.infer<typeof formSchema>;
 export default function ShePlanGeneratorPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<GenerateShePlanOutput | null>(null);
+  const [logoDataUri, setLogoDataUri] = useState<string | null>(null);
+  const [generatedDocument, setGeneratedDocument] = useState<
+    { fileName: string; downloadUrl: string; storagePath: string } | null
+  >(null);
   const { toast } = useToast();
   const { user } = useAuth(); // Get authenticated user
 
@@ -60,14 +66,26 @@ export default function ShePlanGeneratorPage() {
 
     setIsLoading(true);
     setResult(null);
-    const response = await generateShePlanAction({ values, userId: user.uid });
+    setGeneratedDocument(null);
+    const response = await generateShePlanAction({
+      values,
+      userId: user.uid,
+      companyId: user.companyId,
+      companyName: user.companyName,
+      logoDataUri: logoDataUri || undefined,
+    });
     setIsLoading(false);
 
     if (response.success) {
       setResult(response.data);
+      setGeneratedDocument({
+        fileName: response.fileName,
+        downloadUrl: response.downloadUrl,
+        storagePath: response.storagePath,
+      });
       toast({
         title: "SHE Plan Generated",
-        description: `PDF is being created and will appear in 'Generated Documents'. Path: ${response.storagePath}`,
+        description: `Word document stored at ${response.storagePath}.`,
       });
       return;
     }
@@ -122,6 +140,28 @@ export default function ShePlanGeneratorPage() {
                   </FormItem>
                 )}
               />
+              <div className="space-y-2">
+                <FormLabel htmlFor="logo-upload">Company Logo (Optional)</FormLabel>
+                <Input
+                  id="logo-upload"
+                  type="file"
+                  accept="image/png, image/jpeg"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = (e) =>
+                        setLogoDataUri(e.target?.result as string);
+                      reader.readAsDataURL(file);
+                    } else {
+                      setLogoDataUri(null);
+                    }
+                  }}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Uploaded logos are embedded into the ISO-compliant SHE plan.
+                </p>
+              </div>
               <Button
                 type="submit"
                 disabled={isLoading || !user}
@@ -142,7 +182,20 @@ export default function ShePlanGeneratorPage() {
                 Review the AI-generated plan below.
               </CardDescription>
             </div>
-            {result && <CopyButton textToCopy={fullTextResult} />}
+            <div className="flex items-center gap-2">
+              {result && <CopyButton textToCopy={fullTextResult} />}
+              {generatedDocument && (
+                <Button asChild variant="outline" size="sm">
+                  <a
+                    href={generatedDocument.downloadUrl}
+                    download={generatedDocument.fileName}
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Download Word Document
+                  </a>
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             {isLoading && <LoadingDots />}

@@ -19,7 +19,7 @@ import { Label } from "@/components/ui/label";
 import LoadingDots from "@/components/ui/loading-dots";
 import { useToast } from "@/hooks/use-toast";
 import { CopyButton } from "@/components/copy-button";
-import { FileText } from "lucide-react";
+import { FileText, Download } from "lucide-react";
 
 export default function SafeWorkProcedureTool() {
   const [clientName, setClientName] = useState("");
@@ -27,6 +27,10 @@ export default function SafeWorkProcedureTool() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<SafeWorkProcedureOutput | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [logoDataUri, setLogoDataUri] = useState<string | null>(null);
+  const [generatedDocument, setGeneratedDocument] = useState<
+    { fileName: string; downloadUrl: string; storagePath: string } | null
+  >(null);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -38,6 +42,7 @@ export default function SafeWorkProcedureTool() {
     setLoading(true);
     setError(null);
     setResult(null);
+    setGeneratedDocument(null);
 
     if (!user) {
       setError("User not authenticated.");
@@ -49,11 +54,22 @@ export default function SafeWorkProcedureTool() {
       const response = await generateSwpAction({
         values: { clientName, taskDescription },
         userId: user.uid,
+        companyId: user.companyId,
+        companyName: user.companyName,
+        logoDataUri: logoDataUri || undefined,
       });
 
       if (response.success) {
         setResult(response.data);
-        toast({ title: "Success", description: "Safe Work Procedure generated."});
+        setGeneratedDocument({
+          fileName: response.fileName,
+          downloadUrl: response.downloadUrl,
+          storagePath: response.storagePath,
+        });
+        toast({
+          title: "Success",
+          description: `Safe Work Procedure generated and stored at ${response.storagePath}.`,
+        });
       } else {
         setError(response.error);
         toast({ variant: "destructive", title: "Error", description: response.error });
@@ -97,6 +113,28 @@ export default function SafeWorkProcedureTool() {
                 onChange={(e) => setTaskDescription(e.target.value)}
               />
             </div>
+            <div>
+              <Label htmlFor="logo-upload">Company Logo (Optional)</Label>
+              <Input
+                id="logo-upload"
+                type="file"
+                accept="image/png, image/jpeg"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) =>
+                      setLogoDataUri(e.target?.result as string);
+                    reader.readAsDataURL(file);
+                  } else {
+                    setLogoDataUri(null);
+                  }
+                }}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Your logo will appear in the ISO-aligned Word document.
+              </p>
+            </div>
             <Button
               onClick={handleGenerate}
               disabled={loading || !user}
@@ -115,7 +153,20 @@ export default function SafeWorkProcedureTool() {
               <CardTitle>Generated Procedure</CardTitle>
               <CardDescription>Review the AI-generated SWP.</CardDescription>
             </div>
-            {result && <CopyButton textToCopy={result.procedure} />}
+            <div className="flex items-center gap-2">
+              {result && <CopyButton textToCopy={result.procedure} />}
+              {generatedDocument && (
+                <Button asChild variant="outline" size="sm">
+                  <a
+                    href={generatedDocument.downloadUrl}
+                    download={generatedDocument.fileName}
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Download Word Document
+                  </a>
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             {loading && <LoadingDots />}

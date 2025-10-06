@@ -21,7 +21,9 @@ export async function generateSwpAction(args: {
     return {
       success: true,
       data: result,
-      storagePath: `/generated/swp/${args.userId}-${Date.now()}.pdf`,
+      storagePath: `/generated/swp/${args.userId}-${Date.now()}.docx`,
+      fileName: `Safe-Work-Procedure-${args.userId}.docx`,
+      downloadUrl: "",
     };
   } catch (err) {
     console.error("Error in generateSwpAction:", err);

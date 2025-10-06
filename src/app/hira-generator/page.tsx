@@ -15,6 +15,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import {
   Card,
   CardContent,
@@ -27,6 +28,7 @@ import LoadingDots from "@/components/ui/loading-dots";
 import { useToast } from "@/hooks/use-toast";
 import { CopyButton } from "@/components/copy-button";
 import { useAuth } from "@/hooks/use-auth";
+import { Download } from "lucide-react";
 
 const formSchema = z.object({
   projectDetails: z.string().min(20, "Please provide more project details."),
@@ -39,6 +41,10 @@ type HiraResult = { controlMeasures: string };
 export default function HiraGeneratorPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<HiraResult | null>(null);
+  const [logoDataUri, setLogoDataUri] = useState<string | null>(null);
+  const [generatedDocument, setGeneratedDocument] = useState<
+    { fileName: string; downloadUrl: string; storagePath: string } | null
+  >(null);
   const { toast } = useToast();
   const { user } = useAuth(); // Get authenticated user
 
@@ -61,14 +67,26 @@ export default function HiraGeneratorPage() {
     }
     setIsLoading(true);
     setResult(null);
-    const response = await generateHiraAction({ values, userId: user.uid });
+    setGeneratedDocument(null);
+    const response = await generateHiraAction({
+      values,
+      userId: user.uid,
+      companyId: user.companyId,
+      companyName: user.companyName,
+      logoDataUri: logoDataUri || undefined,
+    });
     setIsLoading(false);
 
     if (response.success) {
       setResult(response.data as HiraResult);
+      setGeneratedDocument({
+        fileName: response.fileName,
+        downloadUrl: response.downloadUrl,
+        storagePath: response.storagePath,
+      });
       toast({
         title: "HIRA Controls Generated",
-        description: `Please review the suggested measures.`,
+        description: `Word document stored at ${response.storagePath}.`,
       });
     } else {
       toast({
@@ -125,6 +143,28 @@ export default function HiraGeneratorPage() {
                   </FormItem>
                 )}
               />
+              <div className="space-y-2">
+                <FormLabel htmlFor="logo-upload">Company Logo (Optional)</FormLabel>
+                <Input
+                  id="logo-upload"
+                  type="file"
+                  accept="image/png, image/jpeg"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = (e) =>
+                        setLogoDataUri(e.target?.result as string);
+                      reader.readAsDataURL(file);
+                    } else {
+                      setLogoDataUri(null);
+                    }
+                  }}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Embedded logos keep documents aligned with client branding.
+                </p>
+              </div>
               <Button
                 type="submit"
                 disabled={isLoading || !user}
@@ -145,7 +185,20 @@ export default function HiraGeneratorPage() {
                 Additional controls based on your input and SA law.
               </CardDescription>
             </div>
-            {result && <CopyButton textToCopy={result.controlMeasures} />}
+            <div className="flex items-center gap-2">
+              {result && <CopyButton textToCopy={result.controlMeasures} />}
+              {generatedDocument && (
+                <Button asChild variant="outline" size="sm">
+                  <a
+                    href={generatedDocument.downloadUrl}
+                    download={generatedDocument.fileName}
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Download Word Document
+                  </a>
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             {isLoading && <LoadingDots />}
