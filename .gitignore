@@ -65,3 +65,5 @@ firestore-debug.log
 .env
 .env.*
 !.env.example
+*.json
+!firebase.json
