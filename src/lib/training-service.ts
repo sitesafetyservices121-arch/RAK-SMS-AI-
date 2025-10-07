@@ -1,3 +1,4 @@
+
 "use server";
 
 import { db, Timestamp } from "@/lib/firebase-admin";
@@ -82,7 +83,7 @@ export async function getEmployeesByCompany(companyId: string): Promise<Employee
   const snapshot = await db.collection("employees")
     .where("companyId", "==", companyId)
     .where("status", "==", "active")
-    .orderBy("lastName")
+    .orderBy("surname")
     .get();
 
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as Employee }));

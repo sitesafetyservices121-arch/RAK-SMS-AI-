@@ -4,7 +4,7 @@ export interface Employee {
   id?: string;
   companyId: string; // Links to company for multi-tenant separation
   firstName: string;
-  lastName: string;
+  surname: string;
   idNumber: string;
   cellphone: string;
   email: string;
