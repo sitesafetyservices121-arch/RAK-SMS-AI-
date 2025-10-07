@@ -1,6 +1,6 @@
 "use client";
 
-import AuthProtected from "./_components/auth-protected";
+import AuthProtected from "@/components/auth-protected";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 
