@@ -51,13 +51,6 @@ const nextConfig = {
       asyncWebAssembly: true,
     };
 
-    // Polyfills for Node modules in the browser
-    config.resolve.fallback = {
-      ...config.resolve.fallback,
-      process: require.resolve("process/browser"),
-      stream: require.resolve("stream-browserify"),
-    };
-
     return config;
   },
 };
