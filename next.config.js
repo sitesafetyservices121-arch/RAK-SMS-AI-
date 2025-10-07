@@ -9,11 +9,6 @@ const nextConfig = {
     ignoreBuildErrors: false,
   },
 
-  eslint: {
-    // Run ESLint during builds
-    ignoreDuringBuilds: false,
-  },
-
   // This ensures 'firebase-admin' is handled correctly on the server
   serverExternalPackages: ["firebase-admin"],
 
