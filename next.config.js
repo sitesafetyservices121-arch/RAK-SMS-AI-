@@ -22,21 +22,6 @@ const nextConfig = {
       { protocol: "https", hostname: "raksms.services", pathname: "/**" },
     ],
   },
-
-  webpack: (config, { isServer }) => {
-    // Prevent firebase-admin from being bundled client-side
-    if (!isServer) {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        "firebase-admin": false,
-      };
-    }
-
-    // Add @ alias to the src directory
-    config.resolve.alias["@"] = path.resolve(__dirname, "src");
-
-    return config;
-  },
 };
 
 module.exports = nextConfig;
