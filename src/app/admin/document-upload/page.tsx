@@ -121,11 +121,22 @@ export default function DocumentUploadPage() {
 
       clearInterval(progressInterval);
       setUploadProgress(100);
-      
-      const responseData = await response.json();
+
+      const contentType = response.headers.get("content-type");
+      const isJsonResponse = contentType?.includes("application/json");
+
+      let responseData: any = null;
+
+      if (isJsonResponse) {
+        responseData = await response.json();
+      } else {
+        const errorText = await response.text();
+        const fallbackMessage = errorText || `HTTP error! status: ${response.status}`;
+        throw new Error(fallbackMessage);
+      }
 
       if (!response.ok) {
-        throw new Error(responseData.error || `HTTP error! status: ${response.status}`);
+        throw new Error(responseData?.error || `HTTP error! status: ${response.status}`);
       }
 
       toast({
