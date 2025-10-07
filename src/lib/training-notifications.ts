@@ -1,3 +1,4 @@
+
 "use server";
 
 import { db, Timestamp } from "@/lib/firebase-admin";
@@ -89,20 +90,22 @@ export async function checkAndCreateNotifications(companyId: string) {
  * Get all notifications for a company
  */
 export async function getNotifications(companyId: string, unreadOnly: boolean = false) {
-  let query = db
+  const query = db
     .collection("training_notifications")
     .where("companyId", "==", companyId);
 
-  if (unreadOnly) {
-    query = query.where("read", "==", false);
-  }
-
   const snapshot = await query.orderBy("createdAt", "desc").limit(100).get();
 
-  return snapshot.docs.map((doc) => ({
+  const allNotifications = snapshot.docs.map((doc) => ({
     id: doc.id,
     ...doc.data(),
   }));
+
+  if (unreadOnly) {
+    return allNotifications.filter(n => n.read === false);
+  }
+
+  return allNotifications;
 }
 
 /**
