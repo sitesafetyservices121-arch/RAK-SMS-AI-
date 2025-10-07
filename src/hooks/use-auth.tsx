@@ -1,8 +1,15 @@
-
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { auth, db } from "@/lib/firebase-client";
+import {
+  signInWithEmailAndPassword,
+  signOut as firebaseSignOut,
+  onAuthStateChanged,
+  User as FirebaseUser
+} from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
 
 type UserRole = "user" | "admin" | "consultant";
 
@@ -17,12 +24,14 @@ export interface MockUser {
 interface AuthContextType {
   user: MockUser | null;
   loading: boolean;
-  loginAsAdmin: () => void;
-  loginAsClient: () => void;
+  loginWithEmail: (email: string, password: string) => Promise<void>;
   signOut: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const ADMIN_UID = process.env.NEXT_PUBLIC_ADMIN_UID || "";
+const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "";
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<MockUser | null>(null);
@@ -30,60 +39,88 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
 
   useEffect(() => {
-    // Simulate checking for a logged-in user from localStorage
-    try {
-      const storedUser = localStorage.getItem("user");
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
+    // Listen to Firebase auth state changes
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        const userData = await fetchUserData(firebaseUser);
+        setUser(userData);
+      } else {
+        setUser(null);
       }
-    } catch (error) {
-      console.error("Failed to parse user from localStorage", error);
-      localStorage.removeItem("user");
-    }
-    setLoading(false);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  const loginAsAdmin = () => {
-    setLoading(true);
-    const adminUser: MockUser = {
-      uid: "admin-user",
-      email: "ruan@sitesafety.services",
-      displayName: "Ruan Admin",
-      role: "admin",
-      photoURL: `https://i.pravatar.cc/150?u=admin`,
+  const fetchUserData = async (firebaseUser: FirebaseUser): Promise<MockUser> => {
+    // Check if user is admin based on UID
+    const isAdmin = firebaseUser.uid === ADMIN_UID || firebaseUser.email === ADMIN_EMAIL;
+
+    try {
+      // Try to fetch role from Firestore users collection
+      const userDocRef = doc(db, "users", firebaseUser.uid);
+      const userDoc = await getDoc(userDocRef);
+
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        return {
+          uid: firebaseUser.uid,
+          email: firebaseUser.email || "",
+          displayName: firebaseUser.displayName || userData.displayName || "User",
+          role: isAdmin ? "admin" : (userData.role as UserRole || "user"),
+          photoURL: firebaseUser.photoURL || userData.photoURL,
+        };
+      }
+    } catch (error) {
+      console.error("Error fetching user data from Firestore:", error);
+    }
+
+    // Fallback if Firestore document doesn't exist
+    return {
+      uid: firebaseUser.uid,
+      email: firebaseUser.email || "",
+      displayName: firebaseUser.displayName || "User",
+      role: isAdmin ? "admin" : "user",
+      photoURL: firebaseUser.photoURL,
     };
-    localStorage.setItem("user", JSON.stringify(adminUser));
-    setUser(adminUser);
-    setLoading(false);
-    router.push("/admin");
   };
 
-  const loginAsClient = () => {
+  const loginWithEmail = async (email: string, password: string) => {
     setLoading(true);
-    const clientUser: MockUser = {
-      uid: "client-user",
-      email: "client@example.com",
-      displayName: "Client User",
-      role: "user",
-      photoURL: `https://i.pravatar.cc/150?u=client`,
-    };
-    localStorage.setItem("user", JSON.stringify(clientUser));
-    setUser(clientUser);
-    setLoading(false);
-    router.push("/dashboard");
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const userData = await fetchUserData(userCredential.user);
+      setUser(userData);
+
+      // Redirect based on role
+      if (userData.role === "admin") {
+        router.push("/admin");
+      } else {
+        router.push("/dashboard");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const signOut = () => {
-    localStorage.removeItem("user");
-    setUser(null);
-    router.push("/login");
+  const signOut = async () => {
+    try {
+      await firebaseSignOut(auth);
+      setUser(null);
+      router.push("/login");
+    } catch (error) {
+      console.error("Sign out error:", error);
+    }
   };
 
   const value: AuthContextType = {
     user,
     loading,
-    loginAsAdmin,
-    loginAsClient,
+    loginWithEmail,
     signOut,
   };
 

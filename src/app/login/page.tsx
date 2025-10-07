@@ -23,21 +23,16 @@ const ADMIN_EMAIL = "ruan@sitesafety.services";
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { loginWithEmailPassword, loading, authError, clearAuthError } = useAuth();
+  const { loginWithEmail, loading } = useAuth();
 
   const [email, setEmail] = useState(ADMIN_EMAIL);
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
 
-  const errorMessage = useMemo(() => localError || authError, [localError, authError]);
-
   const resetErrors = useCallback(() => {
     setLocalError(null);
-    if (authError) {
-      clearAuthError();
-    }
-  }, [authError, clearAuthError]);
+  }, []);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -50,14 +45,24 @@ export default function LoginPage() {
     setSubmitting(true);
 
     try {
-      const authUser = await loginWithEmailPassword(email.trim(), password);
+      await loginWithEmail(email.trim(), password);
       toast({
         title: "Welcome back",
-        description: `Signed in as ${authUser.email}`,
+        description: `Signed in as ${email}`,
       });
-      router.push(authUser.role === "admin" ? "/admin" : "/dashboard");
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Unable to sign in.";
+    } catch (error: any) {
+      let message = "Unable to sign in.";
+      if (error.code === "auth/user-not-found") {
+        message = "No account found with this email address.";
+      } else if (error.code === "auth/wrong-password") {
+        message = "Incorrect password.";
+      } else if (error.code === "auth/invalid-email") {
+        message = "Invalid email address.";
+      } else if (error.code === "auth/too-many-requests") {
+        message = "Too many failed login attempts. Please try again later.";
+      } else if (error.message) {
+        message = error.message;
+      }
       setLocalError(message);
     } finally {
       setSubmitting(false);
@@ -109,10 +114,10 @@ export default function LoginPage() {
               />
             </div>
 
-            {errorMessage ? (
+            {localError ? (
               <Alert variant="destructive">
                 <AlertTitle>Unable to sign in</AlertTitle>
-                <AlertDescription>{errorMessage}</AlertDescription>
+                <AlertDescription>{localError}</AlertDescription>
               </Alert>
             ) : null}
 

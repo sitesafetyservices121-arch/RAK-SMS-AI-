@@ -17,6 +17,9 @@ const nextConfig = {
   // This ensures 'firebase-admin' is handled correctly on the server
   serverExternalPackages: ["firebase-admin"],
 
+  // Allow cross-origin requests from Cloud Workstation
+  allowedDevOrigins: ["3000-firebase-studio-1759140212143.cluster-fbfjltn375c6wqxlhoehbz44sk.cloudworkstations.dev"],
+
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "i.pravatar.cc", pathname: "/**" },
