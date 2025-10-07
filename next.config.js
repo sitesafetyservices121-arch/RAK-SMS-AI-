@@ -14,8 +14,13 @@ const nextConfig = {
     ignoreDuringBuilds: false,
   },
 
-  // Removed invalid 'allowedDevOrigins' key from 'experimental'
-  experimental: {},
+  experimental: {
+    // Allow cross-origin requests from the development environment
+    allowedDevOrigins: [
+      "9000-firebase-studio-1759140212143.cluster-fbfjltn375c6wqxlhoehbz44sk.cloudworkstations.dev",
+      "*.cloudworkstations.dev",
+    ],
+  },
 
   // This ensures 'firebase-admin' is handled correctly on the server
   serverExternalPackages: ["firebase-admin"],
@@ -66,4 +71,3 @@ const nextConfig = {
 };
 
 module.exports = nextConfig;
-
