@@ -23,8 +23,8 @@ interface Employee {
   idNumber: string;
   codeLicense?: string;
   courses?: Course[];
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  createdAt: FirebaseFirestore.Timestamp;
+  updatedAt: FirebaseFirestore.Timestamp;
 }
 
 export async function GET() {

@@ -1,68 +1,38 @@
-
-import { resolve } from "path";
+const path = require("path");
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
 
   typescript: {
-    // Ensures TypeScript build errors block the build (change to true to ignore)
+    // Don’t allow builds to pass if there are type errors
     ignoreBuildErrors: false,
   },
 
   eslint: {
-    // Ensures ESLint errors block builds (set true to skip during build)
+    // Run ESLint during builds
     ignoreDuringBuilds: false,
   },
 
-  experimental: {
-    // Allows Next.js dev server access from Firebase Studio
-    allowedDevOrigins: [
-      "*.cluster-fbfjltn375c6wqxlhoehbz44sk.cloudworkstations.dev",
-      "9000-firebase-studio-1759140212143.cluster-fbfjltn375c6wqxlhoehbz44sk.cloudworkstations.dev",
-    ],
-  },
+  // Removed invalid 'allowedDevOrigins' key from 'experimental'
+  experimental: {},
 
-  // Ensures Firebase Admin is treated as external during server build
+  // This ensures 'firebase-admin' is handled correctly on the server
   serverExternalPackages: ["firebase-admin"],
 
   images: {
     remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "i.pravatar.cc",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "placehold.co",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "images.unsplash.com",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "picsum.photos",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "www.payfast.co.za",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "raksms.services",
-        pathname: "/**",
-      },
+      { protocol: "https", hostname: "i.pravatar.cc", pathname: "/**" },
+      { protocol: "https", hostname: "placehold.co", pathname: "/**" },
+      { protocol: "https", hostname: "images.unsplash.com", pathname: "/**" },
+      { protocol: "https", hostname: "picsum.photos", pathname: "/**" },
+      { protocol: "https", hostname: "www.payfast.co.za", pathname: "/**" },
+      { protocol: "https", hostname: "raksms.services", pathname: "/**" },
     ],
   },
 
   webpack: (config, { isServer }) => {
-    // Prevent firebase-admin from being bundled on the client
+    // Prevent firebase-admin from being bundled client-side
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -70,10 +40,10 @@ const nextConfig = {
       };
     }
 
-    // Set up path alias
-    config.resolve.alias["@"] = resolve(__dirname, "src");
+    // Add @ alias to the src directory
+    config.resolve.alias["@"] = path.resolve(__dirname, "src");
 
-    // Add WebAssembly async support
+    // Support WebAssembly (WASM)
     config.module.rules.push({
       test: /\.wasm$/,
       type: "webassembly/async",
@@ -84,7 +54,7 @@ const nextConfig = {
       asyncWebAssembly: true,
     };
 
-    // Add Node.js polyfills for browser builds
+    // Polyfills for Node modules in the browser
     config.resolve.fallback = {
       ...config.resolve.fallback,
       process: require.resolve("process/browser"),
@@ -95,4 +65,4 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+module.exports = nextConfig;

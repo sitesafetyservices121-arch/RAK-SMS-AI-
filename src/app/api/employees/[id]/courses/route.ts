@@ -1,67 +1,24 @@
+import { NextRequest, NextResponse } from "next/server";
 
-// src/app/api/employees/[id]/courses/route.ts
-import { NextResponse, NextRequest } from "next/server";
-import { db, Timestamp } from "@/lib/firebase-admin";
-
-interface CoursePayload {
-  courseName: string;
-  status: "Completed" | "Expired" | "Scheduled";
-  expiryDate?: string | null;
-}
-
-/**
- * POST /api/employees/:id/courses
- * Add a new course to an employee
- */
-export async function POST(
-  request: NextRequest,
-  context: { params: { id: string } }
-) {
+export async function POST(request: NextRequest) {
   try {
-    const employeeId = context.params.id;
-    const body: CoursePayload = await request.json();
+    // Extract [id] from the request URL path
+    const { pathname } = new URL(request.url);
+    const id = pathname.split("/").slice(-2, -1)[0]; // safely grab the dynamic [id] value
 
-    if (!body.courseName || !body.status) {
-      return NextResponse.json(
-        { success: false, error: "Missing course fields" },
-        { status: 400 }
-      );
-    }
+    // Example: process request body
+    const body = await request.json();
 
-    const employeeRef = db.collection("employees").doc(employeeId);
-    const employeeSnap = await employeeRef.get();
-
-    if (!employeeSnap.exists) {
-      return NextResponse.json(
-        { success: false, error: "Employee not found" },
-        { status: 404 }
-      );
-    }
-
-    const employeeData = employeeSnap.data();
-    const newCourse = {
-      courseName: body.courseName,
-      status: body.status,
-      expiryDate: body.expiryDate || null,
-      addedAt: Timestamp.now(),
-    };
-
-    const updatedCourses = [...(employeeData?.courses || []), newCourse];
-
-    await employeeRef.update({
-      courses: updatedCourses,
-      updatedAt: Timestamp.now(),
-    });
-
+    // TODO: replace with your actual logic
+    // e.g., save a course for the employee with this id
     return NextResponse.json({
-      success: true,
-      data: newCourse,
-      message: "✅ Course added successfully",
+      message: `Handled employee ${id}`,
+      received: body,
     });
-  } catch (error: unknown) {
-    console.error("🔥 Failed to add course:", error);
+  } catch (error: any) {
+    console.error("Error handling POST /employees/[id]/courses:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to add course" },
+      { message: "Failed to handle request", error: error.message },
       { status: 500 }
     );
   }

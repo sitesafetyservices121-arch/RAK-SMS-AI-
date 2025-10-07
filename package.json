@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
-    "test": "playwright test"
+    "test": "playwright test",
+    "verify:admin": "node ./scripts/verify-admin-login.mjs"
   },
   "dependencies": {
     "@genkit-ai/google-genai": "1.20.0",
