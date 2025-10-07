@@ -9,9 +9,6 @@ const nextConfig = {
     ignoreBuildErrors: false,
   },
 
-  // This ensures 'firebase-admin' is handled correctly on the server
-  serverExternalPackages: ["firebase-admin"],
-
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "i.pravatar.cc", pathname: "/**" },
