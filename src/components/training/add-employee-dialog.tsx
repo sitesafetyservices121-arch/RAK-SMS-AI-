@@ -106,7 +106,7 @@ export default function AddEmployeeDialog({
         <DialogHeader>
           <DialogTitle>Add New Employee</DialogTitle>
           <DialogDescription>
-            Enter the employee's details to add them to the training tracker
+            Enter the employee&apos;s details to add them to the training tracker
           </DialogDescription>
         </DialogHeader>
 

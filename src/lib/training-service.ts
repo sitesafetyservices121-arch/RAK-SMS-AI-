@@ -9,7 +9,7 @@ import type { Employee, TrainingCourse, Company, EmployeeWithTraining } from "@/
 
 export async function createCompany(data: Omit<Company, "id" | "createdAt" | "updatedAt">) {
   const companyRef = db.collection("companies").doc();
-  const company: Company = {
+  const company: any = {
     ...data,
     createdAt: Timestamp.now(),
     updatedAt: Timestamp.now(),
@@ -46,7 +46,7 @@ export async function getAllCompanies() {
 
 export async function createEmployee(data: Omit<Employee, "id" | "createdAt" | "updatedAt">) {
   const employeeRef = db.collection("employees").doc();
-  const employee: Employee = {
+  const employee: any = {
     ...data,
     status: data.status || "active",
     createdAt: Timestamp.now(),
@@ -59,7 +59,7 @@ export async function createEmployee(data: Omit<Employee, "id" | "createdAt" | "
 export async function updateEmployee(id: string, data: Partial<Employee>) {
   await db.collection("employees").doc(id).update({
     ...data,
-    updatedAt: Timestamp.now(),
+    updatedAt: Timestamp.now() as any,
   });
   return { success: true };
 }
@@ -113,7 +113,7 @@ export async function addTrainingCourse(data: Omit<TrainingCourse, "id" | "statu
     status = "expiring-soon";
   }
 
-  const course: TrainingCourse = {
+  const course: any = {
     ...data,
     status,
     createdAt: Timestamp.now(),
@@ -126,7 +126,7 @@ export async function addTrainingCourse(data: Omit<TrainingCourse, "id" | "statu
 
 export async function updateTrainingCourse(id: string, data: Partial<TrainingCourse>) {
   // Recalculate status if expiry date is being updated
-  let updateData: any = { ...data, updatedAt: Timestamp.now() };
+  let updateData: any = { ...data, updatedAt: Timestamp.now() as any };
 
   if (data.expiryDate) {
     const expiryDate = data.expiryDate instanceof Date ? data.expiryDate : data.expiryDate.toDate();

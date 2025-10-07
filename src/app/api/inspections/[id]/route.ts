@@ -5,9 +5,9 @@ import type { Inspection } from "@/types/inspections";
 
 // Next.js 15 automatically infers the context type from the folder structure.
 // No explicit type annotation needed — it causes the type error.
-export async function PUT(request: Request, context: any) {
+export async function PUT(request: Request, context: { params: { id: string } }) {
+  const { id } = context.params;
   try {
-    const id = context.params.id;
     const body = await request.json();
 
     // Prevent overwriting the ID and handle timestamps properly

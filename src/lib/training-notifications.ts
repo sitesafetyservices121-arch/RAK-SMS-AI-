@@ -178,10 +178,10 @@ export async function getNotificationSummary(companyId: string) {
     total: allNotifications.length,
     unread: unreadNotifications.length,
     byType: {
-      expired: unreadNotifications.filter((n) => n.type === "expired").length,
-      expiring7: unreadNotifications.filter((n) => n.type === "expiring-7").length,
-      expiring14: unreadNotifications.filter((n) => n.type === "expiring-14").length,
-      expiring30: unreadNotifications.filter((n) => n.type === "expiring-30").length,
+      expired: unreadNotifications.filter((n: any) => n.type === "expired").length,
+      expiring7: unreadNotifications.filter((n: any) => n.type === "expiring-7").length,
+      expiring14: unreadNotifications.filter((n: any) => n.type === "expiring-14").length,
+      expiring30: unreadNotifications.filter((n: any) => n.type === "expiring-30").length,
     },
   };
 

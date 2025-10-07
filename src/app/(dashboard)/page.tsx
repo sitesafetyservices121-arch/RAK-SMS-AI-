@@ -4,6 +4,8 @@ import AuthProtected from "@/components/auth-protected";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 
+export const dynamic = 'force-dynamic';
+
 export default function DashboardPage() {
   const { user, signOut } = useAuth();
 

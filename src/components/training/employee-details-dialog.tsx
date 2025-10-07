@@ -64,14 +64,14 @@ export default function EmployeeDetailsDialog({
     switch (status) {
       case "valid":
         return (
-          <Badge variant="success" className="gap-1 bg-green-500 text-white">
+          <Badge variant="default" className="gap-1 bg-green-500 text-white">
             <CheckCircle className="h-3 w-3" />
             Valid
           </Badge>
         );
       case "expiring-soon":
         return (
-          <Badge variant="warning" className="gap-1 bg-yellow-500 text-white">
+          <Badge variant="secondary" className="gap-1 bg-yellow-500 text-white">
             <AlertTriangle className="h-3 w-3" />
             Expiring Soon
           </Badge>

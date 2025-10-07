@@ -39,7 +39,7 @@ export default function NotificationBell({ companyId }: NotificationBellProps) {
     try {
       const data = await getNotifications(companyId, false);
       setNotifications(data as Notification[]);
-      setUnreadCount(data.filter((n) => !n.read).length);
+      setUnreadCount(data.filter((n: any) => !n.read).length);
     } catch (error) {
       console.error("Error loading notifications:", error);
     }
@@ -52,6 +52,7 @@ export default function NotificationBell({ companyId }: NotificationBellProps) {
       const interval = setInterval(loadNotifications, 5 * 60 * 1000);
       return () => clearInterval(interval);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [companyId]);
 
   const handleMarkAsRead = async (notificationId: string) => {

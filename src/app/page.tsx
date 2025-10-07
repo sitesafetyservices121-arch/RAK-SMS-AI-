@@ -1,6 +1,17 @@
 // /app/page.tsx
-import { redirect } from "next/navigation";
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+
+export const dynamic = 'force-dynamic';
 
 export default function Page() {
-  return redirect("/login");
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace("/login");
+  }, [router]);
+
+  return null;
 }

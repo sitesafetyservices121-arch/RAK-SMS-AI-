@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(request: NextRequest) {
+export async function POST(
+  request: NextRequest,
+  context: { params: { id: string } }
+) {
   try {
-    // Extract [id] from the request URL path
-    const { pathname } = new URL(request.url);
-    const id = pathname.split("/").slice(-2, -1)[0]; // safely grab the dynamic [id] value
+    // Extract [id] from the context object
+    const { id } = context.params;
 
     // Example: process request body
     const body = await request.json();

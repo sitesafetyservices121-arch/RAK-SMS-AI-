@@ -88,6 +88,7 @@ export default function EmployeeTrainingTrackerPage() {
 
   useEffect(() => {
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const filteredEmployees = employees.filter(emp =>
@@ -107,12 +108,12 @@ export default function EmployeeTrainingTrackerPage() {
       </Badge>;
     }
     if (employee.expiringCoursesCount > 0) {
-      return <Badge variant="warning" className="gap-1 bg-yellow-500 text-white">
+      return <Badge variant="secondary" className="gap-1 bg-yellow-500 text-white">
         <AlertTriangle className="h-3 w-3" />
         {employee.expiringCoursesCount} Expiring Soon
       </Badge>;
     }
-    return <Badge variant="success" className="gap-1 bg-green-500 text-white">
+    return <Badge variant="default" className="gap-1 bg-green-500 text-white">
       <CheckCircle className="h-3 w-3" />
       All Valid
     </Badge>;
@@ -271,7 +272,7 @@ export default function EmployeeTrainingTrackerPage() {
                 <div className="text-center py-8 text-muted-foreground">Loading...</div>
               ) : filteredEmployees.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  No employees found. Click "Add Employee" to get started.
+                  No employees found. Click &quot;Add Employee&quot; to get started.
                 </div>
               ) : (
                 <Table>
@@ -336,7 +337,7 @@ export default function EmployeeTrainingTrackerPage() {
                         </TableCell>
                         <TableCell>{employee.email}</TableCell>
                         <TableCell>
-                          <Badge variant="warning" className="bg-yellow-500 text-white">
+                          <Badge variant="secondary" className="bg-yellow-500 text-white">
                             {employee.expiringCoursesCount} course(s)
                           </Badge>
                         </TableCell>
