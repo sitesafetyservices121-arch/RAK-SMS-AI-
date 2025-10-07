@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate signature
-    const pfValidSignature = generateSignature(
+    const pfValidSignature = await generateSignature(
       pfDataObject,
       process.env.PAYFAST_PASSPHRASE
     );

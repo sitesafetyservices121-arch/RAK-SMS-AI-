@@ -17,9 +17,6 @@ const nextConfig = {
   // This ensures 'firebase-admin' is handled correctly on the server
   serverExternalPackages: ["firebase-admin"],
 
-  // Allow cross-origin requests from Cloud Workstation
-  allowedDevOrigins: ["3000-firebase-studio-1759140212143.cluster-fbfjltn375c6wqxlhoehbz44sk.cloudworkstations.dev"],
-
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "i.pravatar.cc", pathname: "/**" },
@@ -42,17 +39,6 @@ const nextConfig = {
 
     // Add @ alias to the src directory
     config.resolve.alias["@"] = path.resolve(__dirname, "src");
-
-    // Support WebAssembly (WASM)
-    config.module.rules.push({
-      test: /\.wasm$/,
-      type: "webassembly/async",
-    });
-
-    config.experiments = {
-      ...config.experiments,
-      asyncWebAssembly: true,
-    };
 
     return config;
   },

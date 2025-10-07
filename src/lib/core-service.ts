@@ -15,15 +15,15 @@ export type SiteDoc = Site & { id: string };
 export async function getAllEmployees(): Promise<EmployeeDoc[]> {
   const snapshot = await db.collection("employees").get();
   return snapshot.docs.map((doc) => ({
-    id: doc.id,
     ...(doc.data() as Employee),
+    id: doc.id,
   }));
 }
 
 export async function getEmployeeById(id: string): Promise<EmployeeDoc | null> {
   const docSnap = await db.collection("employees").doc(id).get();
   if (!docSnap.exists) return null;
-  return { id: docSnap.id, ...(docSnap.data() as Employee) };
+  return { ...(docSnap.data() as Employee), id: docSnap.id };
 }
 
 // ==============================
@@ -48,13 +48,13 @@ export async function updateVehicleStatus(id: string, status: InspectionStatus) 
 export async function getAllSites(): Promise<SiteDoc[]> {
   const snapshot = await db.collection("sites").get();
   return snapshot.docs.map((doc) => ({
-    id: doc.id,
     ...(doc.data() as Site),
+    id: doc.id,
   }));
 }
 
 export async function getSiteById(id: string): Promise<SiteDoc | null> {
   const docSnap = await db.collection("sites").doc(id).get();
   if (!docSnap.exists) return null;
-  return { id: docSnap.id, ...(docSnap.data() as Site) };
+  return { ...(docSnap.data() as Site), id: docSnap.id };
 }

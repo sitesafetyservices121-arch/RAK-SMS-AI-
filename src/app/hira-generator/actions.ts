@@ -1,7 +1,7 @@
 "use server";
 
 import { ActionResponse } from "@/types/action-response";
-import { HiraOutput, HiraInput, GenerateHiraInput } from "@/types/hira";
+import { HiraOutput, GenerateHiraInput } from "@/types/hira";
 
 import { generateHira } from "@/ai/flows/ai-hira-generator";
 // import { generatePdfRequest } from "@/lib/pdf";

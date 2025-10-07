@@ -1,12 +1,18 @@
 { pkgs, ... }: {
-  # Which nixpkgs channel to use.
-  channel = "stable-23.11"; # or "unstable"
-  # Use https://search.nixos.org/packages to find packages
+  channel = "stable-23.11";
   packages = [
     pkgs.nodejs_20
   ];
-  # Sets environment variables in the workspace
   env = {};
-  # Search for the extensions you want on https://open-vsx.org/ and use "publisher.id"
   idx.extensions = [];
+  idx.previews = {
+    enable = true;
+    previews = [
+      {
+        command = ["npm" "run" "dev" "--" "--port" "$PORT" "--hostname" "0.0.0.0"];
+        manager = "web";
+        id = "web";
+      }
+    ];
+  };
 }

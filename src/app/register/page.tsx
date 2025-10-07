@@ -42,7 +42,6 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const { toast } = useToast();
-  const { signUp } = useAuth();
   const router = useRouter();
 
   const form = useForm<FormValues>({
@@ -53,12 +52,14 @@ export default function RegisterPage() {
   async function onSubmit(values: FormValues) {
     setIsLoading(true);
     try {
-      await signUp(values.email, values.password, values.displayName);
+      // Note: Registration is currently disabled. Contact admin for account creation.
       toast({
-        title: "Registration Successful",
-        description: "Welcome!",
+        variant: "destructive",
+        title: "Registration Disabled",
+        description: "Please contact your administrator to create an account.",
       });
-      router.push("/dashboard");
+      // Redirect to login after showing message
+      setTimeout(() => router.push("/login"), 2000);
     } catch (error: any) {
       toast({
         variant: "destructive",

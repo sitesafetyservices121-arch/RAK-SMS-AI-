@@ -13,7 +13,7 @@ import crypto from "crypto";
 export async function generateSignature(
   data: Record<string, string>,
   passphrase?: string
-): string {
+): Promise<string> {
   // Filter out the signature key itself
   const keys = Object.keys(data)
     .filter((k) => k !== "signature")

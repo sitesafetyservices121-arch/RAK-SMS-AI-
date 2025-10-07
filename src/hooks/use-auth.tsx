@@ -82,7 +82,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       email: firebaseUser.email || "",
       displayName: firebaseUser.displayName || "User",
       role: isAdmin ? "admin" : "user",
-      photoURL: firebaseUser.photoURL,
+      photoURL: firebaseUser.photoURL || undefined,
     };
   };
 
