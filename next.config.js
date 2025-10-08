@@ -34,11 +34,6 @@ const nextConfig = {
     // Improve build performance
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
   },
-
-  // Prevent build from hanging on API routes
-  generateBuildId: async () => {
-    return 'build-' + Date.now()
-  },
 };
 
 module.exports = nextConfig;
