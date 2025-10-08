@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -20,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import React, { useState } from "react";
-import { FilePlus } from "lucide-react";
+import { FilePlus, LinkIcon } from "lucide-react";
 
 export default function CreateNewsPage() {
   const { toast } = useToast();
@@ -29,15 +30,16 @@ export default function CreateNewsPage() {
     title: "",
     category: "",
     content: "",
+    link: "", // Add new field for the external link
   });
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
 
-    if (!form.title || !form.category || !form.content) {
+    if (!form.title || !form.category) {
       toast({
         title: "Validation Error",
-        description: "All fields are required.",
+        description: "Title and Category are required.",
         variant: "destructive",
       });
       return;
@@ -50,8 +52,10 @@ export default function CreateNewsPage() {
     });
 
     // Reset form
-    setForm({ title: "", category: "", content: "" });
+    setForm({ title: "", category: "", content: "", link: "" });
   };
+
+  const isLinkValid = form.link.startsWith("http");
 
   return (
     <div className="space-y-6">
@@ -90,18 +94,37 @@ export default function CreateNewsPage() {
                   <SelectItem value="updates">Updates</SelectItem>
                   <SelectItem value="events">Events</SelectItem>
                   <SelectItem value="announcements">Announcements</SelectItem>
+                  <SelectItem value="external">External Article</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="link">External Link (Optional)</Label>
+              <Input
+                id="link"
+                placeholder="https://example.com/news-article"
+                value={form.link}
+                onChange={(e) => setForm({ ...form, link: e.target.value })}
+              />
+            </div>
+
+            {isLinkValid && (
+              <div className="p-4 border rounded-lg bg-muted/50">
+                <p className="text-sm font-semibold text-muted-foreground">Link Preview</p>
+                <a href={form.link} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline line-clamp-1">
+                  {form.link}
+                </a>
+              </div>
+            )}
+
+            <div className="space-y-2">
               <Label htmlFor="content">Content</Label>
               <Textarea
                 id="content"
-                placeholder="Write the news content..."
+                placeholder="Write a summary or the full news content..."
                 value={form.content}
                 onChange={(e) => setForm({ ...form, content: e.target.value })}
-                required
               />
             </div>
 

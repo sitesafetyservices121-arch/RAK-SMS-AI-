@@ -1,3 +1,4 @@
+
 import {
   Card,
   CardContent,
@@ -6,6 +7,8 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { LinkIcon } from "lucide-react";
+import Link from "next/link";
 
 const newsArticles = [
   {
@@ -15,6 +18,7 @@ const newsArticles = [
     category: "Legal Update",
     content:
       "The amended Construction Regulations have been officially gazetted and are now in effect. Key changes include stricter requirements for risk assessments and the appointment of competent persons. All site managers are required to review the updated documents in the Document Library.",
+    link: "https://www.gov.za/documents/construction-regulations-2014",
   },
   {
     title: "Q3 Safety Target: 10% Reduction in LTIR",
@@ -55,7 +59,21 @@ export default function NewsPage() {
             <Card key={article.title}>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle>{article.title}</CardTitle>
+                  {article.link ? (
+                    <Link
+                      href={article.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:underline"
+                    >
+                      <CardTitle className="flex items-center gap-2">
+                        {article.title}
+                        <LinkIcon className="h-4 w-4 text-primary" />
+                      </CardTitle>
+                    </Link>
+                  ) : (
+                    <CardTitle>{article.title}</CardTitle>
+                  )}
                   <Badge
                     variant={
                       article.category === "Legal Update"
