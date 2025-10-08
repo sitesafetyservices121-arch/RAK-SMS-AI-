@@ -90,9 +90,13 @@ export async function checkAndCreateNotifications(companyId: string) {
  * Get all notifications for a company
  */
 export async function getNotifications(companyId: string, unreadOnly: boolean = false) {
-  const query = db
+  let query = db
     .collection("training_notifications")
     .where("companyId", "==", companyId);
+
+  if (unreadOnly) {
+    query = query.where("read", "==", false);
+  }
 
   const snapshot = await query.orderBy("createdAt", "desc").limit(100).get();
 
@@ -100,10 +104,6 @@ export async function getNotifications(companyId: string, unreadOnly: boolean = 
     id: doc.id,
     ...doc.data(),
   }));
-
-  if (unreadOnly) {
-    return allNotifications.filter(n => n.read === false);
-  }
 
   return allNotifications;
 }

@@ -6,9 +6,9 @@ import { generateSignature } from "@/lib/payfast"; // Corrected import
 // PayFast IP ranges (simplified list)
 const validIpRanges = [
   "197.97.145.145",
-    "196.33.227.",
-      "41.74.179.",
-      ];
+  "196.33.227.",
+  "41.74.179."
+];
 
 
 // Helper: Validate source IP

@@ -17,14 +17,11 @@ export async function GET(request: Request) {
     // Fetch all items for the company
     let query = db.collection("storeroom").where("companyId", "==", companyId);
 
-    // Apply report type filters
-    if (reportType === "low-stock") {
-      // Will filter in memory based on quantity vs reorderPoint
-    } else if (reportType === "maintenance-due") {
-      // Will filter in memory based on nextMaintenanceDate
-    } else if (reportType === "decommissioned") {
-      query = query.where("status", "==", "decommissioned") as any;
+    // Apply report type filters for decommissioned items later
+    if (reportType === "decommissioned") {
+        query = query.where("status", "==", "decommissioned") as any;
     }
+
 
     const snapshot = await query.get();
     const items = snapshot.docs.map((doc) => ({

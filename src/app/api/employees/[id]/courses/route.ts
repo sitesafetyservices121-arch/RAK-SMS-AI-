@@ -1,18 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  request: NextRequest
 ) {
   try {
-    // Extract [id] from the context object
-    const { id } = params;
-
-    // Example: process request body
+    const id = request.nextUrl.pathname.split('/')[3];
     const body = await request.json();
 
-    // TODO: replace with your actual logic
-    // e.g., save a course for the employee with this id
     return NextResponse.json({
       message: `Handled employee ${id}`,
       received: body,
