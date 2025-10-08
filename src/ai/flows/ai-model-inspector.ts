@@ -15,7 +15,7 @@ interface GoogleAIModel {
   supportedGenerationMethods: string[];
 }
 
-export const ModelInfoSchema = z.object({
+const ModelInfoSchema = z.object({
   name: z.string(),
   description: z.string(),
   inputTokenLimit: z.number(),
