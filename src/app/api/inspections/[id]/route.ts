@@ -3,10 +3,8 @@ import { NextResponse } from "next/server";
 import { db, Timestamp } from "@/lib/firebase-admin";
 import type { Inspection } from "@/types/inspections";
 
-// Next.js 15 automatically infers the context type from the folder structure.
-// No explicit type annotation needed — it causes the type error.
-export async function PUT(request: Request, context) {
-  const { id } = context.params;
+export async function PUT(request: Request, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params;
   try {
     const body = await request.json();
 

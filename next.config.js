@@ -20,12 +20,12 @@ const nextConfig = {
     ],
   },
 
-  experimental: {
-    // Allow cross-origin fetching in development for Firebase Studio
-    allowedDevOrigins: [
-      "https://6000-firebase-studio-1759140212143.cluster-fbfjltn375c6wqxlhoehbz44sk.cloudworkstations.dev",
-    ],
-  },
+  // experimental: {
+  //   // Allow cross-origin fetching in development for Firebase Studio
+  //   allowedDevOrigins: [
+  //     "https://6000-firebase-studio-1759140212143.cluster-fbfjltn375c6wqxlhoehbz44sk.cloudworkstations.dev",
+  //   ],
+  // },
 };
 
 module.exports = nextConfig;

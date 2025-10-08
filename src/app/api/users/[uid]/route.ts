@@ -3,9 +3,9 @@ import { db } from "@/lib/firebase-admin";
 
 export async function GET(
   request: Request,
-  { params }: { params: { uid: string } }
+  { params }: { params: Promise<{ uid: string }> }
 ) {
-  const { uid } = params;
+  const { uid } = await params;
   try {
 
     if (!uid) {
