@@ -2,24 +2,25 @@
   "name": "next-project",
   "version": "0.1.0",
   "private": true,
+  "files": [
+    "src"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "playwright test",
-    "test:ui": "playwright test --ui",
-    "test:report": "playwright show-report",
-    "genkit:start": "genkit start",
-    "genkit:dev": "node --watch src/ai/dev.ts",
-    "firebase:emulators": "firebase emulators:start --import=./firebase-data --export-on-exit",
-    "firebase:seed": "tsx scripts/seedFirestore.ts",
-    "admin:set-role": "tsx scripts/set-admin-role.ts",
-    "admin:check-connections": "tsx scripts/test-firebase-connection.ts",
-    "admin:check-routes": "tsx scripts/check-routes.ts"
+    "seed": "tsx scripts/seedFirestore.ts",
+    "add-doc": "tsx scripts/temp-add-doc.js",
+    "add-eng-doc": "tsx scripts/add-engineering-doc.ts",
+    "test:env": "tsx scripts/test-env.ts",
+    "test:firebase": "tsx scripts/test-firebase-connection.ts",
+    "set:admin": "tsx scripts/set-admin-role.ts",
+    "check-routes": "tsx scripts/check-routes.ts",
+    "test-docs": "tsx scripts/test-document-upload.ts",
+    "seed-storeroom": "tsx scripts/seed-storeroom.ts"
   },
   "dependencies": {
-    "@genkit-ai/google-genai": "^1.0.0",
     "@google-cloud/vertexai": "^1.0.0",
     "@hookform/resolvers": "^3.9.0",
     "@radix-ui/react-accordion": "^1.2.0",
@@ -43,12 +44,11 @@
     "@radix-ui/react-tabs": "^1.1.0",
     "@radix-ui/react-toast": "^1.2.1",
     "@radix-ui/react-tooltip": "^1.1.2",
-    "autoprefixer": "^10.4.19",
+    "@genkit-ai/google-genai": "^1.0.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
     "date-fns": "^3.6.0",
-    "dotenv": "^16.4.5",
     "embla-carousel-react": "^8.1.6",
     "firebase": "^10.12.3",
     "firebase-admin": "^12.2.0",
@@ -58,6 +58,7 @@
     "lucide-react": "^0.400.0",
     "next": "14.2.4",
     "next-themes": "^0.3.0",
+    "node-fetch": "^3.3.2",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
     "react-dom": "^18.3.1",
@@ -68,16 +69,17 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@playwright/test": "^1.45.1",
     "@types/node": "^20.14.9",
-    "@types/node-fetch": "^2.6.13",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
+    "@playwright/test": "^1.45.1",
+    "dotenv": "^16.4.5",
     "eslint": "^8.57.0",
     "eslint-config-next": "14.2.4",
     "postcss": "^8.4.39",
     "tailwindcss": "^3.4.4",
     "tsx": "^4.16.2",
-    "typescript": "^5.5.3"
+    "typescript": "^5.5.3",
+    "autoprefixer": "^10.4.19"
   }
 }
