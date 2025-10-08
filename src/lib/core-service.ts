@@ -2,12 +2,22 @@
 'use server';
 
 import { db } from "@/lib/firebase-admin";
-import type { Employee, Vehicle, Site, InspectionStatus } from "@/mocks/core-data";
+import type {
+  Employee,
+  Course,
+  PpeItem,
+  PpeRegisterEntry,
+  Vehicle,
+  Site,
+  InspectionStatus
+} from "@/types/core-types";
 
 // Firestore document types
 export type EmployeeDoc = Employee & { id: string };
 export type VehicleDoc = Vehicle & { id: string };
 export type SiteDoc = Site & { id: string };
+export type PpeItemDoc = PpeItem & { id: string };
+export type PpeRegisterDoc = PpeRegisterEntry & { id: string };
 
 // ==============================
 // Employees
@@ -57,4 +67,75 @@ export async function getSiteById(id: string): Promise<SiteDoc | null> {
   const docSnap = await db.collection("sites").doc(id).get();
   if (!docSnap.exists) return null;
   return { ...(docSnap.data() as Site), id: docSnap.id };
+}
+
+// ==============================
+// PPE Items
+// ==============================
+export async function getAllPpeItems(): Promise<PpeItemDoc[]> {
+  const snapshot = await db.collection("ppeItems").get();
+  return snapshot.docs.map((doc) => ({
+    ...(doc.data() as PpeItem),
+    id: doc.id,
+  }));
+}
+
+export async function getPpeItemById(id: string): Promise<PpeItemDoc | null> {
+  const docSnap = await db.collection("ppeItems").doc(id).get();
+  if (!docSnap.exists) return null;
+  return { ...(docSnap.data() as PpeItem), id: docSnap.id };
+}
+
+// ==============================
+// PPE Register
+// ==============================
+export async function getAllPpeRegisterEntries(): Promise<PpeRegisterDoc[]> {
+  const snapshot = await db.collection("ppeRegister").get();
+  return snapshot.docs.map((doc) => ({
+    ...(doc.data() as PpeRegisterEntry),
+    id: doc.id,
+  }));
+}
+
+export async function getPpeRegisterByEmployeeId(employeeId: string): Promise<PpeRegisterDoc[]> {
+  const snapshot = await db.collection("ppeRegister")
+    .where("employeeId", "==", employeeId)
+    .get();
+
+  return snapshot.docs.map((doc) => ({
+    ...(doc.data() as PpeRegisterEntry),
+    id: doc.id,
+  }));
+}
+
+/**
+ * Get PPE issued to a specific employee with item details
+ */
+export async function getEmployeePpeWithDetails(employeeId: string) {
+  const ppeEntries = await getPpeRegisterByEmployeeId(employeeId);
+  const ppeItems = await getAllPpeItems();
+
+  return ppeEntries.map((entry) => ({
+    ...entry,
+    item: ppeItems.find((item) => item.id === entry.ppeItemId) || null,
+  }));
+}
+
+/**
+ * Get complete employee profile with PPE and course information
+ */
+export async function getEmployeeProfile(employeeId: string) {
+  const employee = await getEmployeeById(employeeId);
+  if (!employee) return null;
+
+  const ppe = await getEmployeePpeWithDetails(employeeId);
+
+  // Check if any courses are expired
+  const hasExpiredCourses = employee.courses?.some((c: Course) => c.status === "Expired") || false;
+
+  return {
+    ...employee,
+    ppe,
+    hasExpiredCourses,
+  };
 }

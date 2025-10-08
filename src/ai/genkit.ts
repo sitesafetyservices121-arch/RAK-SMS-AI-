@@ -1,14 +1,24 @@
 import { genkit } from "genkit";
 import { googleAI } from "@genkit-ai/google-genai";
 
-// Create the shared Genkit instance with Google AI plugin
-export const ai = genkit({
-  plugins: [googleAI()],
-});
+// Lazy initialization to avoid blocking app startup
+let _ai: ReturnType<typeof genkit> | null = null;
 
-// Convenience wrapper so you don’t repeat the model name everywhere
+function getAI() {
+  if (!_ai) {
+    _ai = genkit({
+      plugins: [googleAI()],
+    });
+  }
+  return _ai;
+}
+
+export const ai = getAI();
+
+// Convenience wrapper so you don't repeat the model name everywhere
 export async function generateWithGemini(prompt: string) {
-  return ai.generate({
+  const aiInstance = getAI();
+  return aiInstance.generate({
     model: "googleai/gemini-1.5-flash-001",
     prompt,
   });

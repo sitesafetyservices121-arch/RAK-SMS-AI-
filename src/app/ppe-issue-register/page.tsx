@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -37,11 +37,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Download, PlusCircle, Save, ChevronDown, ChevronRight } from "lucide-react";
-import {
-  initialEmployees,
-  ppeRegister as initialPpeRegister,
-  type PpeItem,
-} from "@/lib/employee-service";
+import type { PpeItem, Employee } from "@/types/core-types";
 import { format, addMonths } from "date-fns";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
@@ -74,15 +70,49 @@ const ppeItems: PpeItem[] = [
 ];
 
 export default function PpeIssueRegisterPage() {
-  const [register, setRegister] = useState<PpeRegisterEntry[]>(initialPpeRegister);
+  const [register, setRegister] = useState<PpeRegisterEntry[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [isIssueOpen, setIsIssueOpen] = useState(false);
   const [expandedEmployees, setExpandedEmployees] = useState<Set<string>>(new Set());
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+
+  // Fetch data from API on mount
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [employeesRes, registerRes] = await Promise.all([
+          fetch('/api/employees'),
+          fetch('/api/ppe-register')
+        ]);
+
+        const employeesData = await employeesRes.json();
+        const registerData = await registerRes.json();
+
+        if (employeesData.success) {
+          setEmployees(employeesData.data);
+        }
+        if (registerData.success) {
+          setRegister(registerData.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch data:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load data from server",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, [toast]);
 
   const employeeMap = useMemo(
     () =>
-      new Map(initialEmployees.map((e) => [String(e.id), `${e.firstName} ${e.surname}`])),
-    []
+      new Map(employees.map((e) => [String(e.id), `${e.firstName} ${e.surname}`])),
+    [employees]
   );
   const ppeItemMap = useMemo(
     () => new Map(ppeItems.map((item) => [item.id, item.name])),
@@ -228,7 +258,7 @@ export default function PpeIssueRegisterPage() {
                     <SelectValue placeholder="Select an employee" />
                   </SelectTrigger>
                   <SelectContent>
-                    {initialEmployees.map((emp) => (
+                    {employees.map((emp) => (
                       <SelectItem key={String(emp.id)} value={String(emp.id)}>
                         {emp.firstName} {emp.surname}
                       </SelectItem>

@@ -1,28 +1,17 @@
 // src/app/api/employees/route.ts
 import { NextResponse } from "next/server";
 import { db, Timestamp } from "@/lib/firebase-admin";
-
-interface Course {
-  id: string;
-  name: string;
-  // Add other relevant course properties here if known
-}
+import type { Employee, Course } from "@/types/core-types";
 
 interface EmployeePayload {
   firstName: string;
   surname: string;
   idNumber: string;
-  codeLicense?: string;
+  codeLicense?: string | null;
   courses?: Course[];
 }
 
-interface Employee {
-  id: string;
-  firstName: string;
-  surname: string;
-  idNumber: string;
-  codeLicense?: string;
-  courses?: Course[];
+interface EmployeeDoc extends Employee {
   createdAt: FirebaseFirestore.Timestamp;
   updatedAt: FirebaseFirestore.Timestamp;
 }
@@ -30,10 +19,10 @@ interface Employee {
 export async function GET() {
   try {
     const snapshot = await db.collection("employees").get();
-    const employees: Employee[] = snapshot.docs.map((doc) => ({
+    const employees: EmployeeDoc[] = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
-    })) as Employee[];
+    })) as EmployeeDoc[];
 
     return NextResponse.json({ success: true, data: employees });
   } catch (error: unknown) {
@@ -48,7 +37,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body: EmployeePayload = await request.json();
-    const { firstName, surname, idNumber, codeLicense } = body;
+    const { firstName, surname, idNumber, codeLicense, courses } = body;
 
     if (!firstName || !surname || !idNumber) {
       return NextResponse.json(
@@ -63,8 +52,8 @@ export async function POST(request: Request) {
       firstName,
       surname,
       idNumber,
-      codeLicense: codeLicense || "",
-      courses: [],
+      codeLicense: codeLicense || null,
+      courses: courses || [],
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
     };
