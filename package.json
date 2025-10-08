@@ -19,6 +19,7 @@
     "admin:check-routes": "tsx scripts/check-routes.ts"
   },
   "dependencies": {
+    "@genkit-ai/google-genai": "^1.0.0",
     "@google-cloud/vertexai": "^1.0.0",
     "@hookform/resolvers": "^3.9.0",
     "@radix-ui/react-accordion": "^1.2.0",
@@ -52,7 +53,6 @@
     "firebase": "^10.12.3",
     "firebase-admin": "^12.2.0",
     "genkit": "^1.0.0",
-    "@genkit-ai/google-genai": "^1.0.0",
     "jspdf": "^2.5.1",
     "jspdf-autotable": "^3.8.2",
     "lucide-react": "^0.400.0",
@@ -70,6 +70,7 @@
   "devDependencies": {
     "@playwright/test": "^1.45.1",
     "@types/node": "^20.14.9",
+    "@types/node-fetch": "^2.6.13",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "eslint": "^8.57.0",

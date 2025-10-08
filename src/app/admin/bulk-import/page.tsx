@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -27,7 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { UploadCloud, File, Loader2, Import } from "lucide-react";
+import { UploadCloud, File, Loader2, Import, CheckCircle } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
 // This is a placeholder type. In a real app, this would involve unzipping logic.
@@ -97,6 +98,7 @@ export default function BulkImportPage() {
     }
 
     // Simulate import API call
+    console.log(`Importing ${file?.name} with details:`, fileDetails);
 
     toast({
       title: "Import Successful",
@@ -119,46 +121,54 @@ export default function BulkImportPage() {
       <CardHeader>
         <CardTitle>Bulk Document Import</CardTitle>
         <CardDescription>
-          Upload a single ZIP file containing multiple documents, then categorize and import them into the library.
+          Upload a ZIP file containing multiple documents to import them in one go.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="p-6 border-2 border-dashed rounded-lg text-center">
-          <UploadCloud className="mx-auto h-12 w-12 text-muted-foreground" />
-          <Label htmlFor="bulk-upload" className="mt-4 block text-sm font-medium">
-            {isProcessing ? "Processing file..." : "Click to upload a ZIP file"}
-          </Label>
-          <Input
-            id="bulk-upload"
-            type="file"
-            className="sr-only"
-            accept=".zip"
-            onChange={handleFileProcess}
-            disabled={isProcessing}
-          />
-          {isProcessing && <Loader2 className="mx-auto mt-4 h-6 w-6 animate-spin" />}
+        <div>
+          <h3 className="text-lg font-semibold mb-2">Step 1: Upload ZIP File</h3>
+          <div className="p-6 border-2 border-dashed rounded-lg text-center bg-muted/50">
+            <UploadCloud className="mx-auto h-12 w-12 text-muted-foreground" />
+            <Label htmlFor="bulk-upload" className="mt-4 block text-sm font-medium cursor-pointer text-primary hover:underline">
+              {isProcessing ? "Processing file..." : "Click to upload a ZIP file"}
+            </Label>
+            <p className="text-xs text-muted-foreground mt-1">Maximum file size: 50MB. ZIP only.</p>
+            <Input
+              id="bulk-upload"
+              type="file"
+              className="sr-only"
+              accept=".zip"
+              onChange={handleFileProcess}
+              disabled={isProcessing}
+            />
+            {isProcessing && <Loader2 className="mx-auto mt-4 h-6 w-6 animate-spin" />}
+          </div>
         </div>
         
         {extractedFiles.length > 0 && (
           <div>
             <Separator className="my-6" />
-            <h3 className="text-lg font-semibold mb-4">Extracted Documents</h3>
+            <h3 className="text-lg font-semibold mb-2">Step 2: Categorize and Import</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              For each document extracted from the ZIP file, assign a category, section, and final name, then click &apos;Import&apos;.
+            </p>
             <div className="border rounded-lg">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>File Name</TableHead>
+                    <TableHead>Extracted File</TableHead>
                     <TableHead className="w-[180px]">Category</TableHead>
                     <TableHead className="w-[200px]">Section</TableHead>
                     <TableHead>Document Name</TableHead>
-                    <TableHead className="text-right">Action</TableHead>
+                    <TableHead className="text-right w-[120px]">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {extractedFiles.map((file) => (
                     <TableRow key={file.id}>
                       <TableCell className="font-medium flex items-center gap-2">
-                        <File className="h-4 w-4" /> {file.name}
+                        <File className="h-4 w-4 text-muted-foreground" /> 
+                        <span className="truncate" title={file.name}>{file.name}</span>
                       </TableCell>
                       <TableCell>
                         <Select onValueChange={(val) => handleStateChange(file.id, 'category', val)}>
@@ -199,6 +209,13 @@ export default function BulkImportPage() {
               </Table>
             </div>
           </div>
+        )}
+         { !isProcessing && extractedFiles.length === 0 && (
+            <div className="mt-6 text-center text-muted-foreground border-2 border-dashed rounded-lg p-12">
+                <CheckCircle className="mx-auto h-12 w-12 text-green-500 mb-4" />
+                <p className="font-semibold">Ready for import</p>
+                <p>Upload a ZIP file to begin.</p>
+            </div>
         )}
       </CardContent>
     </Card>
