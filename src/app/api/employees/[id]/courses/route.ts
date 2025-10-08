@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
     // Extract [id] from the context object
-    const { id } = context.params;
+    const { id } = params;
 
     // Example: process request body
     const body = await request.json();
