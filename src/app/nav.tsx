@@ -61,9 +61,24 @@ const menuConfig = [
     items: [
       { href: "/dashboard", label: "Dashboard", icon: Home },
       { href: "/documents", label: "Document Library", icon: Library },
-      { href: "/generated-documents", label: "Generated Documents", icon: FolderKanban },
-      { href: "/news", label: "News", icon: Newspaper },
-      { href: "/how-to-guide", label: "How-to Guide", icon: BookOpen },
+    ],
+  },
+  {
+    label: "Consultant",
+    items: [
+      { href: "/ohs-consultant", label: "Wilson - OHS Consultant", icon: WilsonLogo },
+    ],
+  },
+  {
+    label: "AI Tools",
+    icon: Bot,
+    collapsible: true,
+    items: [
+      { href: "/she-plan-generator", label: "SHE Plan Generator", icon: FileText },
+      { href: "/hira-generator", label: "HIRA Generator", icon: ShieldAlert },
+      { href: "/safe-work-procedure", label: "Safe Work Procedure", icon: ClipboardCheck },
+      { href: "/method-statement", label: "Method Statement", icon: DraftingCompass },
+      { href: "/ltir-analysis", label: "LTIR Trend Analysis", icon: LineChart },
     ],
   },
   {
@@ -81,23 +96,12 @@ const menuConfig = [
     ],
   },
   {
-    label: "AI Tools",
-    icon: Bot,
-    collapsible: true,
+    label: "Records",
     items: [
-      { href: "/she-plan-generator", label: "SHE Plan Generator", icon: FileText },
-      { href: "/hira-generator", label: "HIRA Generator", icon: ShieldAlert },
-      { href: "/safe-work-procedure", label: "Safe Work Procedure", icon: ClipboardCheck },
-      { href: "/method-statement", label: "Method Statement", icon: DraftingCompass },
-      { href: "/ltir-analysis", label: "LTIR Trend Analysis", icon: LineChart },
+      { href: "/generated-documents", label: "Generated Documents", icon: FolderKanban },
+      { href: "/news", label: "News", icon: Newspaper },
+      { href: "/how-to-guide", label: "How-to Guide", icon: BookOpen },
     ],
-  },
-  {
-    label: "Consultant",
-    items: [
-      { href: "/ohs-consultant", label: "Wilson - OHS Consultant", icon: WilsonLogo },
-    ],
-    role: "consultant",
   },
   {
     label: "My Account",
@@ -115,7 +119,6 @@ const menuConfig = [
     collapsible: true,
     role: "admin",
     items: [
-      { href: "/admin", label: "Admin Dashboard", icon: Shield },
       { href: "/admin/onboarding", label: "Onboarding", icon: Users },
       { href: "/admin/prescription-management", label: "Prescription Mgt", icon: ClipboardCheck },
       { href: "/admin/billing", label: "Billing", icon: CreditCard },
@@ -131,9 +134,17 @@ const menuConfig = [
 export function AppNav() {
   const pathname = usePathname();
   const { user } = useAuth();
-  const userRole = (user?.role ?? "user") as "user" | "admin" | "consultant";
+  const userRole = user?.role;
 
-  const isActive = (path: string) => pathname === path || pathname.startsWith(`${path}/`);
+  const isActive = (path: string) => {
+    if (path === '/admin' && pathname.startsWith('/admin')) {
+      return true;
+    }
+    if (path === '/dashboard') {
+        return pathname === '/dashboard' || pathname === '/';
+    }
+    return pathname.startsWith(path);
+  };
 
   return (
     <Sidebar>
