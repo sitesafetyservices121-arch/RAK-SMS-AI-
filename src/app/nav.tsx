@@ -1,3 +1,4 @@
+
 // /components/app-nav.tsx
 "use client";
 
@@ -66,7 +67,7 @@ const menuConfig = [
   {
     label: "Consultant",
     items: [
-      { href: "/ohs-consultant", label: "Wilson - OHS Consultant", icon: WilsonLogo },
+        { href: "/ohs-consultant", label: "Wilson - OHS Consultant", icon: WilsonLogo },
     ],
   },
   {
